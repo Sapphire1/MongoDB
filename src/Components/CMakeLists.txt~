@@ -1,5 +1,0 @@
-# Add all components here using ADD_COMPONENT(<COMPONENT_DIRECTORY>)
-
-ADD_COMPONENT(TestDB)
-ADD_COMPONENT(Sequence)
-ADD_COMPONENT(CvWindow)
