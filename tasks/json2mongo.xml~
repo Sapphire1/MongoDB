@@ -1,0 +1,47 @@
+<Task>
+        <!-- reference task information -->
+        <Reference>
+                <Author>
+                        <name>Lukasz Zmuda</name>
+                        <link></link>
+                </Author>
+                
+                <Description>
+                        <brief>Bar Code Recognition</brief>
+                        <full>Bar Code Recognition</full>
+                </Description>
+        </Reference>
+        
+        <!-- task definition -->
+        <Subtasks>
+                <Subtask name="Main">
+                        <Executor name="Processing"  period="1">
+                                <Component name="Sequence" type="writeJson2MongoDB:Sequence" priority="1" bump="0">
+                                        <param name="sequence.directory">%[TASK_LOCATION]%/../data/barCodes/</param>
+                                        <param name="sequence.pattern">.*\.jpg</param>
+                                        <param name="mode.loop">1</param>
+                                </Component>
+                                <Component name="WriteJSON2Mongo" type="writeJson2MongoDB:WriteJSON2Mongo" priority="2" bump="0">
+                                </Component>
+                        </Executor>
+
+                        <Executor name="Visualization" period="0.2">
+                                <Component name="Window" type="writeJson2MongoDB:CvWindow" priority="3" bump="5">
+                                        <param name="count">1</param>
+                                        <param name="title">Window</param>
+                                </Component>
+                        </Executor>
+                </Subtask>        
+        
+        </Subtasks>
+        
+        <!-- pipes connecting datastreams -->
+        <DataStreams>
+                <Source name="Sequence.out_img">
+                        <sink>WriteJSON2Mongo.in_img</sink>                
+                </Source>
+                <Source name="WriteJSON2Mongo.out_img">
+                        <sink>Window.in_img</sink>                
+                </Source>
+        </DataStreams>
+</Task>
