@@ -1,4 +1,8 @@
 
+#ifndef WRITEJSON2MONGO_H_
+#define WRITEJSON2MONGO_H_
+
+
 #include "Component_Aux.hpp"
 #include "Component.hpp"
 #include "DataStream.hpp"
@@ -12,7 +16,7 @@
 #include "mongo/client/dbclient.h"
 
 namespace Processors {
-namespace TestDB {
+namespace MongoDB {
 
 using namespace cv;
 
@@ -54,18 +58,18 @@ public:
         }
 };
 
-class TestDB_Processor: public Base::Component
+class Json2MongoWriter_Processor: public Base::Component
 {
 public:
         /*!
          * Constructor.
          */
-	TestDB_Processor(const std::string & name = "");
+	Json2MongoWriter_Processor(const std::string & name = "");
 
         /*!
          * Destructor
          */
-        virtual ~TestDB_Processor();
+        virtual ~Json2MongoWriter_Processor();
 
         /*!
          * Prepares communication interface.
@@ -106,7 +110,7 @@ protected:
         void onNewImage();
 
         /// Event handler.
-        Base::EventHandler <TestDB_Processor> h_onNewImage;
+        Base::EventHandler <Json2MongoWriter_Processor> h_onNewImage;
 
         /// Input data stream
         Base::DataStreamIn <cv::Mat> in_img;
@@ -123,9 +127,9 @@ private:
 
         void run();
 };
-}//: namespace TestDB
+}//: namespace MongoDB
 }//: namespace Processors
 
-REGISTER_COMPONENT("WriteJSON2Mongo", Processors::TestDB::TestDB_Processor)
+REGISTER_COMPONENT("WriteJSON2Mongo", Processors::MongoDB::Json2MongoWriter_Processor)
 
-
+#endif /* WRITEJSON2MONGO_H_ */
