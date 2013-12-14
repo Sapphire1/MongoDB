@@ -42,10 +42,10 @@ EQUALS = =
 CMAKE_EDIT_COMMAND = /usr/bin/ccmake
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/lzmuda/DCL/writeJson2MongoDB
+CMAKE_SOURCE_DIR = /home/lzmuda/DCL/Json2MongoDBWriter
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/lzmuda/DCL/writeJson2MongoDB/build
+CMAKE_BINARY_DIR = /home/lzmuda/DCL/Json2MongoDBWriter/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -113,14 +113,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/lzmuda/DCL/writeJson2MongoDB/build/CMakeFiles /home/lzmuda/DCL/writeJson2MongoDB/build/src/Components/Sequence/CMakeFiles/progress.marks
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/Sequence/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/lzmuda/DCL/writeJson2MongoDB/build/CMakeFiles 0
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/lzmuda/DCL/Json2MongoDBWriter/build/CMakeFiles /home/lzmuda/DCL/Json2MongoDBWriter/build/src/Components/Sequence/CMakeFiles/progress.marks
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/Sequence/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/lzmuda/DCL/Json2MongoDBWriter/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/Sequence/clean
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/Sequence/clean
 .PHONY : clean
 
 # The main clean target
@@ -129,22 +129,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/Sequence/preinstall
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/Sequence/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/Sequence/preinstall
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/Sequence/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 src/Components/Sequence/CMakeFiles/Sequence.dir/rule:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/Sequence/CMakeFiles/Sequence.dir/rule
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/Sequence/CMakeFiles/Sequence.dir/rule
 .PHONY : src/Components/Sequence/CMakeFiles/Sequence.dir/rule
 
 # Convenience name for target.
@@ -153,7 +153,7 @@ Sequence: src/Components/Sequence/CMakeFiles/Sequence.dir/rule
 
 # fast build rule for target.
 Sequence/fast:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f src/Components/Sequence/CMakeFiles/Sequence.dir/build.make src/Components/Sequence/CMakeFiles/Sequence.dir/build
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f src/Components/Sequence/CMakeFiles/Sequence.dir/build.make src/Components/Sequence/CMakeFiles/Sequence.dir/build
 .PHONY : Sequence/fast
 
 Sequence.o: Sequence.cpp.o
@@ -161,7 +161,7 @@ Sequence.o: Sequence.cpp.o
 
 # target to build an object file
 Sequence.cpp.o:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f src/Components/Sequence/CMakeFiles/Sequence.dir/build.make src/Components/Sequence/CMakeFiles/Sequence.dir/Sequence.cpp.o
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f src/Components/Sequence/CMakeFiles/Sequence.dir/build.make src/Components/Sequence/CMakeFiles/Sequence.dir/Sequence.cpp.o
 .PHONY : Sequence.cpp.o
 
 Sequence.i: Sequence.cpp.i
@@ -169,7 +169,7 @@ Sequence.i: Sequence.cpp.i
 
 # target to preprocess a source file
 Sequence.cpp.i:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f src/Components/Sequence/CMakeFiles/Sequence.dir/build.make src/Components/Sequence/CMakeFiles/Sequence.dir/Sequence.cpp.i
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f src/Components/Sequence/CMakeFiles/Sequence.dir/build.make src/Components/Sequence/CMakeFiles/Sequence.dir/Sequence.cpp.i
 .PHONY : Sequence.cpp.i
 
 Sequence.s: Sequence.cpp.s
@@ -177,7 +177,7 @@ Sequence.s: Sequence.cpp.s
 
 # target to generate assembly for a file
 Sequence.cpp.s:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f src/Components/Sequence/CMakeFiles/Sequence.dir/build.make src/Components/Sequence/CMakeFiles/Sequence.dir/Sequence.cpp.s
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f src/Components/Sequence/CMakeFiles/Sequence.dir/build.make src/Components/Sequence/CMakeFiles/Sequence.dir/Sequence.cpp.s
 .PHONY : Sequence.cpp.s
 
 # Help Target
@@ -207,6 +207,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

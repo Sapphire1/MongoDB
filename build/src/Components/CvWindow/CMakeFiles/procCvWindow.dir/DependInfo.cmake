@@ -4,7 +4,7 @@ SET(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 SET(CMAKE_DEPENDS_CHECK_CXX
-  "/home/lzmuda/DCL/writeJson2MongoDB/src/Components/CvWindow/CvWindow_Sink.cpp" "/home/lzmuda/DCL/writeJson2MongoDB/build/src/Components/CvWindow/CMakeFiles/procCvWindow.dir/CvWindow_Sink.cpp.o"
+  "/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/CvWindow/CvWindow_Sink.cpp" "/home/lzmuda/DCL/Json2MongoDBWriter/build/src/Components/CvWindow/CMakeFiles/procCvWindow.dir/CvWindow_Sink.cpp.o"
   )
 SET(CMAKE_CXX_COMPILER_ID "GNU")
 

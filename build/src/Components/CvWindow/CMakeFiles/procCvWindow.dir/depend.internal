@@ -3,8 +3,8 @@
 
 src/Components/CvWindow/CMakeFiles/procCvWindow.dir/CvWindow_Sink.cpp.o
  ../src/./Types/Drawable.hpp
- /home/lzmuda/DCL/writeJson2MongoDB/src/Components/CvWindow/CvWindow_Sink.cpp
- /home/lzmuda/DCL/writeJson2MongoDB/src/Components/CvWindow/CvWindow_Sink.hpp
+ /home/lzmuda/DCL/Json2MongoDBWriter/src/Components/CvWindow/CvWindow_Sink.cpp
+ /home/lzmuda/DCL/Json2MongoDBWriter/src/Components/CvWindow/CvWindow_Sink.hpp
  /home/lzmuda/DisCODe/build/inst/include/Base/Component.hpp
  /home/lzmuda/DisCODe/build/inst/include/Base/Component_Aux.hpp
  /home/lzmuda/DisCODe/build/inst/include/Base/Connection.hpp

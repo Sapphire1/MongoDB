@@ -1,8 +1,8 @@
-# Install script for directory: /home/lzmuda/DCL/writeJson2MongoDB/src/Components/Sequence
+# Install script for directory: /home/lzmuda/DCL/Json2MongoDBWriter/src/Components/Sequence
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  SET(CMAKE_INSTALL_PREFIX "/home/lzmuda/DCL/writeJson2MongoDB/dist")
+  SET(CMAKE_INSTALL_PREFIX "/home/lzmuda/DCL/Json2MongoDBWriter/dist")
 ENDIF(NOT DEFINED CMAKE_INSTALL_PREFIX)
 STRING(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -33,7 +33,7 @@ IF(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
 ENDIF(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
 
 IF(NOT CMAKE_INSTALL_COMPONENT OR "${CMAKE_INSTALL_COMPONENT}" STREQUAL "components")
-  FILE(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/home/lzmuda/DCL/writeJson2MongoDB/build/src/Components/Sequence/libSequence.so")
+  FILE(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE SHARED_LIBRARY FILES "/home/lzmuda/DCL/Json2MongoDBWriter/build/src/Components/Sequence/libSequence.so")
   IF(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libSequence.so" AND
      NOT IS_SYMLINK "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/libSequence.so")
     IF(CMAKE_INSTALL_DO_STRIP)

@@ -6,11 +6,11 @@
 
 #IncludeRegexTransform: 
 
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/Sequence/Sequence.cpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/Sequence/Sequence.cpp
 Sequence.hpp
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/Sequence/Sequence.hpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/Sequence/Sequence.hpp
 Utils.hpp
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/Sequence/Utils.hpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/Sequence/Utils.hpp
 algorithm
 -
 boost/foreach.hpp
@@ -18,15 +18,15 @@ boost/foreach.hpp
 opencv2/highgui/highgui.hpp
 -
 
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/Sequence/Sequence.hpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/Sequence/Sequence.hpp
 Component_Aux.hpp
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/Sequence/Component_Aux.hpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/Sequence/Component_Aux.hpp
 Component.hpp
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/Sequence/Component.hpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/Sequence/Component.hpp
 DataStream.hpp
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/Sequence/DataStream.hpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/Sequence/DataStream.hpp
 Property.hpp
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/Sequence/Property.hpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/Sequence/Property.hpp
 vector
 -
 string

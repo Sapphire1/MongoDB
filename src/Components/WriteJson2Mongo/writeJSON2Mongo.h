@@ -14,49 +14,14 @@
 #include <cstdlib>
 #include <iostream>
 #include "mongo/client/dbclient.h"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
 
 namespace Processors {
 namespace MongoDB {
 
 using namespace cv;
-
-class ThresholdTranslator {
-public:
-        static int fromStr(const std::string & s)
-        {
-                if (s == "BINARY")
-                        return THRESH_BINARY;
-                else if (s == "BINARY_INV")
-                        return THRESH_BINARY_INV;
-                else if (s == "TRUNC")
-                        return THRESH_TRUNC;
-                else if (s == "TOZERO")
-                        return THRESH_TOZERO;
-                else if (s == "TOZERO_INV")
-                        return THRESH_TOZERO_INV;
-                else
-                        return THRESH_BINARY;
-        }
-
-        static std::string toStr(int t)
-        {
-                switch (t)
-                {
-                        case THRESH_BINARY:
-                                return "BINARY";
-                        case THRESH_BINARY_INV:
-                                return "BINARY_INV";
-                        case THRESH_TRUNC:
-                                return "TRUNC";
-                        case THRESH_TOZERO:
-                                return "TOZERO";
-                        case THRESH_TOZERO_INV:
-                                return "TOZERO_INV";
-                        default:
-                                return "BINARY";
-                }
-        }
-};
 
 class Json2MongoWriter_Processor: public Base::Component
 {
@@ -109,6 +74,8 @@ protected:
          */
         void onNewImage();
 
+        void connect2MongoDB();
+
         /// Event handler.
         Base::EventHandler <Json2MongoWriter_Processor> h_onNewImage;
 
@@ -120,10 +87,11 @@ protected:
 
 private:
         /// Type of the performed thresholding operation.
-        Base::Property<int, ThresholdTranslator> m_type;
+   //     Base::Property<int, ThresholdTranslator> m_type;
 
-        Base::Property<double> m_thresh;
-        Base::Property<double> m_maxval;
+    //    Base::Property<double> m_thresh;
+   //     Base::Property<double> m_maxval;
+        Base::Property<std::string> mongoDBHost;
 
         void run();
 };

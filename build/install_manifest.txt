@@ -1,3 +1,3 @@
-/home/lzmuda/DCL/writeJson2MongoDB/dist/lib/libprocJSON2MONGO.so
-/home/lzmuda/DCL/writeJson2MongoDB/dist/lib/libSequence.so
-/home/lzmuda/DCL/writeJson2MongoDB/dist/lib/libprocCvWindow.so
+/home/lzmuda/DCL/Json2MongoDBWriter/dist/lib/libprocJSON2MONGO.so
+/home/lzmuda/DCL/Json2MongoDBWriter/dist/lib/libSequence.so
+/home/lzmuda/DCL/Json2MongoDBWriter/dist/lib/libprocCvWindow.so

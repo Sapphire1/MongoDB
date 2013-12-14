@@ -4,7 +4,7 @@ SET(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 SET(CMAKE_DEPENDS_CHECK_CXX
-  "/home/lzmuda/DCL/writeJson2MongoDB/src/Components/WriteJson2Mongo/writeJSON2Mongo.cpp" "/home/lzmuda/DCL/writeJson2MongoDB/build/src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/writeJSON2Mongo.cpp.o"
+  "/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/WriteJson2Mongo/writeJSON2Mongo.cpp" "/home/lzmuda/DCL/Json2MongoDBWriter/build/src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/writeJSON2Mongo.cpp.o"
   )
 SET(CMAKE_CXX_COMPILER_ID "GNU")
 

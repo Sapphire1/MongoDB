@@ -42,10 +42,10 @@ EQUALS = =
 CMAKE_EDIT_COMMAND = /usr/bin/ccmake
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/lzmuda/DCL/writeJson2MongoDB
+CMAKE_SOURCE_DIR = /home/lzmuda/DCL/Json2MongoDBWriter
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/lzmuda/DCL/writeJson2MongoDB/build
+CMAKE_BINARY_DIR = /home/lzmuda/DCL/Json2MongoDBWriter/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -113,14 +113,14 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/lzmuda/DCL/writeJson2MongoDB/build/CMakeFiles /home/lzmuda/DCL/writeJson2MongoDB/build/src/Components/WriteJson2Mongo/CMakeFiles/progress.marks
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/WriteJson2Mongo/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/lzmuda/DCL/writeJson2MongoDB/build/CMakeFiles 0
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(CMAKE_COMMAND) -E cmake_progress_start /home/lzmuda/DCL/Json2MongoDBWriter/build/CMakeFiles /home/lzmuda/DCL/Json2MongoDBWriter/build/src/Components/WriteJson2Mongo/CMakeFiles/progress.marks
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/WriteJson2Mongo/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/lzmuda/DCL/Json2MongoDBWriter/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/WriteJson2Mongo/clean
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/WriteJson2Mongo/clean
 .PHONY : clean
 
 # The main clean target
@@ -129,22 +129,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/WriteJson2Mongo/preinstall
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/WriteJson2Mongo/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/WriteJson2Mongo/preinstall
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/WriteJson2Mongo/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/rule:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/rule
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f CMakeFiles/Makefile2 src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/rule
 .PHONY : src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/rule
 
 # Convenience name for target.
@@ -153,7 +153,7 @@ procJSON2MONGO: src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/rul
 
 # fast build rule for target.
 procJSON2MONGO/fast:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/build.make src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/build
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/build.make src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/build
 .PHONY : procJSON2MONGO/fast
 
 writeJSON2Mongo.o: writeJSON2Mongo.cpp.o
@@ -161,7 +161,7 @@ writeJSON2Mongo.o: writeJSON2Mongo.cpp.o
 
 # target to build an object file
 writeJSON2Mongo.cpp.o:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/build.make src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/writeJSON2Mongo.cpp.o
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/build.make src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/writeJSON2Mongo.cpp.o
 .PHONY : writeJSON2Mongo.cpp.o
 
 writeJSON2Mongo.i: writeJSON2Mongo.cpp.i
@@ -169,7 +169,7 @@ writeJSON2Mongo.i: writeJSON2Mongo.cpp.i
 
 # target to preprocess a source file
 writeJSON2Mongo.cpp.i:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/build.make src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/writeJSON2Mongo.cpp.i
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/build.make src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/writeJSON2Mongo.cpp.i
 .PHONY : writeJSON2Mongo.cpp.i
 
 writeJSON2Mongo.s: writeJSON2Mongo.cpp.s
@@ -177,7 +177,7 @@ writeJSON2Mongo.s: writeJSON2Mongo.cpp.s
 
 # target to generate assembly for a file
 writeJSON2Mongo.cpp.s:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(MAKE) -f src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/build.make src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/writeJSON2Mongo.cpp.s
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(MAKE) -f src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/build.make src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir/writeJSON2Mongo.cpp.s
 .PHONY : writeJSON2Mongo.cpp.s
 
 # Help Target
@@ -207,6 +207,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/lzmuda/DCL/writeJson2MongoDB/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /home/lzmuda/DCL/Json2MongoDBWriter/build && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

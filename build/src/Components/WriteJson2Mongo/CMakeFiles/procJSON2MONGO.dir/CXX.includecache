@@ -6,31 +6,31 @@
 
 #IncludeRegexTransform: 
 
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/WriteJson2Mongo/writeJSON2Mongo.cpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/WriteJson2Mongo/writeJSON2Mongo.cpp
 cstdlib
 -
 iostream
 -
 mongo/client/dbclient.h
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/WriteJson2Mongo/mongo/client/dbclient.h
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/WriteJson2Mongo/mongo/client/dbclient.h
 writeJSON2Mongo.h
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/WriteJson2Mongo/writeJSON2Mongo.h
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/WriteJson2Mongo/writeJSON2Mongo.h
 memory
 -
 string
 -
 Logger.hpp
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/WriteJson2Mongo/Logger.hpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/WriteJson2Mongo/Logger.hpp
 
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/WriteJson2Mongo/writeJSON2Mongo.h
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/WriteJson2Mongo/writeJSON2Mongo.h
 Component_Aux.hpp
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/WriteJson2Mongo/Component_Aux.hpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/WriteJson2Mongo/Component_Aux.hpp
 Component.hpp
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/WriteJson2Mongo/Component.hpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/WriteJson2Mongo/Component.hpp
 DataStream.hpp
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/WriteJson2Mongo/DataStream.hpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/WriteJson2Mongo/DataStream.hpp
 Property.hpp
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/WriteJson2Mongo/Property.hpp
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/WriteJson2Mongo/Property.hpp
 opencv2/core/core.hpp
 -
 opencv2/imgproc/imgproc.hpp
@@ -42,7 +42,13 @@ cstdlib
 iostream
 -
 mongo/client/dbclient.h
-/home/lzmuda/DCL/writeJson2MongoDB/src/Components/WriteJson2Mongo/mongo/client/dbclient.h
+/home/lzmuda/DCL/Json2MongoDBWriter/src/Components/WriteJson2Mongo/mongo/client/dbclient.h
+boost/property_tree/ptree.hpp
+-
+boost/property_tree/json_parser.hpp
+-
+boost/foreach.hpp
+-
 
 /home/lzmuda/DisCODe/build/inst/include/Base/Component.hpp
 map

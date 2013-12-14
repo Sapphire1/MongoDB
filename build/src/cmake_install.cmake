@@ -1,8 +1,8 @@
-# Install script for directory: /home/lzmuda/DCL/writeJson2MongoDB/src
+# Install script for directory: /home/lzmuda/DCL/Json2MongoDBWriter/src
 
 # Set the install prefix
 IF(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  SET(CMAKE_INSTALL_PREFIX "/home/lzmuda/DCL/writeJson2MongoDB/dist")
+  SET(CMAKE_INSTALL_PREFIX "/home/lzmuda/DCL/Json2MongoDBWriter/dist")
 ENDIF(NOT DEFINED CMAKE_INSTALL_PREFIX)
 STRING(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -34,7 +34,7 @@ ENDIF(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
 
 IF(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  INCLUDE("/home/lzmuda/DCL/writeJson2MongoDB/build/src/Components/cmake_install.cmake")
+  INCLUDE("/home/lzmuda/DCL/Json2MongoDBWriter/build/src/Components/cmake_install.cmake")
 
 ENDIF(NOT CMAKE_INSTALL_LOCAL_ONLY)
 
