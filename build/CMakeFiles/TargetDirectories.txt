@@ -1,3 +1,0 @@
-/home/lzmuda/DCL/Json2MongoDBWriter/build/src/Components/Sequence/CMakeFiles/Sequence.dir
-/home/lzmuda/DCL/Json2MongoDBWriter/build/src/Components/CvWindow/CMakeFiles/procCvWindow.dir
-/home/lzmuda/DCL/Json2MongoDBWriter/build/src/Components/WriteJson2Mongo/CMakeFiles/procJSON2MONGO.dir
