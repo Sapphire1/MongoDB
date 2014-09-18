@@ -20,8 +20,10 @@ MongoDBWriter::MongoDBWriter(const string & name) : Base::Component(name),
 		description("description", string("My green coffe cup")),
 		collectionName("collectionName", string("containers")),
 		extensions("extensions", string("*.png,*.jpg,*.txt")),
-		nodeType("nodeType", string("Object")),
-		folderName("folderName", string("/home/lzmuda/mongo_driver_tutorial/"))
+		nodeTypeProp("nodeType", string("Object")),
+		folderName("folderName", string("/home/lzmuda/mongo_driver_tutorial/")),
+		viewNameProp("viewName", string("")),
+		modelNameProp("modelName", string(""))
 		//folderName("folderName", string("./"))
 {
         registerProperty(mongoDBHost);
@@ -29,8 +31,10 @@ MongoDBWriter::MongoDBWriter(const string & name) : Base::Component(name),
         registerProperty(description);
         registerProperty(collectionName);
         registerProperty(extensions);
-        registerProperty(nodeType);
+        registerProperty(nodeTypeProp);
         registerProperty(folderName);
+        registerProperty(viewNameProp);
+        registerProperty(modelNameProp);
         CLOG(LTRACE) << "Hello MongoDBWriter";
 }
 void MongoDBWriter::connect2MongoDB()
@@ -44,7 +48,13 @@ MongoDBWriter::~MongoDBWriter()
 void MongoDBWriter::write2DB()
 {
         CLOG(LNOTICE) << "MongoDBReader::write2DB";
-        insert2MongoDB(nodeType);
+        if(modelNameProp!="")
+        	insert2MongoDB(nodeTypeProp,modelNameProp, "Model");
+        else if(viewNameProp!="")
+            insert2MongoDB(nodeTypeProp,viewNameProp, "View");
+        else
+        	insert2MongoDB(nodeTypeProp,"", "");
+
 }
 
 void MongoDBWriter::prepareInterface() {
@@ -75,7 +85,28 @@ bool MongoDBWriter::onInit()
 	    dbCollectionPath="images.dish";
 	  else if(collectionName=="other")
 	    dbCollectionPath="images.other";
-         }
+
+	  docViewsNames.push_back("Stereo");
+	  docViewsNames.push_back("Kinect");
+	  docViewsNames.push_back("ToF");
+	  docViewsNames.push_back("StereoSiLR");
+	  docViewsNames.push_back("StereoSiRX");
+	  docViewsNames.push_back("StereoSiRXM");
+	  docViewsNames.push_back("KinectSiLR");
+	  docViewsNames.push_back("KinectSiRX");
+	  docViewsNames.push_back("KinectSiRXM");
+	  docViewsNames.push_back("ToFSiLR");
+	  docViewsNames.push_back("ToFSiRX");
+	  docViewsNames.push_back("ToFSiRXM");
+
+	  docModelsNames.push_back("SomRgb");
+	  docModelsNames.push_back("SomSift");
+	  docModelsNames.push_back("SsomRgb");
+	  docModelsNames.push_back("SsomSift");
+	  docModelsNames.push_back("SsomShot");
+	  docModelsNames.push_back("SSOM");
+	  docModelsNames.push_back("SOM");
+}
          catch(DBException &e)
          {
         	 CLOG(LERROR) <<"Something goes wrong... :>";
@@ -127,9 +158,25 @@ vector<string> MongoDBWriter::getAllFiles(const string& pattern)
 
 }
 
+vector<string> MongoDBWriter::getAllFolders(const string& directoryPath)
+{
+	vector<string> directories;
+	const char *cstr = directoryPath.c_str();
+	DIR *dir = opendir(cstr);
+    struct dirent *entry = readdir(dir);
+    while (entry != NULL)
+    {
+    	if (entry->d_type == DT_DIR)
+    		directories.push_back(entry->d_name);
+    	entry = readdir(dir);
+    }
+    closedir(dir);
+    return directories;
+}
+
 vector<OID>  MongoDBWriter::getChildOIDS(BSONObj &obj)
 {
-	  CLOG(LTRACE) << "Processing JSON document: " << obj.toString() << std::endl;
+	  //CLOG(LTRACE) << "Processing JSON document: " << obj.toString() << std::endl;
 	  vector<BSONElement> v = obj.getField("childOIDs").Array();
 	  vector<OID> oidsVector;
 
@@ -143,13 +190,18 @@ vector<OID>  MongoDBWriter::getChildOIDS(BSONObj &obj)
 	  return oidsVector;
 }
 
-auto_ptr<DBClientCursor>  MongoDBWriter::findDocumentInCollection(string nodeName)
+auto_ptr<DBClientCursor>  MongoDBWriter::findDocumentInCollection(string nodeName, string type, string name)
 {
       auto_ptr<DBClientCursor> cursorCollection;
       try{
-	cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeName<<"Name"<<objectName)));
-      }
-      catch(DBException &e)
+    	 if(type=="" || name=="")
+    		 cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeName<<"ObjectName"<<objectName)));
+    	 else if(type=="View")
+    		 cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeName<<"ObjectName"<<objectName<<"ViewName"<<name)));
+    	 else if(type=="Model")
+    		 cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeName<<"ObjectName"<<objectName<<"ModelName"<<name)));
+
+      }catch(DBException &e)
       {
     	  CLOG(LERROR) <<"Something goes wrong... :>";
     	  CLOG(LERROR) <<c.getLastError();
@@ -158,165 +210,69 @@ auto_ptr<DBClientCursor>  MongoDBWriter::findDocumentInCollection(string nodeNam
 
 }
 
+auto_ptr<DBClientCursor>  MongoDBWriter::findModelDocumentInCollection(string modelName)
+{
+      auto_ptr<DBClientCursor> cursorCollection;
+      try{
+	cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<"Model"<<"ObjectName"<<objectName<<"ModelName"<<modelName)));
+      }
+      catch(DBException &e)
+      {
+    	  CLOG(LERROR) <<"Something goes wrong... :>";
+    	  CLOG(LERROR) <<c.getLastError();
+      }
+    return cursorCollection;
+}
+auto_ptr<DBClientCursor>  MongoDBWriter::findViewDocumentInCollection(string viewName)
+{
+      auto_ptr<DBClientCursor> cursorCollection;
+      try{
+	cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<"View"<<"ObjectName"<<objectName<<"ViewName"<<viewName)));
+      }
+      catch(DBException &e)
+      {
+    	  CLOG(LERROR) <<"Something goes wrong... :>";
+    	  CLOG(LERROR) <<c.getLastError();
+      }
+    return cursorCollection;
+}
+
 void MongoDBWriter::initObject()
 	{
 		  CLOG(LTRACE) <<"Create template of object";
+		  BSONObj o;
+		  BSONElement bsonElement;
+		  BSONArrayBuilder bsonBuilder;
+		  OID oid;
+
 	      try{
-		      BSONObj object = BSONObjBuilder().genOID().append("Type", "Object").append("Name", objectName).append("description", description).obj();
+		      BSONObj object = BSONObjBuilder().genOID().append("Type", "Object").append("ObjectName", objectName).append("description", description).obj();
 		      c.insert(dbCollectionPath, object);
-		      BSONObj view = BSONObjBuilder().genOID().append("Type", "View").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, view);
-		      BSONObj model = BSONObjBuilder().genOID().append("Type", "Model").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, model);
+		      vector<string> models = getAllFolders((string)folderName+"/Model/");
+			  for(std::vector<string>::iterator it = models.begin(); it != models.end(); ++it){
+				  if(*it=="." || *it=="..")
+					  continue;
+				  BSONObj model = BSONObjBuilder().genOID().append("Type", "Model").append("ObjectName", objectName).append("ModelName", *it).append("description", description).obj();
+				  c.insert(dbCollectionPath, model);
+				  model.getObjectID(bsonElement);
+				  oid=bsonElement.__oid();
+				  bsonBuilder.append(BSONObjBuilder().append("childOID", oid.str()).obj());
+			      initModel(*it);
+			  }
+			  vector<string> views = getAllFolders((string)folderName+"/View/");
+			  for(std::vector<string>::iterator it = views.begin(); it != views.end(); ++it){
+				  if(*it=="." || *it=="..")
+					  continue;
+				  BSONObj view = BSONObjBuilder().genOID().append("Type", "View").append("ObjectName", objectName).append("ViewName", *it).append("description", description).obj();
+				  c.insert(dbCollectionPath, view);
+				  view.getObjectID(bsonElement);
+				  oid=bsonElement.__oid();
+				  bsonBuilder.append(BSONObjBuilder().append("childOID", oid.str()).obj());
 
-		      BSONObj stereo = BSONObjBuilder().genOID().append("Type", "Stereo").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, stereo);
-		      BSONObj kinect = BSONObjBuilder().genOID().append("Type","Kinect").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, kinect);
-		      BSONObj tof = BSONObjBuilder().genOID().append("Type", "ToF").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, tof);
-		      BSONObj stereosilrx = BSONObjBuilder().genOID().append("Type", "StereoSiLR").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, stereosilrx);
-		      BSONObj stereosirx = BSONObjBuilder().genOID().append("Type", "StereoSiRX").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, stereosirx);
-		      BSONObj stereosirxm = BSONObjBuilder().genOID().append("Type", "StereoSiRXM").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, stereosirxm);
-
-		      BSONObj kinectsilrx = BSONObjBuilder().genOID().append("Type", "KinectSiLR").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, kinectsilrx);
-		      BSONObj kinectsirx = BSONObjBuilder().genOID().append("Type", "KinectSiRX").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, kinectsirx);
-		      BSONObj kinectsirxm = BSONObjBuilder().genOID().append("Type", "KinectSiRXM").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, kinectsirxm);
-
-		       BSONObj tofsilrx = BSONObjBuilder().genOID().append("Type", "ToFSiLR").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, tofsilrx);
-		      BSONObj tofsirx = BSONObjBuilder().genOID().append("Type", "ToFSiRX").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, tofsirx);
-		      BSONObj tofsirxm = BSONObjBuilder().genOID().append("Type", "ToFSiRXM").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, tofsirxm);
-
-		      BSONObj som = BSONObjBuilder().genOID().append("Type", "Som").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, som);
-		      BSONObj ssom = BSONObjBuilder().genOID().append("Type", "Ssom").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, ssom);
-		      BSONObj somRGB = BSONObjBuilder().genOID().append("Type", "SomRgb").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, somRGB);
-		      BSONObj somSIFT = BSONObjBuilder().genOID().append("Type", "SomSift").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, somSIFT);
-		      BSONObj ssomRGB = BSONObjBuilder().genOID().append("Type", "SsomRgb").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, ssomRGB);
-		      BSONObj ssomSIFT = BSONObjBuilder().genOID().append("Type", "SsomSift").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, ssomSIFT);
-		      BSONObj ssomSHOT = BSONObjBuilder().genOID().append("Type", "SsomShot").append("Name", objectName).append("description", description).obj();
-		      c.insert(dbCollectionPath, ssomSHOT);
-
-		      // get object id for any bsonObj and update
-
-		      BSONElement oi,oi2,oi3;
-		      BSONArrayBuilder b,b1,b2,b3,b4,b5,b6,b7;
-		      OID o, o2, o3;
-
-
-		      model.getObjectID(oi);
-		      view.getObjectID(oi2);
-		      o=oi.__oid();
-		      o2=oi2.__oid();
-
-		      b.append(BSONObjBuilder().append("childOID", o.str()).obj());
-		      b.append(BSONObjBuilder().append("childOID", o2.str()).obj());
-		      BSONArray objectArr = b.arr();
-
-		      stereo.getObjectID(oi);
-		      kinect.getObjectID(oi2);
-		      tof.getObjectID(oi3);
-		      o=oi.__oid();
-		      o2=oi2.__oid();
-		      o3=oi3.__oid();
-
-		      b1.append(BSONObjBuilder().append("childOID", o.str()).obj());
-		      b1.append(BSONObjBuilder().append("childOID", o2.str()).obj());
-		      b1.append(BSONObjBuilder().append("childOID", o3.str()).obj());
-		      BSONArray viewArr = b1.arr();
-
-		      stereosilrx.getObjectID(oi);
-		      stereosirx.getObjectID(oi2);
-		      stereosirxm.getObjectID(oi3);
-		      o=oi.__oid();
-		      o2=oi2.__oid();
-		      o3=oi3.__oid();
-
-		      b2.append(BSONObjBuilder().append("childOID", o.str()).obj());
-		      b2.append(BSONObjBuilder().append("childOID", o2.str()).obj());
-		      b2.append(BSONObjBuilder().append("childOID", o3.str()).obj());
-		      BSONArray stereoArr = b2.arr();
-
-		      kinectsilrx.getObjectID(oi);
-		      kinectsirx.getObjectID(oi2);
-		      kinectsirxm.getObjectID(oi3);
-		      o=oi.__oid();
-		      o2=oi2.__oid();
-		      o3=oi3.__oid();
-
-		      b6.append(BSONObjBuilder().append("childOID", o.str()).obj());
-		      b6.append(BSONObjBuilder().append("childOID", o2.str()).obj());
-		      b6.append(BSONObjBuilder().append("childOID", o3.str()).obj());
-		      BSONArray kinectArr = b6.arr();
-
-		      tofsilrx.getObjectID(oi);
-		      tofsirx.getObjectID(oi2);
-		      tofsirxm.getObjectID(oi3);
-		      o=oi.__oid();
-		      o2=oi2.__oid();
-		      o3=oi3.__oid();
-
-		      b7.append(BSONObjBuilder().append("childOID", o.str()).obj());
-		      b7.append(BSONObjBuilder().append("childOID", o2.str()).obj());
-		      b7.append(BSONObjBuilder().append("childOID", o3.str()).obj());
-		      BSONArray tofArr = b7.arr();
-
-
-		      som.getObjectID(oi);
-		      ssom.getObjectID(oi2);
-		      o=oi.__oid();
-		      o2=oi2.__oid();
-
-		      b3.append(BSONObjBuilder().append("childOID", o.str()).obj());
-		      b3.append(BSONObjBuilder().append("childOID", o2.str()).obj());
-		      BSONArray modelArr = b3.arr();
-
-
-		      ssomRGB.getObjectID(oi);
-		      ssomSIFT.getObjectID(oi2);
-		      ssomSHOT.getObjectID(oi3);
-		      o=oi.__oid();
-		      o2=oi2.__oid();
-		      o3=oi3.__oid();
-
-		      b4.append(BSONObjBuilder().append("childOID", o.str()).obj());
-		      b4.append(BSONObjBuilder().append("childOID", o2.str()).obj());
-		      b4.append(BSONObjBuilder().append("childOID", o3.str()).obj());
-		      BSONArray ssomArr = b4.arr();
-
-
-		      somRGB.getObjectID(oi);
-		      ssomSIFT.getObjectID(oi2);
-		      o=oi.__oid();
-		      o2=oi2.__oid();
-
-		      b5.append(BSONObjBuilder().append("childOID", o.str()).obj());
-		      b5.append(BSONObjBuilder().append("childOID", o2.str()).obj());
-		      BSONArray somArr = b5.arr();
-
-		      //update - add childs
-		      c.update(dbCollectionPath, QUERY("Type"<<"ToF"<<"Name"<<objectName), BSON("$set"<<BSON("childOIDs"<<tofArr)), false, true);
-		      c.update(dbCollectionPath, QUERY("Type"<<"Kinect"<<"Name"<<objectName), BSON("$set"<<BSON("childOIDs"<<kinectArr)), false, true);
-		      c.update(dbCollectionPath, QUERY("Type"<<"Stereo"<<"Name"<<objectName), BSON("$set"<<BSON("childOIDs"<<stereoArr)), false, true);
-		      c.update(dbCollectionPath, QUERY("Type"<<"Model"<<"Name"<<objectName), BSON("$set"<<BSON("childOIDs"<<modelArr)), false, true);
-		      c.update(dbCollectionPath, QUERY("Type"<<"View"<<"Name"<<objectName), BSON("$set"<<BSON("childOIDs"<<viewArr)), false, true);
-		      c.update(dbCollectionPath, QUERY("Type"<<"Object"<<"Name"<<objectName), BSON("$set"<<BSON("childOIDs"<<objectArr)), false, true);
-		      c.update(dbCollectionPath, QUERY("Type"<<"Ssom"<<"Name"<<objectName), BSON("$set"<<BSON("childOIDs"<<ssomArr)), false, true);
-		      c.update(dbCollectionPath, QUERY("Type"<<"Som"<<"Name"<<objectName), BSON("$set"<<BSON("childOIDs"<<somArr)), false, true);
+				  initView(*it);
+			  }
+			  BSONArray destArr = bsonBuilder.arr();
+			  c.update(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"), BSON("$set"<<BSON("childOIDs"<<destArr)), false, true);
 	      }
 	      catch(DBException &e)
 	      {
@@ -325,7 +281,91 @@ void MongoDBWriter::initObject()
 	      }
 	}
 
-void MongoDBWriter::writeNode2MongoDB(const string &source, const string &destination)
+void MongoDBWriter::initView(string & viewName)
+{
+	BSONElement oi;
+    OID o;
+    BSONArrayBuilder viewArrayBuilder, stereoArrayBuilder, kinectArrayBuilder, tofArrayBuilder,b3,b4;
+
+	for(std::vector<string>::iterator it = docViewsNames.begin(); it != docViewsNames.end(); ++it){
+		BSONObj document = BSONObjBuilder().genOID().append("Type", *it).append("ObjectName", objectName).append("ViewName", viewName).append("description", description).obj();
+		c.insert(dbCollectionPath, document);
+
+		if(*it=="Stereo" || *it=="Kinect" || *it=="ToF")
+		{
+			document.getObjectID(oi);
+			o=oi.__oid();
+			viewArrayBuilder.append(BSONObjBuilder().append("childOID", o.str()).obj());
+		}
+
+		else if(*it=="StereoSiLR" || *it=="StereoSiRX" || *it=="StereoSiRXM")
+		{
+			document.getObjectID(oi);
+			o=oi.__oid();
+			stereoArrayBuilder.append(BSONObjBuilder().append("childOID", o.str()).obj());
+		}
+		else if(*it=="KinectSiLR" || *it=="KinectSiRX" || *it=="KinectSiRXM")
+		{
+			document.getObjectID(oi);
+			o=oi.__oid();
+			kinectArrayBuilder.append(BSONObjBuilder().append("childOID", o.str()).obj());
+		}
+		else if(*it=="ToFSiLR" || *it=="ToFSiRX" || *it=="ToFSiRXM")
+		{
+			document.getObjectID(oi);
+			o=oi.__oid();
+			tofArrayBuilder.append(BSONObjBuilder().append("childOID", o.str()).obj());
+		}
+	}
+	BSONArray viewArr = viewArrayBuilder.arr();
+    BSONArray stereoArr = stereoArrayBuilder.arr();
+    BSONArray kinectArr = kinectArrayBuilder.arr();
+    BSONArray tofArr = tofArrayBuilder.arr();
+
+    c.update(dbCollectionPath, QUERY("Type"<<"View"<<"ObjectName"<<objectName<<"ViewName"<<viewName), BSON("$set"<<BSON("childOIDs"<<viewArr)), false, true);
+    c.update(dbCollectionPath, QUERY("Type"<<"ToF"<<"ObjectName"<<objectName<<"ViewName"<<viewName), BSON("$set"<<BSON("childOIDs"<<tofArr)), false, true);
+    c.update(dbCollectionPath, QUERY("Type"<<"Kinect"<<"ObjectName"<<objectName<<"ViewName"<<viewName), BSON("$set"<<BSON("childOIDs"<<kinectArr)), false, true);
+    c.update(dbCollectionPath, QUERY("Type"<<"Stereo"<<"ObjectName"<<objectName<<"ViewName"<<viewName), BSON("$set"<<BSON("childOIDs"<<stereoArr)), false, true);
+}
+
+void MongoDBWriter::initModel(string & modelName)
+{
+	BSONElement oi;
+	OID o;
+	BSONArrayBuilder modelArrayBuilder, somArrayBuilder, ssomArrayBuilder;
+
+		for(std::vector<string>::iterator it = docModelsNames.begin(); it != docModelsNames.end(); ++it){
+			BSONObj document = BSONObjBuilder().genOID().append("Type", *it).append("ObjectName", objectName).append("ModelName", modelName).append("description", description).obj();
+			c.insert(dbCollectionPath, document);
+
+			if(*it=="SOM" || *it=="SSOM")
+			{
+				document.getObjectID(oi);
+				o=oi.__oid();
+				modelArrayBuilder.append(BSONObjBuilder().append("childOID", o.str()).obj());
+			}
+			else if(*it=="SomRgb" || *it=="SomSift")
+			{
+				document.getObjectID(oi);
+				o=oi.__oid();
+				somArrayBuilder.append(BSONObjBuilder().append("childOID", o.str()).obj());
+			}
+			else if(*it=="SsomRgb" || *it=="SsomSift" || *it=="SsomShot")
+			{
+				document.getObjectID(oi);
+				o=oi.__oid();
+				ssomArrayBuilder.append(BSONObjBuilder().append("childOID", o.str()).obj());
+			}
+		}
+		BSONArray modelArr = modelArrayBuilder.arr();
+	    BSONArray somArr = somArrayBuilder.arr();
+	    BSONArray ssomArr = ssomArrayBuilder.arr();
+
+	    c.update(dbCollectionPath, QUERY("Type"<<"Model"<<"ObjectName"<<objectName<<"ModelName"<<modelName), BSON("$set"<<BSON("childOIDs"<<modelArr)), false, true);
+	    c.update(dbCollectionPath, QUERY("Type"<<"SOM"<<"ObjectName"<<objectName<<"ModelName"<<modelName), BSON("$set"<<BSON("childOIDs"<<somArr)), false, true);
+	    c.update(dbCollectionPath, QUERY("Type"<<"SSOM"<<"ObjectName"<<objectName<<"ModelName"<<modelName), BSON("$set"<<BSON("childOIDs"<<ssomArr)), false, true);
+}
+void MongoDBWriter::writeNode2MongoDB(const string &source, const string &destination, const string &option,string modelOrViewName)
 {
 	BSONObj o;
 	BSONElement bsonElement;
@@ -359,7 +399,7 @@ void MongoDBWriter::writeNode2MongoDB(const string &source, const string &destin
 				}
 				GridFS fs(c, collectionName);
 				o = fs.storeFile(*it, newFileName, mime);
-				BSONObj b = BSONObjBuilder().appendElements(o).append("Name", objectName).obj();
+				BSONObj b = BSONObjBuilder().appendElements(o).append("ObjectName", objectName).obj();
 				c.insert(dbCollectionPath, b);
 				b.getObjectID(bsonElement);
 				oid=bsonElement.__oid();
@@ -367,7 +407,11 @@ void MongoDBWriter::writeNode2MongoDB(const string &source, const string &destin
 			}
     	}
 		BSONArray destArr = bsonBuilder.arr();
-		c.update(dbCollectionPath, QUERY("Type"<<destination<<"Name"<<objectName), BSON("$set"<<BSON("childOIDs"<<destArr)), false, true);
+		if(option=="View")
+			c.update(dbCollectionPath, QUERY("Type"<<destination<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName), BSON("$set"<<BSON("childOIDs"<<destArr)), false, true);
+		if(option=="Model")
+			c.update(dbCollectionPath, QUERY("Type"<<destination<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName), BSON("$set"<<BSON("childOIDs"<<destArr)), false, true);
+
 		CLOG(LTRACE) <<"Files saved successfully";
     }
 	catch(DBException &e)
@@ -377,10 +421,12 @@ void MongoDBWriter::writeNode2MongoDB(const string &source, const string &destin
 	}
 }
 
-void MongoDBWriter::insert2MongoDB(const string &destination)
+void MongoDBWriter::insert2MongoDB(const string &destination, const string&  modelOrViewName, const string&  type)
 {
+	CLOG(LTRACE)<<"HI!\t\t\t"<<modelOrViewName;
+
 	try{
-		unsigned long long nr = c.count(dbCollectionPath, QUERY("Name"<<objectName<<"Type"<<"Object"));
+		unsigned long long nr = c.count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"));
 		if(nr==0)
 		{
 			CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
@@ -394,31 +440,79 @@ void MongoDBWriter::insert2MongoDB(const string &destination)
 				return;
 			}
 		}
-		if(destination=="StereoSiLR" || destination=="KinectSiLR" || destination=="ToFSiLR" || destination=="StereoSiRX" || destination=="KinectSiRX" ||  destination=="ToFSiRX" || destination=="StereoSiRXM" || destination=="KinectSiRXM" || destination=="ToFSiRXM" ||  destination=="SomRgb" || destination=="SomSift" ||  destination=="SsomRgb" || destination=="SsomSift" || destination=="SsomShot")
+
+		string source;
+		if(destination=="StereoSiLR" || destination=="KinectSiLR" || destination=="ToFSiLR" || destination=="StereoSiRX" || destination=="KinectSiRX" ||  destination=="ToFSiRX" || destination=="StereoSiRXM" || destination=="KinectSiRXM" || destination=="ToFSiRXM")
 		{
-			string source = (string)folderName+destination+"/";
-			writeNode2MongoDB(source, destination);
+				source = (string)folderName+"View/"+modelOrViewName+"/"+destination+"/";
+				CLOG(LINFO)<< "Source!!! "<<source;
+				writeNode2MongoDB(source, destination, "View", modelOrViewName);
+		}
+		else if(destination=="SomRgb" || destination=="SomSift" ||  destination=="SsomRgb" || destination=="SsomSift" || destination=="SsomShot")
+		{
+				source = (string)folderName+"Model/"+modelOrViewName+"/"+destination+"/";
+				CLOG(LINFO)<< "Source!!! "<<source;
+				writeNode2MongoDB(source, destination, "Model", modelOrViewName);
 		}
 		else
 		{
-			auto_ptr<DBClientCursor> cursorCollection =findDocumentInCollection(destination);
+			CLOG(LINFO)<< "destination: "<<destination;
+
+			auto_ptr<DBClientCursor> cursorCollection;
+			if(destination=="Model")
+			{
+				cursorCollection =findModelDocumentInCollection(modelOrViewName);
+				// sprawdzic czy nie pusty, jak pusty i w gui jest wpisana nazwa modelu to utworzyc taki model
+				// jak nie jest pusty to blad
+				// initModel();
+			}
+			else if(destination=="View")
+			{
+				cursorCollection =findViewDocumentInCollection(modelOrViewName);
+				// sprawdzic czy nie pusty, jak pusty i w gui jest wpisana nazwa widoku to utworzyc taki widok
+				// jak nie jest pusty to blad
+				// initView();
+			}
+			else
+				cursorCollection =findDocumentInCollection(destination, type, modelOrViewName);
+
 			while (cursorCollection->more())
 			{
-				BSONObj obj = cursorCollection->next();
-				vector<OID> childsVector =  getChildOIDS(obj);
-				for (unsigned int i = 0; i<childsVector.size(); i++)
-				{
-					auto_ptr<DBClientCursor> childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
-					if( childCursor->more())
+					CLOG(LINFO)<< "test: 2";
+					BSONObj obj = cursorCollection->next();
+					CLOG(LTRACE)<< obj;
+					vector<OID> childsVector =  getChildOIDS(obj);
+					for (unsigned int i = 0; i<childsVector.size(); i++)
 					{
-						BSONObj childObj = childCursor->next();
-						string childNodeName = childObj.getField("Type").str();
-						// if node consists child read it
-						if(childNodeName!="EOO")
-							insert2MongoDB(childNodeName);
+						auto_ptr<DBClientCursor> childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+						if( childCursor->more())
+						{
+							BSONObj childObj = childCursor->next();
+							string childNodeName = childObj.getField("Type").str();
+							CLOG(LINFO)<< "childNodeName: "<<childNodeName;
+							// if node consists child read it
+							if(childNodeName!="EOO")
+							{
+								if(childNodeName=="View")
+								{
+									string modelOrViewName = childObj.getField("ViewName").str();
+									CLOG(LTRACE)<< "viewName: "<<modelOrViewName;
+									string type = "View";
+									insert2MongoDB(childNodeName, modelOrViewName, type);
+								}
+								else if(childNodeName=="Model")
+								{
+									string modelOrViewName = childObj.getField("ModelName").str();
+									string type = "Model";
+									CLOG(LTRACE)<< "modelName: "<<modelOrViewName;
+									insert2MongoDB(childNodeName, modelOrViewName, type);
+								}
+								else
+									insert2MongoDB(childNodeName, modelOrViewName, type);
+							}
+						}
 					}
-				}
-			}//while
+				}//while
 		}//else
     }//try
 	catch(DBException &e)

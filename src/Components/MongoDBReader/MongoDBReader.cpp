@@ -38,14 +38,14 @@ MongoDBReader::~MongoDBReader()
 
 void MongoDBReader::readfromDB()
 {
-        CLOG(LNOTICE) << "MongoDBReader::write2DB";
+        CLOG(LNOTICE) << "MongoDBReader::readfromDB";
         readFromMongoDB(nodeType);
 }
 void MongoDBReader::prepareInterface() {
         CLOG(LTRACE) << "MongoDBReader::prepareInterface";
 
         h_readfromDB.setup(this, &MongoDBReader::readfromDB);
-        registerHandler("onNewImage", &h_readfromDB);
+        registerHandler("Read", &h_readfromDB);
 
 //        registerStream("in_img", &in_img);
 //        registerStream("out_img", &out_img);
