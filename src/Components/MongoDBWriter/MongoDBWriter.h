@@ -122,8 +122,8 @@ private:
         auto_ptr<DBClientCursor> findViewDocumentInCollection(string nodeName);
         void write2DB();
         void insertToModelOrView(const string &,const string &);
-        void initView(string &);
-        void initModel(string &);
+        void initView(const string &);
+        void initModel(const string &);
 
 };
 }//: namespace MongoDBWriter
