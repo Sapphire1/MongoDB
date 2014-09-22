@@ -38,8 +38,10 @@ MongoDBReader::~MongoDBReader()
 
 void MongoDBReader::readfromDB()
 {
-        CLOG(LNOTICE) << "MongoDBReader::readfromDB";
-        readFromMongoDB(nodeType);
+	string modelOrViewName="";
+	string type="";
+	CLOG(LNOTICE) << "MongoDBReader::readfromDB";
+	readFromMongoDB(nodeType, modelOrViewName, type);
 }
 void MongoDBReader::prepareInterface() {
         CLOG(LTRACE) << "MongoDBReader::prepareInterface";
@@ -114,70 +116,166 @@ vector<OID>  MongoDBReader::getchildOIDS(BSONObj &obj)
 		CLOG(LTRACE) <<"OID: "<< o.str() << endl;
 		oidsVector.push_back(o);
 	  }
+	  CLOG(LTRACE) <<"getchildOIDS - END"<< endl;
 	  return oidsVector;
 }
 
-auto_ptr<DBClientCursor>  MongoDBReader::findDocumentInCollection(string nodeName)
+void  MongoDBReader::findDocumentInCollection(const string &nodeType, auto_ptr<DBClientCursor> & cursorCollection, const string & modelOrViewName, const string & type)
 {
-      auto_ptr<DBClientCursor> cursorCollection;
       try{
-    	  cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeName<<"Name"<<objectName)));
-      }
+    	  CLOG(LINFO)<<"NodeName "<< nodeType;
+    	  if(type!="")
+    	  {
+			  if(type=="View")
+			  {
+				  CLOG(LINFO)<<"findDocumentInCollection- View";
+				  cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName)));
+				  CLOG(LINFO)<<"Founded Documents: "<<c.count(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName)));
+			  }
+			  else if(type=="Model")
+			  {
+				  CLOG(LINFO)<<"findDocumentInCollection- Model";
+				  cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName)));
+				  CLOG(LINFO)<<"Founded Documents: "<<c.count(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName)));
+			  }
+			  else
+			  {
+				  CLOG(LINFO)<<"findDocumentInCollection- no view or model name, know type";
+				  cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<type<<modelOrViewName)));
+				  CLOG(LINFO)<<"Founded Documents: "<<c.count(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<type<<modelOrViewName)));
+			  }
+    	  }
+    	  else
+    	  {
+    		  CLOG(LINFO)<<"findDocumentInCollection- don't know type";
+    	      cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName)));
+    	      CLOG(LINFO)<<"Founded Documents: "<<c.count(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName)));
+    	  }
+    	 }
       catch(DBException &e)
       {
     	  CLOG(LERROR) <<"Something goes wrong... :>";
     	  CLOG(LERROR) <<c.getLastError();
       }
-      return cursorCollection;
+      return;
 }
 
-void MongoDBReader::readFromMongoDB(string nodeType)
+void MongoDBReader::readFromMongoDB(const string& nodeType, const string& modelOrViewName, const string& type)
 {
-	CLOG(LTRACE) <<"NodeType :" << nodeType;
+	CLOG(LINFO) <<"readFromMongoDB - START" << nodeType;
+	CLOG(LINFO) <<"NodeType :" << nodeType;
+	CLOG(LINFO) <<"modelOrViewName :" << modelOrViewName;
+	CLOG(LINFO) <<"type :" << type;
 	try{
-		auto_ptr<DBClientCursor> cursorCollection =findDocumentInCollection(nodeType);
-
+		CLOG(LTRACE) <<"Get document";
+		findDocumentInCollection(nodeType, cursorCollection, modelOrViewName, type);
+		int k=0;
 		while (cursorCollection->more())
 		{
 			BSONObj obj = cursorCollection->next();
-			vector<OID> childsVector =  getchildOIDS(obj);
+			CLOG(LINFO)<<obj;
 
+			vector<OID> childsVector =  getchildOIDS(obj);
+			string name;
 			for (unsigned int i = 0; i<childsVector.size(); i++)
 			{
-				auto_ptr<DBClientCursor> childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
-				if( childCursor->more())
+				CLOG(LINFO)<<"iteration: "<<i<<" k: "<<++k;
+				childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+				if(childCursor->more())
 				{
 					BSONObj childObj = childCursor->next();
-					string childNodeName = childObj.getField("Type").str();
-					// if node consists of nodes read from child
+					string childNodeName= childObj.getField("Type").str();
+					CLOG(LINFO)<<"childNodeName "<< childNodeName;
+
 					if(childNodeName!="EOO")
-						readFromMongoDB(childNodeName);
-				}//if
-				GridFS fs(c,collectionName);
-				GridFile file = fs.findFile(QUERY("_id" << childsVector[i]));
-				if (!file.exists())
-				{
-					CLOG(LTRACE) << "File not found in grid";
-				}//if
-				else
-				{
-					CLOG(LTRACE) <<"Found!";
-					string filename;
-					filename = file.getFileField("filename").str();
-					CLOG(LTRACE) << "Filename "<<filename<<" Chunks: " << file.getNumChunks();
-					string name = (string)folderName+nodeType+"/"+filename;
-					stringstream ss;
-					string str = ss.str();
-					char *fileName = (char*)name.c_str();
-					ofstream ofs(fileName);
-					gridfs_offset off = file.write(ofs);
-					if (off != file.getContentLength())
 					{
-						CLOG(LTRACE) << "Failed to write a file from mongoDB to disc";
-					}
-					else
-					{
-						CLOG(LTRACE) << "Success write a file from mongoDB to disc";
+						if(childNodeName=="View")
+						{
+							string type = "View";
+							string modelOrViewName = childObj.getField("ViewName").str();
+							CLOG(LINFO)<<"set modelOrViewName: " <<modelOrViewName;
+							CLOG(LINFO)<<"modelOrViewName: "<<modelOrViewName<< " childNodeName: "<<childNodeName;
+							// if node consists of nodes read from child
+							CLOG(LTRACE)<<"Get childs";
+							readFromMongoDB(childNodeName, modelOrViewName, type);
+						}
+						else if(childNodeName=="Model")
+						{
+							string modelOrViewName = childObj.getField("ModelName").str();
+							CLOG(LINFO)<<"set modelOrViewName: " <<modelOrViewName;
+							string type = "Model";
+							CLOG(LINFO)<<"modelOrViewName: "<<modelOrViewName<< " childNodeName: "<<childNodeName;
+							// if node consists of nodes read from child
+							CLOG(LTRACE)<<"Get childs";
+							readFromMongoDB(childNodeName, modelOrViewName, type);
+						}
+						else
+						{
+							readFromMongoDB(childNodeName, modelOrViewName, type);
+							CLOG(LTRACE)<<"Not view or model";
+						}
+						if(nodeType=="StereoSiLR" || nodeType=="KinectSiLR" || nodeType=="ToFSiLR" || nodeType=="StereoSiRX" || nodeType=="KinectSiRX" ||  nodeType=="ToFSiRX" || nodeType=="StereoSiRXM" || nodeType=="KinectSiRXM" || nodeType=="ToFSiRXM")
+						{
+							GridFS fs(c,collectionName);
+							GridFile file = fs.findFile(QUERY("_id" << childsVector[i]));
+							if (!file.exists())
+							{
+								CLOG(LTRACE) << "File not found in grid";
+							}//if
+							else
+							{
+								CLOG(LTRACE) <<"Found!";
+								string filename;
+								filename = file.getFileField("filename").str();
+								name = (string)folderName+"View/"+modelOrViewName+"/"+nodeType+"/"+filename;
+								CLOG(LINFO)<< name;
+								CLOG(LTRACE) << "Filename "<<filename<<" Chunks: " << file.getNumChunks();
+								stringstream ss;
+								string str = ss.str();
+								char *fileName = (char*)name.c_str();
+								ofstream ofs(fileName);
+								gridfs_offset off = file.write(ofs);
+								if (off != file.getContentLength())
+								{
+									CLOG(LTRACE) << "Failed to read a file from mongoDB";
+								}
+								else
+								{
+									CLOG(LTRACE) << "Success read a file from mongoDB";
+								}
+							}
+						}
+						else if(nodeType=="SomRgb" || nodeType=="SomSift" ||  nodeType=="SsomRgb" || nodeType=="SsomSift" || nodeType=="SsomShot")
+						{
+							GridFS fs(c,collectionName);
+							GridFile file = fs.findFile(QUERY("_id" << childsVector[i]));
+							if (!file.exists())
+							{
+								CLOG(LTRACE) << "File not found in grid";
+							}//if
+							else
+							{
+								CLOG(LTRACE) <<"Found!";
+								string filename;
+								filename = file.getFileField("filename").str();
+								name = (string)folderName+"Model/"+modelOrViewName+"/"+nodeType+"/"+filename;
+								CLOG(LINFO)<< name;
+								CLOG(LTRACE) << "Filename "<<filename<<" Chunks: " << file.getNumChunks();
+								stringstream ss;
+								string str = ss.str();
+								char *fileName = (char*)name.c_str();
+								ofstream ofs(fileName);
+								gridfs_offset off = file.write(ofs);
+								if (off != file.getContentLength())
+								{
+									CLOG(LTRACE) << "Failed to read a file from mongoDB";
+								}
+								else
+								{
+									CLOG(LTRACE) << "Success read a file from mongoDB";
+								}
+							}
+						}
 					}
 				}
 			}//for
@@ -189,8 +287,5 @@ void MongoDBReader::readFromMongoDB(string nodeType)
 		CLOG(LERROR) <<c.getLastError();
 	}
 }
-
 } //: namespace MongoDBReader
 } //: namespace Processors
-
- 

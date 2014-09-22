@@ -285,7 +285,7 @@ void MongoDBWriter::initView(const string & viewName)
 {
 	BSONElement oi;
     OID o;
-    BSONArrayBuilder viewArrayBuilder, stereoArrayBuilder, kinectArrayBuilder, tofArrayBuilder, viewBuilder;
+    BSONArrayBuilder objectArrayBuilder, viewArrayBuilder, stereoArrayBuilder, kinectArrayBuilder, tofArrayBuilder, viewBuilder;
 
     if(nodeTypeProp=="View")
     {
@@ -302,8 +302,7 @@ void MongoDBWriter::initView(const string & viewName)
 		c.insert(dbCollectionPath, view);
 		view.getObjectID(oi);
 		o=oi.__oid();
-		// add view to object
-		c.update(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"), BSON("$push"<<BSON("childOIDs"<<o)), false, true);
+		c.update(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<o.str()))), false, true);
 	}
 
     for(std::vector<string>::iterator it = docViewsNames.begin(); it != docViewsNames.end(); ++it){
@@ -353,7 +352,7 @@ void MongoDBWriter::initModel(const string & modelName)
 {
 	BSONElement oi;
 	OID o;
-	BSONArrayBuilder modelArrayBuilder, somArrayBuilder, ssomArrayBuilder;
+	BSONArrayBuilder objectArrayBuilder, modelArrayBuilder, somArrayBuilder, ssomArrayBuilder;
 
 	if(nodeTypeProp=="Model")
 	{
@@ -370,8 +369,7 @@ void MongoDBWriter::initModel(const string & modelName)
 		c.insert(dbCollectionPath, model);
 		model.getObjectID(oi);
 		o=oi.__oid();
-		// add model to object
-		c.update(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"), BSON("$push"<<BSON("childOIDs"<<o)), false, true);
+		c.update(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<o.str()))), false, true);
 	}
 
 	for(std::vector<string>::iterator it = docModelsNames.begin(); it != docModelsNames.end(); ++it){
@@ -435,7 +433,7 @@ void MongoDBWriter::writeNode2MongoDB(const string &source, const string &destin
 					mime="text/plain";
 				else
 				{
-					CLOG(LERROR) <<"I don't know such file extension! Please add extension to the code from http://www.sitepoint.com/web-foundations/mime-types-complete-list/";
+					CLOG(LERROR) <<"I don't know such file extension! Please add extension to the if statement from http://www.sitepoint.com/web-foundations/mime-types-complete-list/";
 					return;
 				}
 				GridFS fs(c, collectionName);

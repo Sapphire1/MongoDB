@@ -102,11 +102,13 @@ private:
         Base::Property<string> folderName;
         DBClientConnection c;
         string dbCollectionPath;
+        auto_ptr<DBClientCursor> cursorCollection;
+        auto_ptr<DBClientCursor> childCursor;
 
-        auto_ptr<DBClientCursor>  findDocumentInCollection(string nodeName);
-        vector<OID>  getchildOIDS(BSONObj &obj);
-        void readFromMongoDB(string nodeName);
+        void  findDocumentInCollection(const string &, auto_ptr<DBClientCursor> &, const string &, const string &);
+        void readFromMongoDB(const string&, const string&, const string&);
         void readfromDB();
+        vector<OID>  getchildOIDS(BSONObj &obj);
 
 
         void run();
