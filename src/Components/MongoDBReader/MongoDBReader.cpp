@@ -17,13 +17,17 @@ MongoDBReader::MongoDBReader(const std::string & name) : Base::Component(name),
 		objectName("objectName", string("GreenCup")),
 		collectionName("collectionName", string("containers")),
 		nodeType("nodeType", string("Object")),
+		viewOrModelName("viewOrModelName", string("")),
+		type("type", string("")),
 		folderName("folderName", string("/home/lzmuda/mongo_driver_tutorial/test/"))
 {
 		registerProperty(mongoDBHost);
 		registerProperty(objectName);
 		registerProperty(collectionName);
 		registerProperty(nodeType);
+		registerProperty(viewOrModelName);
 		registerProperty(folderName);
+		registerProperty(type);
         CLOG(LTRACE) << "Hello MongoDBReader";
 }
 void MongoDBReader::connect2MongoDB()
@@ -38,10 +42,8 @@ MongoDBReader::~MongoDBReader()
 
 void MongoDBReader::readfromDB()
 {
-	string modelOrViewName="";
-	string type="";
 	CLOG(LNOTICE) << "MongoDBReader::readfromDB";
-	readFromMongoDB(nodeType, modelOrViewName, type);
+	readFromMongoDB(nodeType, viewOrModelName, type);
 }
 void MongoDBReader::prepareInterface() {
         CLOG(LTRACE) << "MongoDBReader::prepareInterface";

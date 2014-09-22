@@ -100,6 +100,8 @@ private:
         Base::Property<string> collectionName;
         Base::Property<string> nodeType;
         Base::Property<string> folderName;
+        Base::Property<string> viewOrModelName;
+        Base::Property<string> type;
         DBClientConnection c;
         string dbCollectionPath;
         auto_ptr<DBClientCursor> cursorCollection;
