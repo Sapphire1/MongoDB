@@ -2,7 +2,6 @@
 #ifndef  MONGODBREADER_H__
 #define  MONGODBREADER_H__
 
-
 #include "Component_Aux.hpp"
 #include "Component.hpp"
 #include "DataStream.hpp"
@@ -81,9 +80,6 @@ protected:
         /*!
          * Event handler function.
          */
-        void onNewImage();
-
-        void connect2MongoDB();
 
         /// Event handler.
         Base::EventHandler <MongoDBReader> h_readfromDB;
@@ -98,7 +94,7 @@ private:
         Base::Property<string> mongoDBHost;
         Base::Property<string> objectName;
         Base::Property<string> collectionName;
-        Base::Property<string> nodeType;
+        Base::Property<string> nodeTypeProp;
         Base::Property<string> folderName;
         Base::Property<string> viewOrModelName;
         Base::Property<string> type;
@@ -107,12 +103,15 @@ private:
         auto_ptr<DBClientCursor> cursorCollection;
         auto_ptr<DBClientCursor> childCursor;
 
-        void  findDocumentInCollection(const string &, auto_ptr<DBClientCursor> &, const string &, const string &);
+        void  findDocumentInCollection(const string &, auto_ptr<DBClientCursor> &, const string &, const string &, int&);
         void readFromMongoDB(const string&, const string&, const string&);
         void readfromDB();
         vector<OID>  getchildOIDS(BSONObj &obj);
-
-
+        void getFileFromGrid(const GridFile &, const string &, const string &, const string &);
+        bool isViewLastLeaf(const string&);
+        bool isModelLastLeaf(const string&);
+        void setModelOrViewName(const string&, const BSONObj&);
+        void readFile(const string&, const string&, const string&, const OID&);
         void run();
 };
 }//: namespace MongoDBReader

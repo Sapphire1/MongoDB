@@ -79,9 +79,6 @@ protected:
         /*!
          * Event handler function.
          */
-        void onNewImage();
-
-        void connect2MongoDB();
 
         /// Event handler.
         Base::EventHandler <MongoDBWriter> h_write2DB;
@@ -124,6 +121,13 @@ private:
         void insertToModelOrView(const string &,const string &);
         void initView(const string &);
         void initModel(const string &);
+        void setModelOrViewName(const string&, const BSONObj&);
+        bool isModelLastLeaf(const string&);
+        bool isViewLastLeaf(const string&);
+        void setMime(const std::vector<string>::iterator, string&);
+        void findDocumentInCollection(const string &, auto_ptr<DBClientCursor> &, const string &, const string & , int&);
+        void insertFileToGrid(const std::vector<string>::iterator, const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
+
 
 };
 }//: namespace MongoDBWriter
