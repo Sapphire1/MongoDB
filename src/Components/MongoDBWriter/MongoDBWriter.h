@@ -21,7 +21,7 @@
 #include "DataStream.hpp"
 #include "Property.hpp"
 #include <dirent.h>
-
+#include "MongoBase.hpp"
 
 namespace Processors {
 namespace MongoDBWriter {
@@ -30,13 +30,14 @@ using namespace cv;
 using namespace mongo;
 using namespace std;
 
+
 class MongoDBWriter: public Base::Component
 {
 public:
         /*!
          * Constructor.
          */
-	MongoDBWriter(const std::string & name = "");
+	   MongoDBWriter(const std::string & name = "");
 
         /*!
          * Destructor
@@ -99,6 +100,7 @@ private:
         Base::Property<string> folderName;
         Base::Property<string> viewNameProp;
         Base::Property<string> modelNameProp;
+        Base::Property<string> sceneName;
         std::vector<std::string> fileExtensions;
 
         DBClientConnection c;
@@ -106,26 +108,18 @@ private:
   	    vector<string>  docModelsNames;
 
         string dbCollectionPath;
+        MongoBase::MongoBase* base;
 
         void run();
-        vector<string> getAllFiles(const string& pattern);
-        vector<string> getAllFolders(const string& pattern);
-        vector<OID>  getChildOIDS(BSONObj &obj);
-        auto_ptr<DBClientCursor>  findDocumentInCollection(string nodeName, string type, string name);
         void initObject();
         void writeNode2MongoDB(const string &source, const string &destination, const string &option, string );
         void insert2MongoDB(const string &destination,  const string&,  const string& );
-        auto_ptr<DBClientCursor> findModelDocumentInCollection(string nodeName);
-        auto_ptr<DBClientCursor> findViewDocumentInCollection(string nodeName);
         void write2DB();
         void insertToModelOrView(const string &,const string &);
         void initView(const string &);
         void initModel(const string &);
         void setModelOrViewName(const string&, const BSONObj&);
-        bool isModelLastLeaf(const string&);
-        bool isViewLastLeaf(const string&);
         void setMime(const std::vector<string>::iterator, string&);
-        void findDocumentInCollection(const string &, auto_ptr<DBClientCursor> &, const string &, const string & , int&);
         void insertFileToGrid(const std::vector<string>::iterator, const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
 
 

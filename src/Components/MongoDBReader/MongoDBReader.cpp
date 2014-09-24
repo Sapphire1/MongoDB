@@ -6,6 +6,7 @@
 
 #include "MongoDBReader.h"
 
+
 namespace Processors {
 namespace MongoDBReader  {
 using namespace cv;
@@ -29,6 +30,8 @@ MongoDBReader::MongoDBReader(const std::string & name) : Base::Component(name),
 		registerProperty(folderName);
 		registerProperty(type);
         CLOG(LTRACE) << "Hello MongoDBReader";
+
+        base = new MongoBase::MongoBase();
 }
 
 MongoDBReader::~MongoDBReader()
@@ -66,6 +69,7 @@ bool MongoDBReader::onInit()
         try
         {
       	  c.connect(mongoDBHost);
+      	  //base = MongoBase::MongoBase(c,dbCollectionPath,objectName);
          }
          catch(DBException &e)
          {
@@ -97,57 +101,6 @@ bool MongoDBReader::onStart()
         return true;
 }
 
-vector<OID>  MongoDBReader::getchildOIDS(BSONObj &obj)
-{
-	  vector<BSONElement> v = obj.getField("childOIDs").Array();
-	  vector<OID> oidsVector;
-	  for (unsigned int i = 0; i<v.size(); i++)
-	  {
-		string readedOid =v[i]["childOID"].str();
-		OID o = OID(readedOid);
-		oidsVector.push_back(o);
-	  }
-	  return oidsVector;
-}
-
-void  MongoDBReader::findDocumentInCollection(const string &nodeType, auto_ptr<DBClientCursor> & cursorCollection, const string & modelOrViewName, const string & type, int& items)
-{
-      try{
-    	  if(type!="")
-    	  {
-			  if(type=="View")
-			  {
-				  items = c.count(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName)));
-				  if(items>0)
-					  cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName)));
-			  }
-			  else if(type=="Model")
-			  {
-				  items = c.count(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName)));
-				  if (items>0)
-					  cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName)));
-			  }
-			  else
-			  {
-				  items = c.count(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<type<<modelOrViewName)));
-				  if(items>0)
-					  cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<type<<modelOrViewName)));
-			  }
-		  }
-    	  else
-    	  {
-    		  items = c.count(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName)));
-    		  if(items>0)
-    			  cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName)));
-    	  }
-    	 }
-      catch(DBException &e)
-      {
-    	  CLOG(LERROR) <<"findDocumentInCollection(). Something goes wrong... :<";
-    	  CLOG(LERROR) <<c.getLastError();
-      }
-      return;
-}
 void MongoDBReader::getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeType, const string& type)
 {
 	string filename;
@@ -167,22 +120,6 @@ void MongoDBReader::getFileFromGrid(const GridFile& file, const string& modelOrV
 	{
 		CLOG(LTRACE) << "Success read a file from mongoDB";
 	}
-}
-
-bool MongoDBReader::isViewLastLeaf(const string& nodeType)
-{
-	if(nodeType=="StereoSiLR" || nodeType=="KinectSiLR" || nodeType=="ToFSiLR" || nodeType=="StereoSiRX" || nodeType=="KinectSiRX" ||  nodeType=="ToFSiRX" || nodeType=="StereoSiRXM" || nodeType=="KinectSiRXM" || nodeType=="ToFSiRXM")
-		return true;
-	else
-		return false;
-}
-
-bool MongoDBReader::isModelLastLeaf(const string& nodeType)
-{
-	if(nodeType=="SomRgb" || nodeType=="SomSift" ||  nodeType=="SsomRgb" || nodeType=="SsomSift" || nodeType=="SsomShot")
-		return true;
-	else
-		return false;
 }
 
 void MongoDBReader::setModelOrViewName(const string& childNodeName, const BSONObj& childObj)
@@ -209,14 +146,14 @@ void MongoDBReader::readFromMongoDB(const string& nodeType, const string& modelO
 {
 	try{
 		int items=0;
-		findDocumentInCollection(nodeType, cursorCollection, modelOrViewName, type, items);
+		base->findDocumentInCollection(c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
 		if(items>0)
 		{
 			CLOG(LINFO)<<"Founded some data";
 			while (cursorCollection->more())
 			{
 				BSONObj obj = cursorCollection->next();
-				vector<OID> childsVector =  getchildOIDS(obj);
+				vector<OID> childsVector =  base->getChildOIDS(obj, "childOIDs", "childOID");
 				string name;
 				for (unsigned int i = 0; i<childsVector.size(); i++)
 				{
@@ -234,7 +171,7 @@ void MongoDBReader::readFromMongoDB(const string& nodeType, const string& modelO
 							else
 								readFromMongoDB(childNodeName, modelOrViewName, type);
 
-							if(isViewLastLeaf(nodeType) || isModelLastLeaf(nodeType))
+							if(base->isViewLastLeaf(nodeType) || base->isModelLastLeaf(nodeType))
 							{
 								 readFile(modelOrViewName, nodeType, type, childsVector[i]);
 							}

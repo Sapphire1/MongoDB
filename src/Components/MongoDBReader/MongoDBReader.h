@@ -23,6 +23,7 @@
 #include "mongo/client/dbclient.h"
 #include "mongo/bson/bson.h"
 #include "Logger.hpp"
+#include "MongoBase.hpp"
 
 namespace Processors {
 namespace MongoDBReader {
@@ -102,14 +103,11 @@ private:
         string dbCollectionPath;
         auto_ptr<DBClientCursor> cursorCollection;
         auto_ptr<DBClientCursor> childCursor;
+        MongoBase::MongoBase* base;
 
-        void  findDocumentInCollection(const string &, auto_ptr<DBClientCursor> &, const string &, const string &, int&);
         void readFromMongoDB(const string&, const string&, const string&);
         void readfromDB();
-        vector<OID>  getchildOIDS(BSONObj &obj);
         void getFileFromGrid(const GridFile &, const string &, const string &, const string &);
-        bool isViewLastLeaf(const string&);
-        bool isModelLastLeaf(const string&);
         void setModelOrViewName(const string&, const BSONObj&);
         void readFile(const string&, const string&, const string&, const OID&);
         void run();
