@@ -18,9 +18,7 @@ using namespace std;
 using namespace boost;
 
 MongoBase::MongoBase() {
-	//this->c=c;
-	//this->dbCollectionPath = dbCollectionPath;
-	//this->objectName = objectName;
+
 }
 
 MongoBase::~MongoBase() {
@@ -106,9 +104,10 @@ void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbColle
 
       return;
 }
+
 bool MongoBase::isViewLastLeaf(const string& nodeType)
 {
-	if(nodeType=="StereoSiLR" || nodeType=="KinectSiLR" || nodeType=="ToFSiLR" || nodeType=="StereoSiRX" || nodeType=="KinectSiRX" ||  nodeType=="ToFSiRX" || nodeType=="StereoSiRXM" || nodeType=="KinectSiRXM" || nodeType=="ToFSiRXM")
+	if(nodeType=="StereoPC" || nodeType=="StereoPCXYZRGB" || nodeType=="StereoPCXYZSIFT" || nodeType=="StereoPCXYZSHOT" || nodeType=="ToFPCXYZSIFT" || nodeType=="ToFPCXYZRGB" || nodeType=="ToFPCXYZRGB" || nodeType=="ToFPC" || nodeType=="ToFPCXYZSHOT" || nodeType=="KinectPCXYZSHOT"  || nodeType=="KinectPCXYZSIFT" || nodeType=="KinectPCXYZRGB" || nodeType=="KinectPC" || nodeType=="StereoLR" || nodeType=="KinectRGBD" || nodeType=="ToFRGBD" || nodeType=="StereoRX" || nodeType=="KinectRX" ||  nodeType=="ToFRX" || nodeType=="StereoRXM" || nodeType=="KinectRXM" || nodeType=="ToFRXM")
 		return true;
 	else
 		return false;
@@ -116,7 +115,7 @@ bool MongoBase::isViewLastLeaf(const string& nodeType)
 
 bool MongoBase::isModelLastLeaf(const string& nodeType)
 {
-	if(nodeType=="SomRgb" || nodeType=="SomSift" ||  nodeType=="SsomRgb" || nodeType=="SsomSift" || nodeType=="SsomShot")
+	if(nodeType=="SomXYZRgb" || nodeType=="SomXYZSift" ||  nodeType=="SsomXYZRgb" || nodeType=="SsomXYZSift" || nodeType=="SsomXYZShot")
 		return true;
 	else
 		return false;

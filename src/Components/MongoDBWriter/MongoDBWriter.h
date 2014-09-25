@@ -100,8 +100,10 @@ private:
         Base::Property<string> folderName;
         Base::Property<string> viewNameProp;
         Base::Property<string> modelNameProp;
-        Base::Property<string> sceneName;
+        Base::Property<string> sceneNamesProp;
         std::vector<std::string> fileExtensions;
+        //string sceneName;
+        std::vector<std::string> splitedSceneNames;
 
         DBClientConnection c;
   	    vector<string>  docViewsNames;
@@ -116,13 +118,14 @@ private:
         void insert2MongoDB(const string &destination,  const string&,  const string& );
         void write2DB();
         void insertToModelOrView(const string &,const string &);
-        void initView(const string &);
-        void initModel(const string &);
+        void initView(const string &, bool);
+        void initModel(const string &, bool);
         void setModelOrViewName(const string&, const BSONObj&);
         void setMime(const std::vector<string>::iterator, string&);
         void insertFileToGrid(const std::vector<string>::iterator, const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
-
-
+        void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
+        void addScenes(BSONObj&);
+        void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
 };
 }//: namespace MongoDBWriter
 }//: namespace Processors
