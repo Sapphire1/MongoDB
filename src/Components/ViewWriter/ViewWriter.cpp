@@ -15,57 +15,140 @@ using namespace boost;
 using namespace boost::posix_time;
 
 ViewWriter::ViewWriter(const string & name) : Base::Component(name),
-		mongoDBHost("mongoDBHost", string("localhost")),
-		objectName("objectName", string("GreenCup")),
-		description("description", string("My green coffe cup")),
-		collectionName("collectionName", string("containers")),
-		extension("extension", string("png")),
-		viewNameProp("viewName", string("lab012")),
-		fileName("fileName", string("tempFile")),
-		nodeTypeProp("nodeTypeProp", string("StereoLR")),
-		remoteFileName("remoteFileName", string("sweetFoto")),
-		sceneNamesProp("sceneNamesProp", string("scene1,scene2,scene3"))
+	mongoDBHost("mongoDBHost", string("localhost")),
+	objectName("objectName", string("GreenCup")),
+	description("description", string("My green coffe cup")),
+	collectionName("collectionName", string("containers")),
+	//extension("extension", string("pcd")),
+	extension("extension", string("png")),
+	viewNameProp("viewName", string("lab012")),
+	fileName("fileName", string("tempFile")),
+	nodeTypeProp("nodeTypeProp", string("StereoLR")),
+	remoteFileName("remoteFileName", string("sweetFoto")),
+	sceneNamesProp("sceneNamesProp", string("scene1,scene2,scene3")),
+	binary("binary", false),
+	suffix("suffix", false)
 {
-    CLOG(LTRACE) << "Hello ViewWriter";
+	registerProperty(mongoDBHost);
+	registerProperty(objectName);
+	registerProperty(description);
+	registerProperty(collectionName);
+	registerProperty(extension);
+	registerProperty(viewNameProp);
+	registerProperty(sceneNamesProp);
+	registerProperty(fileName);
+	registerProperty(nodeTypeProp);
+	registerProperty(remoteFileName);
+	registerProperty(binary);
+	registerProperty(suffix);
 
-        registerProperty(mongoDBHost);
-        registerProperty(objectName);
-        registerProperty(description);
-        registerProperty(collectionName);
-        registerProperty(extension);
-        registerProperty(viewNameProp);
-        registerProperty(sceneNamesProp);
-        registerProperty(fileName);
-        registerProperty(nodeTypeProp);
-        registerProperty(remoteFileName);
+	base = new MongoBase::MongoBase();
 
-        base = new MongoBase::MongoBase();
+	CLOG(LTRACE) << "Hello ViewWriter";
+
 }
 
 ViewWriter::~ViewWriter()
 {
-        CLOG(LTRACE) << "Good bye ViewWriter";
+	CLOG(LTRACE) << "Good bye ViewWriter";
 }
 void ViewWriter::write2DB()
 {
-        CLOG(LNOTICE) << "ViewWriter::write2DB";
-        CLOG(LINFO)<<"Image on input";
-        string sceneNames = sceneNamesProp;
-        boost::split(splitedSceneNames, sceneNames, is_any_of(","));
+	CLOG(LNOTICE) << "ViewWriter::write2DB";
+	string sceneNames = sceneNamesProp;
+	boost::split(splitedSceneNames, sceneNames, is_any_of(","));
 
-        if(viewNameProp!="")
-            insert2MongoDB(nodeTypeProp,viewNameProp, "View");
-        else
-        	CLOG(LERROR)<<"Add view name and try again";
+	if(viewNameProp!="")
+		insert2MongoDB(nodeTypeProp,viewNameProp, "View");
+	else
+		CLOG(LERROR)<<"Add view name and try again";
+
 }
 
 void ViewWriter::prepareInterface() {
-        CLOG(LTRACE) << "ViewWriter::prepareInterface";
-        h_write2DB.setup(this, &ViewWriter::write2DB);
-        registerHandler("writeView2DB", &h_write2DB);
-        registerStream("in_img", &in_img);
-        //addDependency("writeView2DB", &in_img);
+	CLOG(LTRACE) << "ViewWriter::prepareInterface";
+	h_write2DB.setup(this, &ViewWriter::write2DB);
+	registerHandler("writeView2DB", &h_write2DB);
+	registerHandler("write2DB", &h_write2DB);
+	registerHandler("Write_xyz", boost::bind(&ViewWriter::Write_xyz, this));
+	registerHandler("Write_xyzrgb", boost::bind(&ViewWriter::Write_xyzrgb, this));
+	//registerHandler("Write_xyzsift", boost::bind(&ModelWriter::Write_xyzsift, this));
 
+	registerStream("in_img", &in_img);
+	registerStream("in_cloud_xyz", &in_cloud_xyz);
+	registerStream("in_cloud_xyzrgb", &in_cloud_xyzrgb);
+	//registerStream("in_cloud_xyzsift", &in_cloud_xyzsift);
+
+	//addDependency("writeView2DB", &in_img);
+	addDependency("write2DB", &in_img);
+	addDependency("Write_xyzrgb", &in_cloud_xyzrgb);
+	addDependency("Write_xyz", &in_cloud_xyz);
+	//addDependency("Write_xyzsift", &in_cloud_xyzsift);
+}
+
+void ViewWriter::Write_xyzsift()
+{
+	CLOG(LTRACE) << "ModelWriter::Write_xyzsift";
+	/*
+	cloudType="xyzsift";
+	pcl::PointCloud<pcl::PointXYZSIFT>::Ptr cloud = in_cloud_xyzsift.read();
+	std::string fn = fileName;
+	if(suffix){
+		size_t f = fn.find(".pcd");
+		if(f != std::string::npos)
+		{
+			fn.erase(f);
+		}
+		fn = std::string(fn) + std::string("_xyzsift.pcd");
+	}
+	pcl::io::savePCDFile (fn, *cloud, binary);
+	write2DB();
+	*/
+	//CLOG(LINFO) << "Saved " << cloud->points.size() << " XYZ points to "<< fileName << "\n";
+}
+
+void ViewWriter::Write_xyz()
+{
+	cloudType="xyz";
+	CLOG(LTRACE)<<"Set cloudType: "<<cloudType;
+	CLOG(LTRACE) << "ModelWriter::Write_xyz";
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = in_cloud_xyz.read();
+	std::string fn = fileName;
+	if(suffix){
+		CLOG(LTRACE)<<"suffix: "<<suffix;
+		size_t f = fn.find(".pcd");
+		if(f != std::string::npos)
+		{
+			fn.erase(f);
+		}
+		fn = std::string(fn) + std::string("_xyz.pcd");
+	}
+	pcl::io::savePCDFile (fn, *cloud, binary);
+	CLOG(LINFO) <<"FileName:"<<fn;
+	//CLOG(LINFO) << "Saved " << cloud->points.size() << " XYZ points to "<< fileName << "\n";
+	write2DB();
+}
+
+void ViewWriter::Write_xyzrgb()
+{
+	cloudType="xyzrgb";
+	CLOG(LNOTICE) << "ModelWriter::Write_xyzrgb";
+	CLOG(LNOTICE)<<"Set cloudType: "<<cloudType;
+	CLOG(LNOTICE)<<"suffix: "<<suffix;
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud = in_cloud_xyzrgb.read();
+	std::string fn = fileName;
+	if(suffix){
+		size_t f = fn.find(".pcd");
+		if(f != std::string::npos)
+		{
+			fn.erase(f);
+		}
+		fn = std::string(fn) + std::string("_xyzrgb.pcd");
+	}
+	CLOG(LINFO) <<"FileName:"<<fn;
+	pcl::io::savePCDFile (fn, *cloud, binary);
+	//CLOG(LINFO) << "Saved " << cloud->points.size() << " XYZRGB points to "<< fileName << "\n";
+	write2DB();
 }
 
 bool ViewWriter::onInit()
@@ -73,7 +156,7 @@ bool ViewWriter::onInit()
       CLOG(LTRACE) << "ViewWriter::initialize";
       try
       {
-
+    	  cloudType="";
 		  c.connect(mongoDBHost);
 		  if(collectionName=="containers")
 			dbCollectionPath="images.containers";
@@ -385,25 +468,63 @@ void  ViewWriter::setMime( const string& extension,  string& mime)
 
 void ViewWriter::insertFileToGrid(OID& oid)
 {
-	BSONObj object;
-	BSONElement bsonElement;
-	string mime="";
-	setMime(extension, mime);
-	cv::Mat tempImg = in_img.read();
-	std::stringstream ss;
-	boost::posix_time::time_facet *facet = new boost::posix_time::time_facet("%d_%m_%Y_%H_%M_%S");
-	ss.imbue(locale(cout.getloc(), facet));
-	ss<<second_clock::local_time();
-	CLOG(LINFO) << ss.str() << endl;
-	string tempFileName = string(fileName)+"."+string(extension);
-	cv::imwrite(tempFileName, tempImg);
-	GridFS fs(c, collectionName);
-	string fileNameInmongo = (string)remoteFileName + ss.str()+"."+string(extension);
-	object = fs.storeFile(tempFileName, fileNameInmongo, mime);
-	BSONObj b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
-	c.insert(dbCollectionPath, b);
-	b.getObjectID(bsonElement);
-	oid=bsonElement.__oid();
+	try{
+		BSONObj object;
+		BSONElement bsonElement;
+		string mime="";
+		setMime(extension, mime);
+		std::stringstream time;
+		string tempFileName;
+		if (extension=="png" || extension=="jpg")
+		{
+			CLOG(LINFO)<<"Image!";
+			cv::Mat tempImg = in_img.read();
+			tempFileName = string(fileName)+"."+string(extension);
+			cv::imwrite(tempFileName, tempImg);
+		}
+		else if(extension=="pcd")	// save to file pcd
+		{
+			CLOG(LINFO)<<"Cloud!";
+			if(cloudType=="xyzrgb")
+				tempFileName=std::string(fileName) + std::string("_xyzrgb.pcd");
+			else if(cloudType=="xyz")
+				tempFileName=std::string(fileName) + std::string("_xyz.pcd");
+			else if(cloudType=="xyzsift")
+				tempFileName=std::string(fileName) + std::string("_xyzsift.pcd");
+
+			CLOG(LINFO) << "cloudType: "<< cloudType << endl;
+		}
+		///TODO
+		/// add txt extension
+		else
+		{
+			CLOG(LERROR)<<"I dont know such extension file :(";
+			exit(1);
+		}
+		CLOG(LINFO) << "tempFileName: "<< tempFileName << endl;
+
+		boost::posix_time::time_facet *facet = new boost::posix_time::time_facet("%d_%m_%Y_%H_%M_%S");
+		time.imbue(locale(cout.getloc(), facet));
+		time<<second_clock::local_time();
+		CLOG(LINFO) << "Time: "<< time.str() << endl;
+
+		GridFS fs(c, collectionName);
+		string fileNameInMongo;
+		if(cloudType!="")
+			fileNameInMongo = (string)remoteFileName+"_"+ cloudType + time.str()+"."+string(extension);
+		else
+			fileNameInMongo = (string)remoteFileName + time.str()+"."+string(extension);
+		cloudType="";
+		object = fs.storeFile(tempFileName, fileNameInMongo, mime);
+		BSONObj b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
+		c.insert(dbCollectionPath, b);
+		b.getObjectID(bsonElement);
+		oid=bsonElement.__oid();
+	}catch(DBException &e)
+	{
+		CLOG(LERROR) <<"Something goes wrong... :<";
+		CLOG(LERROR) <<c.getLastError();
+	}
 }
 
 void ViewWriter::writeNode2MongoDB(const string &destination, const string &type,string modelOrViewName)

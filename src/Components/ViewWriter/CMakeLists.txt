@@ -26,9 +26,6 @@ set( LIBS_TO_LINK
 
 ADD_LIBRARY(ViewWriter SHARED ${files} )
 
-target_link_libraries( ViewWriter
-    pthread
-    ${LIBS_TO_LINK}
-)
+TARGET_LINK_LIBRARIES(ViewWriter pthread ${LIBS_TO_LINK} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
 
 INSTALL_COMPONENT(ViewWriter)

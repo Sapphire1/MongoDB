@@ -39,7 +39,6 @@ ModelWriter::ModelWriter(const string & name) : Base::Component(name),
 	registerProperty(fileName);
 	registerProperty(nodeTypeProp);
 	registerProperty(remoteFileName);
-
 	registerProperty(binary);
 	registerProperty(suffix);
 
