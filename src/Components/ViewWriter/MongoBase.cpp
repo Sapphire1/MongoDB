@@ -126,4 +126,47 @@ bool MongoBase::isModelLastLeaf(const string& nodeType)
 	else
 		return false;
 }
+
+void MongoBase::writeNode2MongoDB(const string &destination, const string &type,string modelOrViewName)
+{
+	//CLOG(LTRACE) <<"writeNode2MongoDB";
+	OID oid;
+	//CLOG(LTRACE) <<"Filename: " << fileName << " destination: "<< destination<<" dbCollectionPath: "<<dbCollectionPath;
+    try{
+		insertFileToGrid(oid);
+		//c.update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
+		//CLOG(LTRACE) <<"Files saved successfully";
+    }
+	catch(DBException &e)
+	{
+		//CLOG(LERROR) <<"Something goes wrong... :<";
+		//CLOG(LERROR) <<c.getLastError();
+	}
+}
+
+void MongoBase::insertFileToGrid(OID& oid)
+{
+	/*
+	BSONObj object;
+	BSONElement bsonElement;
+	string mime="";
+	setMime(extension, mime);
+	cv::Mat tempImg = in_img.read();
+	std::stringstream ss;
+	boost::posix_time::time_facet *facet = new boost::posix_time::time_facet("%d_%m_%Y_%H_%M_%S");
+	ss.imbue(locale(cout.getloc(), facet));
+	ss<<second_clock::local_time();
+	CLOG(LINFO) << ss.str() << endl;
+	string tempFileName = string(fileName)+"."+string(extension);
+	cv::imwrite(tempFileName, tempImg);
+	GridFS fs(c, collectionName);
+	string fileNameInmongo = (string)remoteFileName + ss.str();
+	object = fs.storeFile(tempFileName, fileNameInmongo, mime);
+	BSONObj b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
+	c.insert(dbCollectionPath, b);
+	b.getObjectID(bsonElement);
+	oid=bsonElement.__oid();
+	*/
+}
+
 } /* namespace MongoBase */

@@ -383,7 +383,7 @@ void  ViewWriter::setMime( const string& extension,  string& mime)
 }
 
 
-void ViewWriter::insertFileToGrid(BSONArrayBuilder& bsonBuilder, OID& o)
+void ViewWriter::insertFileToGrid(OID& oid)
 {
 	BSONObj object;
 	BSONElement bsonElement;
@@ -395,28 +395,25 @@ void ViewWriter::insertFileToGrid(BSONArrayBuilder& bsonBuilder, OID& o)
 	ss.imbue(locale(cout.getloc(), facet));
 	ss<<second_clock::local_time();
 	CLOG(LINFO) << ss.str() << endl;
-	string tempFileName = string(fileName)+ss.str()+"."+string(extension);
+	string tempFileName = string(fileName)+"."+string(extension);
 	cv::imwrite(tempFileName, tempImg);
 	GridFS fs(c, collectionName);
-	string fileNameInmongo = (string)remoteFileName + ss.str();
+	string fileNameInmongo = (string)remoteFileName + ss.str()+"."+string(extension);
 	object = fs.storeFile(tempFileName, fileNameInmongo, mime);
 	BSONObj b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
 	c.insert(dbCollectionPath, b);
 	b.getObjectID(bsonElement);
-	o=bsonElement.__oid();
-	//bsonBuilder.append(BSONObjBuilder().append("childOID", oid.str()).obj());
+	oid=bsonElement.__oid();
 }
 
 void ViewWriter::writeNode2MongoDB(const string &destination, const string &type,string modelOrViewName)
 {
 	CLOG(LTRACE) <<"writeNode2MongoDB";
-	BSONArrayBuilder bsonBuilder;
-	OID o;
+	OID oid;
 	CLOG(LTRACE) <<"Filename: " << fileName << " destination: "<< destination<<" dbCollectionPath: "<<dbCollectionPath;
     try{
-		insertFileToGrid(bsonBuilder, o);
-		BSONArray destArr = bsonBuilder.arr();
-		c.update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<o.str()))), false, true);
+		insertFileToGrid(oid);
+		c.update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
 		CLOG(LTRACE) <<"Files saved successfully";
     }
 	catch(DBException &e)
@@ -485,7 +482,7 @@ void ViewWriter::insert2MongoDB(const string &destination, const string&  modelO
 					CLOG(LTRACE)<<type <<"There are some files in Mongo in this node!";
 				}
 			}
-			CLOG(LINFO)<<"Write to model or view";
+			CLOG(LINFO)<<"Write to view";
 			writeNode2MongoDB(destination, type, modelOrViewName);
 		}
 		else
@@ -548,7 +545,6 @@ void ViewWriter::insert2MongoDB(const string &destination, const string&  modelO
 	catch(DBException &e)
 	{
 		CLOG(LERROR) <<"Something goes wrong... :<";
-		CLOG(LERROR) <<c.getLastError();
 	}
 }
 

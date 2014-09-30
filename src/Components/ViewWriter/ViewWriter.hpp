@@ -117,7 +117,7 @@ private:
         void initModel(const string &, bool);
         void setModelOrViewName(const string&, const BSONObj&);
         void setMime(const string&, string&);
-        void insertFileToGrid(BSONArrayBuilder&, OID&);
+        void insertFileToGrid(OID&);
         void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
         void addScenes(BSONObj&);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);

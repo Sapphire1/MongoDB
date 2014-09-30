@@ -45,6 +45,9 @@ public:
 	bool isModelLastLeaf(const string&);
 	bool isViewLastLeaf(const string&);
 	void findDocumentInCollection(DBClientConnection&, string&, Base::Property<string> &, const string &, auto_ptr<DBClientCursor> &, const string &, const string & , int&);
+	void insertFileToGrid(OID&);
+	void writeNode2MongoDB(const string &destination, const string &option, string );
+
 
 };
 

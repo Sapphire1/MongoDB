@@ -11,6 +11,11 @@ FIND_PACKAGE(Boost 1.41.0 REQUIRED)
 FIND_PACKAGE( OpenCV REQUIRED )
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 
+FIND_PACKAGE(PCL 1.7 REQUIRED)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
+
 # Find Boost
 find_package( Boost COMPONENTS thread system program_options filesystem  REQUIRED ) #whatever libs you need
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})

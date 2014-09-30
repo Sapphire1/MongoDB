@@ -1,10 +1,12 @@
 
-#ifndef  MONGODBExporter_H__
-#define  MONGODBExporter_H__
+#ifndef  ModelWriter_H__
+#define  ModelWriter_H__
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
 
 #include <cstdlib>
 #include <iostream>
@@ -14,6 +16,10 @@
 #include <vector>
 #include <fstream>
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/io/pcd_io.h>
+
 #include "Logger.hpp"
 #include "mongo/client/dbclient.h"
 #include "Component_Aux.hpp"
@@ -22,27 +28,28 @@
 #include "Property.hpp"
 #include <dirent.h>
 #include "MongoBase.hpp"
+//#include <Types/PointXYZSIFT.hpp>
 
 namespace Processors {
-namespace MongoDBExporter {
+namespace ModelWriter {
 
 using namespace cv;
 using namespace mongo;
 using namespace std;
 
 
-class MongoDBExporter: public Base::Component
+class ModelWriter: public Base::Component
 {
 public:
         /*!
          * Constructor.
          */
-	   MongoDBExporter(const std::string & name = "");
+	   ModelWriter(const std::string & name = "");
 
         /*!
          * Destructor
          */
-        virtual ~MongoDBExporter();
+        virtual ~ModelWriter();
 
         /*!
          * Prepares communication interface.
@@ -82,54 +89,62 @@ protected:
          */
 
         /// Event handler.
-        Base::EventHandler <MongoDBExporter> h_write2DB;
+        Base::EventHandler <ModelWriter> h_write2DB;
 
         /// Input data stream
         Base::DataStreamIn <cv::Mat> in_img;
 
-        /// Output data stream - processed image
-        Base::DataStreamOut <Mat> out_img;
 
 private:
-        Base::Property<string> mongoDBHost;
-        Base::Property<string> objectName;
-        Base::Property<string> description;
-        Base::Property<string> collectionName;
-        Base::Property<string> extensions;
-        Base::Property<string> nodeTypeProp;
-        Base::Property<string> folderName;
-        Base::Property<string> viewNameProp;
-        Base::Property<string> modelNameProp;
-        Base::Property<string> sceneNamesProp;
-        std::vector<std::string> fileExtensions;
-        //string sceneName;
-        std::vector<std::string> splitedSceneNames;
+       Base::Property<string> mongoDBHost;
+	   Base::Property<string> objectName;
+	   Base::Property<string> description;
+	   Base::Property<string> collectionName;
+	   Base::Property<string> modelNameProp;
+	   Base::Property<string> sceneNamesProp;
+	   Base::Property<string> extension;
+	   Base::Property<string> fileName;
+	   Base::Property<string> remoteFileName;
+	   std::vector<std::string> splitedSceneNames;
+	   Base::Property<string> nodeTypeProp;
+	   Base::Property<bool> binary;
+	   Base::Property<bool> suffix;
+	   string cloudType;
+	   DBClientConnection c;
+	   vector<string>  docViewsNames;
+	   vector<string>  docModelsNames;
+	   string dbCollectionPath;
+	   MongoBase::MongoBase* base;
 
-        DBClientConnection c;
-  	    vector<string>  docViewsNames;
-  	    vector<string>  docModelsNames;
+	    /// Cloud containing points with Cartesian coordinates (XYZ).
+	   	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZ>::Ptr > in_cloud_xyz;
 
-        string dbCollectionPath;
-        MongoBase::MongoBase* base;
+	   	/// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
+	   	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > in_cloud_xyzrgb;
 
-        void run();
-        void initObject();
-        void writeNode2MongoDB(const string &source, const string &destination, const string &option, string );
-        void insert2MongoDB(const string &destination,  const string&,  const string& );
-        void write2DB();
-        void insertToModelOrView(const string &,const string &);
-        void initView(const string &, bool);
-        void initModel(const string &, bool);
-        void setModelOrViewName(const string&, const BSONObj&);
-        void setMime(const std::vector<string>::iterator, string&);
-        void insertFileToGrid(const std::vector<string>::iterator, const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
-        void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
-        void addScenes(BSONObj&);
-        void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
+	   	/// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
+	   	//Base::DataStreamIn<pcl::PointCloud<PointXYZSIFT>::Ptr> in_cloud_xyzsift;
+	   void Write_xyz();
+	   void Write_xyzrgb();
+	   void Write_xyzsift();
+       void run();
+	   void initObject();
+	   void writeNode2MongoDB(const string &destination, const string &option, string );
+	   void insert2MongoDB(const string &destination,  const string&,  const string& );
+	   void write2DB();
+	   void insertToModelOrView(const string &,const string &);
+	   void initView(const string &, bool);
+	   void initModel(const string &, bool);
+	   void setModelOrViewName(const string&, const BSONObj&);
+	   void setMime(const string&, string&);
+	   void insertFileToGrid(OID&);
+	   void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
+	   void addScenes(BSONObj&);
+	   void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
 };
-}//: namespace MongoDBExporter
+}//: namespace ModelWriter
 }//: namespace Processors
 
-REGISTER_COMPONENT("MongoDBExporter", Processors::MongoDBExporter::MongoDBExporter)
+REGISTER_COMPONENT("ModelWriter", Processors::ModelWriter::ModelWriter)
 
-#endif /* MONGODBExporter_H__ */
+#endif /* ModelWriter_H__ */

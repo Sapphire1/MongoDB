@@ -27,9 +27,6 @@ set( LIBS_TO_LINK
 
 ADD_LIBRARY(ModelWriter SHARED ${files} )
 
-target_link_libraries( ModelWriter
-    pthread
-    ${LIBS_TO_LINK}
-)
+TARGET_LINK_LIBRARIES(ModelWriter pthread ${LIBS_TO_LINK} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
 
 INSTALL_COMPONENT(ModelWriter)
