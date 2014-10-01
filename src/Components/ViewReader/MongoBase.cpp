@@ -74,14 +74,18 @@ int MongoBase::getChildOIDS(BSONObj &obj, const string & fieldName, const string
 
 void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbCollectionPath, Base::Property<string>& objectName, const string &nodeType, auto_ptr<DBClientCursor> & cursorCollection, const string & modelOrViewName, const string & type, int& items)
 {
+	  cout<<"findDocumentInCollection -  dbCollectionPath: "<< dbCollectionPath<<" objectName: "<<objectName<<" nodeType: "<< nodeType <<" modelOrViewName: "<<modelOrViewName <<" type: "<<type<<"\n";
       try{
     	  if(type!="")
     	  {
 			  if(type=="View")
 			  {
+				  cout < "VIEW\n";
 				  items = c.count(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName)));
 				  if(items>0)
 					  cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName)));
+				  else
+					  cout<<"No data found";
 			  }
 			  else if(type=="Model")
 			  {
@@ -105,8 +109,8 @@ void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbColle
     	 }
       catch(DBException &e)
       {
-    	  //CLOG(LERROR) <<"findDocumentInCollection(). Something goes wrong... :<";
-    	  //CLOG(LERROR) <<c.getLastError();
+    	  cout<<"findDocumentInCollection(). Something goes wrong... :<";
+    	  cout <<c.getLastError();
       }
 
       return;

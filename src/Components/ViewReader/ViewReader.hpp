@@ -1,6 +1,6 @@
 
-#ifndef  MONGODBImporter_H__
-#define  MONGODBImporter_H__
+#ifndef  ViewReader_H__
+#define  ViewReader_H__
 
 #include "Component_Aux.hpp"
 #include "Component.hpp"
@@ -12,6 +12,11 @@
 #include <fstream>
 #include <memory>
 #include <string>
+
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/io/pcd_io.h>
+//#include <Types/PointXYZSIFT.hpp>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -26,24 +31,24 @@
 #include "MongoBase.hpp"
 
 namespace Processors {
-namespace MongoDBImporter {
+namespace ViewReader {
 
 using namespace cv;
 using namespace mongo;
 
 
-class MongoDBImporter: public Base::Component
+class ViewReader: public Base::Component
 {
 public:
         /*!
          * Constructor.
          */
-		MongoDBImporter(const std::string & name = "");
+		ViewReader(const std::string & name = "");
 
         /*!
          * Destructor
          */
-        virtual ~MongoDBImporter();
+        virtual ~ViewReader();
 
         /*!
          * Prepares communication interface.
@@ -83,7 +88,7 @@ protected:
          */
 
         /// Event handler.
-        Base::EventHandler <MongoDBImporter> h_readfromDB;
+        Base::EventHandler <ViewReader> h_readfromDB;
 
         /// Input data stream
         Base::DataStreamIn <cv::Mat> in_img;
@@ -96,7 +101,6 @@ private:
         Base::Property<string> objectName;
         Base::Property<string> collectionName;
         Base::Property<string> nodeTypeProp;
-        Base::Property<string> folderName;
         Base::Property<string> viewOrModelName;
         Base::Property<string> type;
         DBClientConnection c;
@@ -105,16 +109,26 @@ private:
         auto_ptr<DBClientCursor> childCursor;
         MongoBase::MongoBase* base;
 
+        /// Cloud containing points with Cartesian coordinates (XYZ).
+        Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZ>::Ptr > out_cloud_xyz;
+
+        /// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
+        Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > out_cloud_xyzrgb;
+
+        /// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
+    	//Base::DataStreamOut<pcl::PointCloud<PointXYZSIFT>::Ptr > out_cloud_xyzsift;
+
         void readFromMongoDB(const string&, const string&, const string&);
+        void ReadPCDCloud(const string&);
         void readfromDB();
-        void getFileFromGrid(const GridFile &, const string &, const string &, const string &);
+        void getFileFromGrid(const GridFile &, const string &, const string &, const string &, const string &, const string &);
         void setModelOrViewName(const string&, const BSONObj&);
         void readFile(const string&, const string&, const string&, const OID&);
         void run();
 };
-}//: namespace MongoDBImporter
+}//: namespace ViewReader
 }//: namespace Processors
 
-REGISTER_COMPONENT("MongoDBImporter", Processors::MongoDBImporter::MongoDBImporter)
+REGISTER_COMPONENT("ViewReader", Processors::ViewReader::ViewReader)
 
-#endif /* MONGODBImporter_H__ */
+#endif /* ViewReader_H__ */
