@@ -1,6 +1,6 @@
 
-#ifndef  MONGODBExporter_H__
-#define  MONGODBExporter_H__
+#ifndef  SceneWriter_H__
+#define  SceneWriter_H__
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -24,25 +24,25 @@
 #include "MongoBase.hpp"
 
 namespace Processors {
-namespace MongoDBExporter {
+namespace SceneWriter {
 
 using namespace cv;
 using namespace mongo;
 using namespace std;
 
 
-class MongoDBExporter: public Base::Component
+class SceneWriter: public Base::Component
 {
 public:
         /*!
          * Constructor.
          */
-	   MongoDBExporter(const std::string & name = "");
+	   SceneWriter(const std::string & name = "");
 
         /*!
          * Destructor
          */
-        virtual ~MongoDBExporter();
+        virtual ~SceneWriter();
 
         /*!
          * Prepares communication interface.
@@ -82,7 +82,7 @@ protected:
          */
 
         /// Event handler.
-        Base::EventHandler <MongoDBExporter> h_write2DB;
+        Base::EventHandler <SceneWriter> h_write2DB;
 
         /// Input data stream
         Base::DataStreamIn <cv::Mat> in_img;
@@ -95,13 +95,8 @@ private:
         Base::Property<string> objectName;
         Base::Property<string> description;
         Base::Property<string> collectionName;
-        Base::Property<string> extensions;
         Base::Property<string> nodeTypeProp;
-        Base::Property<string> folderName;
-        Base::Property<string> viewNameProp;
-        Base::Property<string> modelNameProp;
         Base::Property<string> sceneNamesProp;
-        std::vector<std::string> fileExtensions;
         //string sceneName;
         std::vector<std::string> splitedSceneNames;
 
@@ -127,9 +122,9 @@ private:
         void addScenes(BSONObj&);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
 };
-}//: namespace MongoDBExporter
+}//: namespace SceneWriter
 }//: namespace Processors
 
-REGISTER_COMPONENT("MongoDBExporter", Processors::MongoDBExporter::MongoDBExporter)
+REGISTER_COMPONENT("SceneWriter", Processors::SceneWriter::SceneWriter)
 
-#endif /* MONGODBExporter_H__ */
+#endif /* SceneWriter_H__ */
