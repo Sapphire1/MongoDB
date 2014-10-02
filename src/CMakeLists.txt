@@ -16,6 +16,8 @@ include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
+DISCODE_FIND_DCL(PCLCoreTypes)
+
 # Find Boost
 find_package( Boost COMPONENTS thread system program_options filesystem  REQUIRED ) #whatever libs you need
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})

@@ -16,7 +16,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
-//#include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZSIFT.hpp>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -116,7 +116,7 @@ private:
         Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > out_cloud_xyzrgb;
 
         /// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
-    	//Base::DataStreamOut<pcl::PointCloud<PointXYZSIFT>::Ptr > out_cloud_xyzsift;
+    	Base::DataStreamOut<pcl::PointCloud<PointXYZSIFT>::Ptr > out_cloud_xyzsift;
 
         void readFromMongoDB(const string&, const string&, const string&);
         void ReadPCDCloud(const string&);

@@ -28,7 +28,7 @@
 #include "Property.hpp"
 #include <dirent.h>
 #include "MongoBase.hpp"
-//#include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZSIFT.hpp>
 
 namespace Processors {
 namespace ViewWriter {
@@ -103,6 +103,7 @@ private:
         Base::Property<string> sceneNamesProp;
         Base::Property<string> extension;
         Base::Property<string> fileName;
+        Base::Property<int> mean_viewpoint_features_number;
         Base::Property<string> remoteFileName;
         std::vector<std::string> splitedSceneNames;
         Base::Property<string> nodeTypeProp;
@@ -122,7 +123,7 @@ private:
 		Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > in_cloud_xyzrgb;
 
 		/// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
-		//Base::DataStreamIn<pcl::PointCloud<PointXYZSIFT>::Ptr> in_cloud_xyzsift;
+		Base::DataStreamIn<pcl::PointCloud<PointXYZSIFT>::Ptr> in_cloud_xyzsift;
 
 		void Write_xyz();
 		void Write_xyzrgb();

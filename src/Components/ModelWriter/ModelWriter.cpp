@@ -19,18 +19,20 @@ ModelWriter::ModelWriter(const string & name) : Base::Component(name),
 		objectName("objectName", string("GreenCup")),
 		description("description", string("My green coffe cup")),
 		collectionName("collectionName", string("containers")),
-		//extension("extension", string("pcd")),
-		extension("extension", string("png")),
+		extension("extension", string("pcd")),
+		//extension("extension", string("png")),
 		modelNameProp("modelName", string("lab012")),
 		fileName("fileName", string("tempFile")),
 		nodeTypeProp("nodeTypeProp", string("SomXYZRgb")),
 		remoteFileName("remoteFileName", string("sweetCloud")),
 		sceneNamesProp("sceneNamesProp", string("scene1,scene2,scene3")),
+		mean_viewpoint_features_number("mean_viewpoint_features_number", int(12)),
 		binary("binary", false),
 		suffix("suffix", false)
 {
 	registerProperty(mongoDBHost);
 	registerProperty(objectName);
+	registerProperty(mean_viewpoint_features_number);
 	registerProperty(description);
 	registerProperty(collectionName);
 	registerProperty(extension);
@@ -72,38 +74,44 @@ void ModelWriter::prepareInterface() {
 	registerHandler("write2DB", &h_write2DB);
 	registerHandler("Write_xyz", boost::bind(&ModelWriter::Write_xyz, this));
 	registerHandler("Write_xyzrgb", boost::bind(&ModelWriter::Write_xyzrgb, this));
-	//registerHandler("Write_xyzsift", boost::bind(&ModelWriter::Write_xyzsift, this));
+	registerHandler("Write_xyzsift", boost::bind(&ModelWriter::Write_xyzsift, this));
 
 	registerStream("in_img", &in_img);
 	registerStream("in_cloud_xyz", &in_cloud_xyz);
 	registerStream("in_cloud_xyzrgb", &in_cloud_xyzrgb);
-	//registerStream("in_cloud_xyzsift", &in_cloud_xyzsift);
+	registerStream("in_cloud_xyzsift", &in_cloud_xyzsift);
 
 	addDependency("write2DB", &in_img);
 	addDependency("Write_xyzrgb", &in_cloud_xyzrgb);
 	addDependency("Write_xyz", &in_cloud_xyz);
-	//addDependency("Write_xyzsift", &in_cloud_xyzsift);
+	addDependency("Write_xyzsift", &in_cloud_xyzsift);
 
 }
 void ModelWriter::Write_xyzsift()
 {
 	CLOG(LTRACE) << "ModelWriter::Write_xyzsift";
-	/*
-	cloudType="xyzsift";
-	pcl::PointCloud<pcl::PointXYZSIFT>::Ptr cloud = in_cloud_xyzsift.read();
-	std::string fn = fileName;
-	if(suffix){
-		size_t f = fn.find(".pcd");
-		if(f != std::string::npos)
-		{
-			fn.erase(f);
+	try{
+		cloudType="xyzsift";
+		CLOG(LTRACE)<<"Set cloudType: "<<cloudType;
+		pcl::PointCloud<PointXYZSIFT>::Ptr cloud = in_cloud_xyzsift.read();
+
+		std::string fn = fileName;
+		if(suffix){
+			CLOG(LTRACE)<<"suffix: "<<suffix;
+			size_t f = fn.find(".pcd");
+			if(f != std::string::npos)
+			{
+				fn.erase(f);
+			}
+			fn = std::string(fn) + std::string("_xyzsift.pcd");
 		}
-		fn = std::string(fn) + std::string("_xyzsift.pcd");
-	}
-	pcl::io::savePCDFile (fn, *cloud, binary);
-	write2DB();
-	*/
-	//CLOG(LINFO) << "Saved " << cloud->points.size() << " XYZ points to "<< fileName << "\n";
+		CLOG(LTRACE)<<"Test";
+		CLOG(LINFO) <<"FileName:"<<fn;
+		CLOG(LINFO) << "Saving " << cloud->points.size() << " XYZ points to "<< fileName << "\n";
+		pcl::io::savePCDFile (fn, *cloud, binary);
+
+		write2DB();
+	}catch(Exception & ex){ex.what();}
 }
 
 void ModelWriter::Write_xyz()
@@ -439,9 +447,14 @@ void ModelWriter::insertFileToGrid(OID& oid)
 			fileNameInMongo = (string)remoteFileName+"_"+ cloudType + time.str()+"."+string(extension);
 		else
 			fileNameInMongo = (string)remoteFileName + time.str()+"."+string(extension);
-		cloudType="";
+
 		object = fs.storeFile(tempFileName, fileNameInMongo, mime);
-		BSONObj b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
+		BSONObj b;
+		if(cloudType=="xyzsift")
+			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
+		else
+			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
+		cloudType="";
 		c.insert(dbCollectionPath, b);
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();

@@ -1,6 +1,6 @@
 
-#ifndef  MONGODBImporter_H__
-#define  MONGODBImporter_H__
+#ifndef  ModelReader_H__
+#define  ModelReader_H__
 
 #include "Component_Aux.hpp"
 #include "Component.hpp"
@@ -26,24 +26,24 @@
 #include "MongoBase.hpp"
 
 namespace Processors {
-namespace MongoDBImporter {
+namespace ModelReader {
 
 using namespace cv;
 using namespace mongo;
 
 
-class MongoDBImporter: public Base::Component
+class ModelReader: public Base::Component
 {
 public:
         /*!
          * Constructor.
          */
-		MongoDBImporter(const std::string & name = "");
+		ModelReader(const std::string & name = "");
 
         /*!
          * Destructor
          */
-        virtual ~MongoDBImporter();
+        virtual ~ModelReader();
 
         /*!
          * Prepares communication interface.
@@ -83,7 +83,7 @@ protected:
          */
 
         /// Event handler.
-        Base::EventHandler <MongoDBImporter> h_readfromDB;
+        Base::EventHandler <ModelReader> h_readfromDB;
 
         /// Input data stream
         Base::DataStreamIn <cv::Mat> in_img;
@@ -112,9 +112,9 @@ private:
         void readFile(const string&, const string&, const string&, const OID&);
         void run();
 };
-}//: namespace MongoDBImporter
+}//: namespace ModelReader
 }//: namespace Processors
 
-REGISTER_COMPONENT("MongoDBImporter", Processors::MongoDBImporter::MongoDBImporter)
+REGISTER_COMPONENT("ModelReader", Processors::ModelReader::ModelReader)
 
-#endif /* MONGODBImporter_H__ */
+#endif /* ModelReader_H__ */

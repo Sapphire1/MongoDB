@@ -8,12 +8,12 @@
 
 
 namespace Processors {
-namespace MongoDBImporter  {
+namespace ModelReader  {
 using namespace cv;
 using namespace mongo;
 using namespace boost::property_tree;
 
-MongoDBImporter::MongoDBImporter(const std::string & name) : Base::Component(name),
+ModelReader::ModelReader(const std::string & name) : Base::Component(name),
 		mongoDBHost("mongoDBHost", string("localhost")),
 		objectName("objectName", string("GreenCup")),
 		collectionName("collectionName", string("containers")),
@@ -29,25 +29,25 @@ MongoDBImporter::MongoDBImporter(const std::string & name) : Base::Component(nam
 		registerProperty(viewOrModelName);
 		registerProperty(folderName);
 		registerProperty(type);
-        CLOG(LTRACE) << "Hello MongoDBImporter";
+        CLOG(LTRACE) << "Hello ModelReader";
 
         base = new MongoBase::MongoBase();
 }
 
-MongoDBImporter::~MongoDBImporter()
+ModelReader::~ModelReader()
 {
-        CLOG(LTRACE) << "Good bye MongoDBImporter";
+        CLOG(LTRACE) << "Good bye ModelReader";
 }
 
-void MongoDBImporter::readfromDB()
+void ModelReader::readfromDB()
 {
-	CLOG(LNOTICE) << "MongoDBImporter::readfromDB";
+	CLOG(LNOTICE) << "ModelReader::readfromDB";
 	readFromMongoDB(nodeTypeProp, viewOrModelName, type);
 }
-void MongoDBImporter::prepareInterface() {
-        CLOG(LTRACE) << "MongoDBImporter::prepareInterface";
+void ModelReader::prepareInterface() {
+        CLOG(LTRACE) << "ModelReader::prepareInterface";
 
-        h_readfromDB.setup(this, &MongoDBImporter::readfromDB);
+        h_readfromDB.setup(this, &ModelReader::readfromDB);
         registerHandler("Read", &h_readfromDB);
 
 //        registerStream("in_img", &in_img);
@@ -55,9 +55,9 @@ void MongoDBImporter::prepareInterface() {
 //        addDependency("onNewImage", &in_img);
 }
 
-bool MongoDBImporter::onInit()
+bool ModelReader::onInit()
 {
-        CLOG(LTRACE) << "MongoDBImporter::initialize";
+        CLOG(LTRACE) << "ModelReader::initialize";
         if(collectionName=="containers")
         	dbCollectionPath="images.containers";
         else if(collectionName=="food")
@@ -79,31 +79,31 @@ bool MongoDBImporter::onInit()
         return true;
 }
 
-bool MongoDBImporter::onFinish()
+bool ModelReader::onFinish()
 {
-        CLOG(LTRACE) << "MongoDBImporter::finish";
+        CLOG(LTRACE) << "ModelReader::finish";
         return true;
 }
 
-bool MongoDBImporter::onStep()
+bool ModelReader::onStep()
 {
-        CLOG(LTRACE) << "MongoDBImporter::step";
+        CLOG(LTRACE) << "ModelReader::step";
         return true;
 }
 
-bool MongoDBImporter::onStop()
-{
-        return true;
-}
-
-bool MongoDBImporter::onStart()
+bool ModelReader::onStop()
 {
         return true;
 }
 
-void MongoDBImporter::getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeType, const string& type)
+bool ModelReader::onStart()
 {
-	CLOG(LTRACE)<<"MongoDBImporter::getFileFromGrid";
+        return true;
+}
+
+void ModelReader::getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeType, const string& type)
+{
+	CLOG(LTRACE)<<"ModelReader::getFileFromGrid";
 	string filename;
 	filename = file.getFileField("filename").str();
 	// type in "View","Model"
@@ -124,16 +124,16 @@ void MongoDBImporter::getFileFromGrid(const GridFile& file, const string& modelO
 	}
 }
 
-void MongoDBImporter::setModelOrViewName(const string& childNodeName, const BSONObj& childObj)
+void ModelReader::setModelOrViewName(const string& childNodeName, const BSONObj& childObj)
 {
-	CLOG(LTRACE)<<"MongoDBImporter::setModelOrViewName";
+	CLOG(LTRACE)<<"ModelReader::setModelOrViewName";
 	string type = childNodeName;
 	string modelOrViewName = childObj.getField(type+"Name").str();
 	readFromMongoDB(childNodeName, modelOrViewName, type);
 }
-void MongoDBImporter::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID)
+void ModelReader::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID)
 {
-	CLOG(LTRACE)<<"MongoDBImporter::readFile";
+	CLOG(LTRACE)<<"ModelReader::readFile";
 	GridFS fs(c,collectionName);
 	CLOG(LTRACE)<<"_id"<<childOID;
 	GridFile file = fs.findFile(QUERY("_id" << childOID));
@@ -147,9 +147,9 @@ void MongoDBImporter::readFile(const string& modelOrViewName, const string& node
 	}
 }
 
-void MongoDBImporter::readFromMongoDB(const string& nodeType, const string& modelOrViewName, const string& type)
+void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrViewName, const string& type)
 {
-	CLOG(LTRACE)<<"MongoDBImporter::readFromMongoDB";
+	CLOG(LTRACE)<<"ModelReader::readFromMongoDB";
 	string name;
 	try{
 		int items=0;
@@ -207,5 +207,5 @@ void MongoDBImporter::readFromMongoDB(const string& nodeType, const string& mode
 		exit(1);
 	}
 }
-} //: namespace MongoDBImporter
+} //: namespace ModelReader
 } //: namespace Processors

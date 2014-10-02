@@ -28,7 +28,7 @@
 #include "Property.hpp"
 #include <dirent.h>
 #include "MongoBase.hpp"
-//#include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZSIFT.hpp>
 
 namespace Processors {
 namespace ModelWriter {
@@ -107,6 +107,7 @@ private:
 	   Base::Property<string> remoteFileName;
 	   std::vector<std::string> splitedSceneNames;
 	   Base::Property<string> nodeTypeProp;
+       Base::Property<int> mean_viewpoint_features_number;
 	   Base::Property<bool> binary;
 	   Base::Property<bool> suffix;
 	   string cloudType;
@@ -116,14 +117,14 @@ private:
 	   string dbCollectionPath;
 	   MongoBase::MongoBase* base;
 
-	    /// Cloud containing points with Cartesian coordinates (XYZ).
-	   	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZ>::Ptr > in_cloud_xyz;
+	   /// Cloud containing points with Cartesian coordinates (XYZ).
+	   Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZ>::Ptr > in_cloud_xyz;
 
-	   	/// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
-	   	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > in_cloud_xyzrgb;
+	   /// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
+	   Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > in_cloud_xyzrgb;
 
-	   	/// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
-	   	//Base::DataStreamIn<pcl::PointCloud<PointXYZSIFT>::Ptr> in_cloud_xyzsift;
+	   /// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
+	   Base::DataStreamIn<pcl::PointCloud<PointXYZSIFT>::Ptr> in_cloud_xyzsift;
 	   void Write_xyz();
 	   void Write_xyzrgb();
 	   void Write_xyzsift();

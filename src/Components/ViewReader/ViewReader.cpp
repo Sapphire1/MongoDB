@@ -51,7 +51,7 @@ void ViewReader::prepareInterface() {
 //        registerStream("in_img", &in_img);
         registerStream("out_cloud_xyz", &out_cloud_xyz);
         registerStream("out_cloud_xyzrgb", &out_cloud_xyzrgb);
-       // registerStream("out_cloud_xyzsift", &out_cloud_xyzsift);
+        registerStream("out_cloud_xyzsift", &out_cloud_xyzsift);
         registerStream("out_img", &out_img);
  //       addDependency("readfromDB", NULL);
 }
@@ -121,7 +121,7 @@ void ViewReader::ReadPCDCloud(const string& filename)
 
 	// Try to read the cloud of XYZSIFT points.
 
-	/*
+
 	 if(filename.find("xyzsift.pcd")!=string::npos)
 	 {
 		pcl::PointCloud<PointXYZSIFT>::Ptr cloud_xyzsift (new pcl::PointCloud<PointXYZSIFT>);
@@ -134,7 +134,7 @@ void ViewReader::ReadPCDCloud(const string& filename)
 			//return;
 		}// else
 	}
-	*/
+
 	else if(filename.find("xyz")!=string::npos)
 		{
 			// Try to read the cloud of XYZ points.

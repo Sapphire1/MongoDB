@@ -25,11 +25,13 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	fileName("fileName", string("tempFile")),
 	nodeTypeProp("nodeTypeProp", string("StereoLR")),
 	remoteFileName("remoteFileName", string("sweetFoto")),
+	mean_viewpoint_features_number("mean_viewpoint_features_number", int(12)),
 	sceneNamesProp("sceneNamesProp", string("scene1,scene2,scene3")),
 	binary("binary", false),
 	suffix("suffix", false)
 {
 	registerProperty(mongoDBHost);
+	registerProperty(mean_viewpoint_features_number);
 	registerProperty(objectName);
 	registerProperty(description);
 	registerProperty(collectionName);
@@ -72,26 +74,26 @@ void ViewWriter::prepareInterface() {
 	registerHandler("write2DB", &h_write2DB);
 	registerHandler("Write_xyz", boost::bind(&ViewWriter::Write_xyz, this));
 	registerHandler("Write_xyzrgb", boost::bind(&ViewWriter::Write_xyzrgb, this));
-	//registerHandler("Write_xyzsift", boost::bind(&ModelWriter::Write_xyzsift, this));
+	registerHandler("Write_xyzsift", boost::bind(&ViewWriter::Write_xyzsift, this));
 
 	registerStream("in_img", &in_img);
 	registerStream("in_cloud_xyz", &in_cloud_xyz);
 	registerStream("in_cloud_xyzrgb", &in_cloud_xyzrgb);
-	//registerStream("in_cloud_xyzsift", &in_cloud_xyzsift);
+	registerStream("in_cloud_xyzsift", &in_cloud_xyzsift);
 
 	//addDependency("writeView2DB", &in_img);
 	addDependency("write2DB", &in_img);
 	addDependency("Write_xyzrgb", &in_cloud_xyzrgb);
 	addDependency("Write_xyz", &in_cloud_xyz);
-	//addDependency("Write_xyzsift", &in_cloud_xyzsift);
+	addDependency("Write_xyzsift", &in_cloud_xyzsift);
 }
 
 void ViewWriter::Write_xyzsift()
 {
 	CLOG(LTRACE) << "ModelWriter::Write_xyzsift";
-	/*
+
 	cloudType="xyzsift";
-	pcl::PointCloud<pcl::PointXYZSIFT>::Ptr cloud = in_cloud_xyzsift.read();
+	pcl::PointCloud<PointXYZSIFT>::Ptr cloud = in_cloud_xyzsift.read();
 	std::string fn = fileName;
 	if(suffix){
 		size_t f = fn.find(".pcd");
@@ -103,7 +105,7 @@ void ViewWriter::Write_xyzsift()
 	}
 	pcl::io::savePCDFile (fn, *cloud, binary);
 	write2DB();
-	*/
+
 	//CLOG(LINFO) << "Saved " << cloud->points.size() << " XYZ points to "<< fileName << "\n";
 }
 
@@ -514,12 +516,16 @@ void ViewWriter::insertFileToGrid(OID& oid)
 			fileNameInMongo = (string)remoteFileName+"_"+ cloudType + time.str()+"."+string(extension);
 		else
 			fileNameInMongo = (string)remoteFileName + time.str()+"."+string(extension);
-		cloudType="";
 		object = fs.storeFile(tempFileName, fileNameInMongo, mime);
-		BSONObj b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
+		BSONObj b;
+		if(cloudType=="xyzsift")
+			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
+		else
+			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
 		c.insert(dbCollectionPath, b);
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
+		cloudType="";
 	}catch(DBException &e)
 	{
 		CLOG(LERROR) <<"Something goes wrong... :<";
