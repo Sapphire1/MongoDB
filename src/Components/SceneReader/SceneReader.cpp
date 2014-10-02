@@ -8,204 +8,219 @@
 
 
 namespace Processors {
-namespace MongoDBImporter  {
+namespace SceneReader  {
 using namespace cv;
 using namespace mongo;
 using namespace boost::property_tree;
 
-MongoDBImporter::MongoDBImporter(const std::string & name) : Base::Component(name),
+SceneReader::SceneReader(const std::string & name) : Base::Component(name),
 		mongoDBHost("mongoDBHost", string("localhost")),
 		objectName("objectName", string("GreenCup")),
+		sceneName("sceneName", string("scene1")),
 		collectionName("collectionName", string("containers")),
-		nodeTypeProp("nodeType", string("Object")),
-		viewOrModelName("viewOrModelName", string("")),
-		type("type", string("")),
-		folderName("folderName", string("/home/lzmuda/mongo_driver_tutorial/test/"))
+		getObjectsActive("Get objects", bool("1")),
+		getScenesActive("Get scenes", bool("0")),
+		getObjectFromSceneActive("Get object from scene", bool("0"))
+
 {
 		registerProperty(mongoDBHost);
+		registerProperty(sceneName);
 		registerProperty(objectName);
 		registerProperty(collectionName);
-		registerProperty(nodeTypeProp);
-		registerProperty(viewOrModelName);
-		registerProperty(folderName);
-		registerProperty(type);
-        CLOG(LTRACE) << "Hello MongoDBImporter";
+		registerProperty(getObjectsActive);
+		registerProperty(getScenesActive);
+		registerProperty(getObjectFromSceneActive);
+		base = new MongoBase::MongoBase();
+        CLOG(LTRACE) << "Hello SceneReader";
 
         base = new MongoBase::MongoBase();
 }
 
-MongoDBImporter::~MongoDBImporter()
+SceneReader::~SceneReader()
 {
-        CLOG(LTRACE) << "Good bye MongoDBImporter";
+        CLOG(LTRACE) << "Good bye SceneReader";
 }
 
-void MongoDBImporter::readfromDB()
+void SceneReader::readfromDB()
 {
-	CLOG(LNOTICE) << "MongoDBImporter::readfromDB";
-	readFromMongoDB(nodeTypeProp, viewOrModelName, type);
+	CLOG(LNOTICE) << "SceneReader::readfromDB";
+	if(getObjectsActive)
+	{
+		getObjects();
+	}
+	else if(getScenesActive)
+	{
+		getScenes();
+	}
+	else if(getObjectFromSceneActive)
+	{
+		getObjectFromScene();
+	}
 }
-void MongoDBImporter::prepareInterface() {
-        CLOG(LTRACE) << "MongoDBImporter::prepareInterface";
 
-        h_readfromDB.setup(this, &MongoDBImporter::readfromDB);
+void SceneReader::getObjects()
+{
+	CLOG(LINFO)<<"SceneReader::getObjects()";
+	OID objectOID;
+	OID sceneOID;
+	BSONElement bsonElement;
+	BSONElement sceneOI;
+	BSONElement objectOI;
+	auto_ptr<DBClientCursor> cursorCollection;
+	int items = c.count(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
+	if(items>0)
+	{
+		cursorCollection  =c.query(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
+		vector<OID> childsVector;
+		BSONObj scene = cursorCollection->next();
+		if(base->getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
+		{
+			for (unsigned int i = 0; i<childsVector.size(); i++)
+			{
+				auto_ptr<DBClientCursor> childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+				while(childCursor->more())
+				{
+					BSONObj objectDocument = childCursor->next();
+					//CLOG(LINFO)<<"objectDocument: "<< objectDocument;
+					string objectNameFromScene = objectDocument.getField("ObjectName").str();
+					CLOG(LINFO)<<"Object: "<< objectNameFromScene;
+				}
+			}
+		}
+	}
+	else
+	{
+		CLOG(LERROR)<<"No scene founded!";
+	}
+}
+
+void SceneReader::getScenes()
+{
+	CLOG(LINFO)<<"SceneReader::getScenes()";
+	OID objectOID;
+	OID sceneOID;
+	BSONElement bsonElement;
+	BSONElement sceneOI;
+	BSONElement objectOI;
+	auto_ptr<DBClientCursor> cursorCollection;
+	int items = c.count(dbCollectionPath, (QUERY("ObjectName"<<objectName)));
+	if(items>0)
+	{
+		cursorCollection  =c.query(dbCollectionPath, (QUERY("ObjectName"<<objectName)));
+		vector<OID> childsVector;
+		BSONObj object = cursorCollection->next();
+		if(base->getChildOIDS(object, "sceneOIDs", "sceneOID", childsVector)>0)
+		{
+			for (unsigned int i = 0; i<childsVector.size(); i++)
+			{
+				auto_ptr<DBClientCursor> childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+				while(childCursor->more())
+				{
+					BSONObj objectDocument = childCursor->next();
+					//CLOG(LINFO)<<"objectDocument: "<< objectDocument;
+					string sceneNameFromObject = objectDocument.getField("SceneName").str();
+					CLOG(LINFO)<<"Scene: "<< sceneNameFromObject;
+				}
+			}
+		}
+	}
+	else
+	{
+		CLOG(LERROR)<<"No scene founded!";
+	}
+
+}
+
+void SceneReader::getObjectFromScene()
+{
+	CLOG(LINFO)<<"SceneReader::getObjectFromScene()";
+	OID objectOID;
+	OID sceneOID;
+	BSONElement bsonElement;
+	BSONElement sceneOI;
+	BSONElement objectOI;
+	bool objectFound = false;
+	auto_ptr<DBClientCursor> cursorCollection;
+	int items = c.count(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
+	if(items>0)
+	{
+		cursorCollection  =c.query(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
+		vector<OID> childsVector;
+		BSONObj scene = cursorCollection->next();
+		if(base->getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
+		{
+			for (unsigned int i = 0; i<childsVector.size(); i++)
+			{
+				auto_ptr<DBClientCursor> childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+				while(childCursor->more())
+				{
+					BSONObj objectDocument = childCursor->next();
+					//CLOG(LINFO)<<"objectDocument: "<< objectDocument;
+					string objectNameFromScene = objectDocument.getField("ObjectName").str();
+					if(objectNameFromScene==(string)objectName)
+					{
+						objectFound=true;
+						CLOG(LINFO)<<"Object: "<< objectNameFromScene;
+					}
+				}
+			}
+			if(!objectFound)
+				CLOG(LERROR)<<"No object founded!";
+		}
+	}
+	else
+	{
+		CLOG(LERROR)<<"No scene founded!";
+	}
+
+}
+
+void SceneReader::prepareInterface() {
+        CLOG(LTRACE) << "SceneReader::prepareInterface";
+
+        h_readfromDB.setup(this, &SceneReader::readfromDB);
         registerHandler("Read", &h_readfromDB);
-
-//        registerStream("in_img", &in_img);
-//        registerStream("out_img", &out_img);
-//        addDependency("onNewImage", &in_img);
 }
 
-bool MongoDBImporter::onInit()
+bool SceneReader::onInit()
 {
-        CLOG(LTRACE) << "MongoDBImporter::initialize";
+        CLOG(LTRACE) << "SceneReader::initialize";
         if(collectionName=="containers")
         	dbCollectionPath="images.containers";
-        else if(collectionName=="food")
-            dbCollectionPath="images.food";
-        else if(collectionName=="dish")
-            dbCollectionPath="images.dish";
-        else if(collectionName=="other")
-            dbCollectionPath="images.other";
-        try
-        {
-      	  c.connect(mongoDBHost);
-      	  //base = MongoBase::MongoBase(c,dbCollectionPath,objectName);
-         }
-         catch(DBException &e)
-         {
-        	 CLOG(LERROR) <<"Something goes wrong... :>";
-        	 CLOG(LERROR) <<c.getLastError();
-         }
-        return true;
-}
-
-bool MongoDBImporter::onFinish()
-{
-        CLOG(LTRACE) << "MongoDBImporter::finish";
-        return true;
-}
-
-bool MongoDBImporter::onStep()
-{
-        CLOG(LTRACE) << "MongoDBImporter::step";
-        return true;
-}
-
-bool MongoDBImporter::onStop()
-{
-        return true;
-}
-
-bool MongoDBImporter::onStart()
-{
-        return true;
-}
-
-void MongoDBImporter::getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeType, const string& type)
-{
-	CLOG(LTRACE)<<"MongoDBImporter::getFileFromGrid";
-	string filename;
-	filename = file.getFileField("filename").str();
-	// type in "View","Model"
-	CLOG(LINFO)<<(string)folderName+type+"/"+modelOrViewName+"/"+nodeType+"/"+filename;
-	string name = (string)folderName+type+"/"+modelOrViewName+"/"+nodeType+"/"+filename;
-	stringstream ss;
-	string str = ss.str();
-	char *fileName = (char*)name.c_str();
-	ofstream ofs(fileName);
-	gridfs_offset off = file.write(ofs);
-	if (off != file.getContentLength())
-	{
-		CLOG(LERROR) << "Failed to read a file from mongoDB";
-	}
-	else
-	{
-		CLOG(LTRACE) << "Success read a file from mongoDB";
-	}
-}
-
-void MongoDBImporter::setModelOrViewName(const string& childNodeName, const BSONObj& childObj)
-{
-	CLOG(LTRACE)<<"MongoDBImporter::setModelOrViewName";
-	string type = childNodeName;
-	string modelOrViewName = childObj.getField(type+"Name").str();
-	readFromMongoDB(childNodeName, modelOrViewName, type);
-}
-void MongoDBImporter::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID)
-{
-	CLOG(LTRACE)<<"MongoDBImporter::readFile";
-	GridFS fs(c,collectionName);
-	CLOG(LTRACE)<<"_id"<<childOID;
-	GridFile file = fs.findFile(QUERY("_id" << childOID));
-	if (!file.exists())
-	{
-		CLOG(LERROR) << "File not found in grid";
-	}
-	else
-	{
-		getFileFromGrid(file, modelOrViewName, nodeType, type);
-	}
-}
-
-void MongoDBImporter::readFromMongoDB(const string& nodeType, const string& modelOrViewName, const string& type)
-{
-	CLOG(LTRACE)<<"MongoDBImporter::readFromMongoDB";
-	string name;
-	try{
-		int items=0;
-		base->findDocumentInCollection(c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
-
-		if(items>0)
+		try
 		{
-			CLOG(LINFO)<<"Founded some data";
-			while (cursorCollection->more())
-			{
-				BSONObj obj = cursorCollection->next();
-				CLOG(LTRACE)<<obj;
-				vector<OID> childsVector;
-				int items =  base->getChildOIDS(obj, "childOIDs", "childOID", childsVector);
-				if(items>0)
-				{
-					CLOG(LTRACE)<<"There are childs "<<childsVector.size();
-					for (unsigned int i = 0; i<childsVector.size(); i++)
-					{
-						childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
-						if(childCursor->more())
-						{
-							BSONObj childObj = childCursor->next();
-							string childNodeName= childObj.getField("Type").str();
-							if(childNodeName!="EOO")
-							{
-								if(base->isViewLastLeaf(nodeType) || base->isModelLastLeaf(nodeType))
-								{
-									CLOG(LTRACE)<<"LastLeaf"<<" childNodeName "<<childNodeName;
-									readFile(modelOrViewName, nodeType, type, childsVector[i]);
-								}
-								else if(childNodeName=="View" || childNodeName=="Model")
-								{
-									setModelOrViewName(childNodeName, childObj);
-								}
-								else
-									readFromMongoDB(childNodeName, modelOrViewName, type);
-							}
-						}//if(childNodeName!="EOO")
-					}//for
-				}//if
-			}//while
-		}//if
-		else
-		{
-			CLOG(LTRACE)<<"10";
-			if(nodeTypeProp==nodeType)
-				CLOG(LERROR)<<"Wrong name";
-			CLOG(LTRACE)<<"No results";
+			c.connect(mongoDBHost);
 		}
-	}//try
-	catch(DBException &e)
-	{
-		CLOG(LERROR) <<"ReadFromMongoDB(). Something goes wrong... :<";
-		exit(1);
-	}
+		catch(DBException &e)
+		{
+			CLOG(LERROR) <<"Something goes wrong... :>";
+			CLOG(LERROR) <<c.getLastError();
+		}
+		return true;
 }
-} //: namespace MongoDBImporter
+
+bool SceneReader::onFinish()
+{
+        CLOG(LTRACE) << "SceneReader::finish";
+        return true;
+}
+
+bool SceneReader::onStep()
+{
+        CLOG(LTRACE) << "SceneReader::step";
+        return true;
+}
+
+bool SceneReader::onStop()
+{
+        return true;
+}
+
+bool SceneReader::onStart()
+{
+        return true;
+}
+
+
+} //: namespace SceneReader
 } //: namespace Processors

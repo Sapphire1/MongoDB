@@ -60,12 +60,6 @@ bool SceneWriter::onInit()
 		  c.connect(mongoDBHost);
 		  if(collectionName=="containers")
 			dbCollectionPath="images.containers";
-		  else if(collectionName=="food")
-			dbCollectionPath="images.food";
-		  else if(collectionName=="dish")
-			dbCollectionPath="images.dish";
-		  else if(collectionName=="other")
-			dbCollectionPath="images.other";
       }
 	 catch(DBException &e)
 	 {
@@ -137,7 +131,6 @@ try{
 				for (unsigned int i = 0; i<childsVector.size(); i++)
 				{
 					CLOG(LINFO)<<"Sprawdzam obiekt";
-					auto_ptr<DBClientCursor> childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
 					CLOG(LINFO)<<"childsVector[i].str(): "<<childsVector[i].str();
 					CLOG(LINFO)<<"objectOID.str(): "<<objectOID.str();
 					if(childsVector[i].str()==objectOID.str())
