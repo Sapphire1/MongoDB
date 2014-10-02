@@ -1,18 +1,29 @@
-FILE(GLOB headers *.hpp)
+SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-install(
-    FILES ${headers}
-    DESTINATION include/Types
-    COMPONENT sdk
-)
+# If DCL provides any additional libraries - add them here
 
+# # Get soource files of library
+# FILE(GLOB lib_src *.cpp)
+# ADD_LIBRARY(PCLTypes SHARED ${lib_src})
+# # Link with other libraries
+# TARGET_LINK_LIBRARIES(PCLTypes ${OpenCV_LIBRARIES})
+#
+# # Install library
+# INSTALL(
+#   TARGETS CvBlobsTypes
+#   RUNTIME DESTINATION bin COMPONENT applications
+#   LIBRARY DESTINATION lib COMPONENT applications
+#   ARCHIVE DESTINATION lib COMPONENT sdk
+# )
 
-FILE(GLOB objects3d Objects3D/*.hpp)
+# If DCL provides any additional headers to be used from outside of it, add them
 
-install(
-    FILES ${objects3d}
-    DESTINATION include/Types/Objects3D
-    COMPONENT sdk
-)
+ # Get list of header files
+ FILE(GLOB headers *.hpp)
 
-add_subdirectory(Circles)
+ # Install them to include subdirectory
+ install(
+     FILES ${headers}
+     DESTINATION include/Types
+     COMPONENT sdk
+ )

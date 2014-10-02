@@ -33,11 +33,9 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 # Add source directories
 # ##############################################################################
 
-# CvBlobs components
-ADD_SUBDIRECTORY(Components)
 
-# CvBlobs types
-#ADD_SUBDIRECTORY(Types)
+ADD_SUBDIRECTORY(Components)
+ADD_SUBDIRECTORY(Types)
 
 # Prepare config file to use from another DCLs
 CONFIGURE_FILE(MongoDBConfig.cmake.in ${CMAKE_INSTALL_PREFIX}/MongoDBConfig.cmake @ONLY)

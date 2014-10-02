@@ -3,7 +3,6 @@
  * \brief
  * \author Lukasz Zmuda
  */
-
 #include "ModelReader.hpp"
 
 
@@ -18,17 +17,17 @@ ModelReader::ModelReader(const std::string & name) : Base::Component(name),
 		objectName("objectName", string("GreenCup")),
 		collectionName("collectionName", string("containers")),
 		nodeTypeProp("nodeType", string("Object")),
-		viewOrModelName("viewOrModelName", string("")),
+		viewOrModelName("viewOrModelName", string("lab012")),
 		type("type", string("")),
-		folderName("folderName", string("/home/lzmuda/mongo_driver_tutorial/test/"))
+		modelType("modelType", string("SOM"))
+//		modelType("modelType", string("SSOM"))
 {
 		registerProperty(mongoDBHost);
 		registerProperty(objectName);
 		registerProperty(collectionName);
 		registerProperty(nodeTypeProp);
 		registerProperty(viewOrModelName);
-		registerProperty(folderName);
-		registerProperty(type);
+		registerProperty(modelType);
         CLOG(LTRACE) << "Hello ModelReader";
 
         base = new MongoBase::MongoBase();
@@ -45,38 +44,43 @@ void ModelReader::readfromDB()
 	readFromMongoDB(nodeTypeProp, viewOrModelName, type);
 }
 void ModelReader::prepareInterface() {
-        CLOG(LTRACE) << "ModelReader::prepareInterface";
+	CLOG(LTRACE) << "ModelReader::prepareInterface";
+	h_readfromDB.setup(this, &ModelReader::readfromDB);
+	registerHandler("Read", &h_readfromDB);
 
-        h_readfromDB.setup(this, &ModelReader::readfromDB);
-        registerHandler("Read", &h_readfromDB);
-
-//        registerStream("in_img", &in_img);
-//        registerStream("out_img", &out_img);
-//        addDependency("onNewImage", &in_img);
+	registerStream("out_cloud_xyz", &out_cloud_xyz);
+	registerStream("out_cloud_xyzrgb", &out_cloud_xyzrgb);
+	registerStream("out_cloud_xyzsift", &out_cloud_xyzsift);
+	registerStream("out_img", &out_img);
 }
 
 bool ModelReader::onInit()
 {
-        CLOG(LTRACE) << "ModelReader::initialize";
-        if(collectionName=="containers")
-        	dbCollectionPath="images.containers";
-        else if(collectionName=="food")
-            dbCollectionPath="images.food";
-        else if(collectionName=="dish")
-            dbCollectionPath="images.dish";
-        else if(collectionName=="other")
-            dbCollectionPath="images.other";
-        try
-        {
-      	  c.connect(mongoDBHost);
-      	  //base = MongoBase::MongoBase(c,dbCollectionPath,objectName);
-         }
-         catch(DBException &e)
-         {
-        	 CLOG(LERROR) <<"Something goes wrong... :>";
-        	 CLOG(LERROR) <<c.getLastError();
-         }
-        return true;
+	CLOG(LTRACE) << "ModelReader::initialize";
+	if(collectionName=="containers")
+		dbCollectionPath="images.containers";
+	else if(collectionName=="food")
+		dbCollectionPath="images.food";
+	else if(collectionName=="dish")
+		dbCollectionPath="images.dish";
+	else if(collectionName=="other")
+		dbCollectionPath="images.other";
+
+	name_cloud_xyz="";
+	name_cloud_xyzrgb="";
+	name_cloud_xyzsift="";
+
+	try
+	{
+		c.connect(mongoDBHost);
+		//base = MongoBase::MongoBase(c,dbCollectionPath,objectName);
+	}
+	catch(DBException &e)
+	{
+		CLOG(LERROR) <<"Something goes wrong... :>";
+		CLOG(LERROR) <<c.getLastError();
+	}
+	return true;
 }
 
 bool ModelReader::onFinish()
@@ -101,18 +105,16 @@ bool ModelReader::onStart()
         return true;
 }
 
-void ModelReader::getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeType, const string& type)
+void ModelReader::getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeType, const string& type, const string& fileName, const string& mime)
 {
-	CLOG(LTRACE)<<"ModelReader::getFileFromGrid";
-	string filename;
-	filename = file.getFileField("filename").str();
-	// type in "View","Model"
-	CLOG(LINFO)<<(string)folderName+type+"/"+modelOrViewName+"/"+nodeType+"/"+filename;
-	string name = (string)folderName+type+"/"+modelOrViewName+"/"+nodeType+"/"+filename;
+	CLOG(LTRACE)<<"ViewReader::getFileFromGrid";
+	CLOG(LINFO)<<"Filename: "<< fileName<< " Mime: "<<mime;
 	stringstream ss;
 	string str = ss.str();
-	char *fileName = (char*)name.c_str();
-	ofstream ofs(fileName);
+	///TODO zmienic na parametr, albo chociaz zadeklarowac jako pole klasy
+	string fn = "tempFile";
+	char *filename = (char*)fn.c_str();
+	ofstream ofs(filename);
 	gridfs_offset off = file.write(ofs);
 	if (off != file.getContentLength())
 	{
@@ -121,6 +123,137 @@ void ModelReader::getFileFromGrid(const GridFile& file, const string& modelOrVie
 	else
 	{
 		CLOG(LTRACE) << "Success read a file from mongoDB";
+	}
+
+	if(mime=="image/png" || mime=="image/jpeg")
+	{
+		// read from disc
+		cv::Mat image = imread(filename, CV_LOAD_IMAGE_UNCHANGED);
+		out_img.write(image);
+	}
+	else if(mime=="text/plain")
+	{
+		CLOG(LINFO)<<"mime==text/plain";
+		CLOG(LINFO)<<"fileName.find(pcd): "<<fileName.find("pcd");
+		if((fileName.find("pcd"))!=string::npos)
+		{
+			CLOG(LINFO)<<"pcd :)";
+			ReadPCDCloud(fileName);
+		}
+		else if(fileName.find("txt")!=string::npos)
+		{
+			//TODO read text file
+			;
+		}
+		else
+			CLOG(LERROR)<<"Nie wiem co to za plik :/";
+	}
+}
+
+void ModelReader::ReadPCDCloud(const string& filename)
+{
+	CLOG(LTRACE) << "ViewReader::ReadPCDCloud";
+	string tempFile="tempFile";
+	// Try to read the cloud of XYZRGB points.
+	if(filename.find("xyzrgb")!=string::npos)
+	{
+		pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_xyzrgb (new pcl::PointCloud<pcl::PointXYZRGB>);
+		if (pcl::io::loadPCDFile<pcl::PointXYZRGB> (tempFile, *cloud_xyzrgb) == -1){
+			CLOG(LWARNING) <<"Cannot read PointXYZRGB cloud from "<<tempFile;
+		}else{
+			//out_cloud_xyzrgb.write(cloud_xyzrgb);
+			CLOG(LINFO) <<"PointXYZRGB cloud loaded properly from "<<tempFile;
+			//return;
+		}// else
+	}
+
+	// Try to read the cloud of XYZSIFT points.
+
+
+	 if(filename.find("xyzsift.pcd")!=string::npos)
+	 {
+		pcl::PointCloud<PointXYZSIFT>::Ptr cloud_xyzsift (new pcl::PointCloud<PointXYZSIFT>);
+		if (pcl::io::loadPCDFile<PointXYZSIFT> (tempFile, *cloud_xyzsift) == -1){
+			CLOG(LWARNING) <<"Cannot read PointXYZSIFT cloud from "<<tempFile;
+		}else{
+			//out_cloud_xyzsift.write(cloud_xyzsift);
+			CLOG(LINFO) <<"PointXYZSIFT cloud loaded properly from "<<tempFile;
+
+			//return;
+		}// else
+	}
+
+	else if(filename.find("xyz")!=string::npos)
+		{
+			// Try to read the cloud of XYZ points.
+			pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz (new pcl::PointCloud<pcl::PointXYZ>);
+			if (pcl::io::loadPCDFile<pcl::PointXYZ> (tempFile, *cloud_xyz) == -1){
+				CLOG(LWARNING) <<"Cannot read PointXYZ cloud from "<<tempFile;
+			}else{
+				//out_cloud_xyz.write(cloud_xyz);
+				CLOG(LINFO) <<"PointXYZ cloud loaded properly from "<<tempFile;
+				//return;
+			}// else
+		}
+
+
+}
+
+void ModelReader::loadModels(string& name_cloud, string& features_number, std::vector<AbstractObject*>& models) {
+	CLOG(LTRACE) << "SOMJSONReader::loadModels()";
+
+	model_name = nodeTypeProp;
+	if(name_cloud.find("xyzrgb")!=string::npos)
+		name_cloud_xyzrgb = name_cloud;
+	else if(name_cloud.find("xyzsift")!=string::npos)
+	{
+		istringstream (features_number) >> mean_viewpoint_features_number;
+		name_cloud_xyzsift = name_cloud;
+	}
+	else if(name_cloud.find("xyz")!=string::npos)
+		name_cloud_xyz = name_cloud;
+
+	CLOG(LDEBUG) << "name_cloud_xyzrgb:" << name_cloud_xyzrgb;
+	CLOG(LDEBUG) << "name_cloud_xyzsift:" << name_cloud_xyzsift;
+	CLOG(LDEBUG) << "name_cloud_xyz:" << name_cloud_xyz;
+
+   // to wykonywac tylko jesli juz mamy caly model tylko jak to zrobic???
+	// Create SOModel and add it to list.
+	if(name_cloud_xyzsift!="" && name_cloud_xyzrgb!="")
+	{
+		CLOG(LDEBUG) << "Create model";
+		SIFTObjectModel* model;
+		model = dynamic_cast<SIFTObjectModel*>(produce());
+		models.push_back(model);
+		name_cloud_xyzsift="";
+		name_cloud_xyzrgb="";
+	}
+}
+
+
+void ModelReader::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID, std::vector<AbstractObject*>& models)
+{
+	CLOG(LTRACE)<<"ModelReader::readFile";
+	GridFS fs(c,collectionName);
+	CLOG(LTRACE)<<"_id"<<childOID;
+	GridFile file = fs.findFile(QUERY("_id" << childOID));
+
+	if (!file.exists())
+	{
+		CLOG(LERROR) << "File not found in grid";
+	}
+	else
+	{
+		// get filename
+		string filename = file.getFileField("filename").str();
+		string featuresNumber;
+		if((filename.find("sift"))!=string::npos)
+			featuresNumber = file.getFileField("mean_viewpoint_features_number").str();
+		// get mime from file
+		string mime = file.getContentType();
+		getFileFromGrid(file, modelOrViewName, nodeType, type, filename, mime);
+		CLOG(LTRACE)<<"Add to model";
+		loadModels(filename, featuresNumber, models);
 	}
 }
 
@@ -131,30 +264,15 @@ void ModelReader::setModelOrViewName(const string& childNodeName, const BSONObj&
 	string modelOrViewName = childObj.getField(type+"Name").str();
 	readFromMongoDB(childNodeName, modelOrViewName, type);
 }
-void ModelReader::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID)
-{
-	CLOG(LTRACE)<<"ModelReader::readFile";
-	GridFS fs(c,collectionName);
-	CLOG(LTRACE)<<"_id"<<childOID;
-	GridFile file = fs.findFile(QUERY("_id" << childOID));
-	if (!file.exists())
-	{
-		CLOG(LERROR) << "File not found in grid";
-	}
-	else
-	{
-		getFileFromGrid(file, modelOrViewName, nodeType, type);
-	}
-}
 
 void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrViewName, const string& type)
 {
 	CLOG(LTRACE)<<"ModelReader::readFromMongoDB";
 	string name;
+	std::vector<AbstractObject*> models;
 	try{
 		int items=0;
 		base->findDocumentInCollection(c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
-
 		if(items>0)
 		{
 			CLOG(LINFO)<<"Founded some data";
@@ -174,16 +292,26 @@ void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrV
 						{
 							BSONObj childObj = childCursor->next();
 							string childNodeName= childObj.getField("Type").str();
+							CLOG(LTRACE)<<childNodeName;
 							if(childNodeName!="EOO")
 							{
 								if(base->isViewLastLeaf(nodeType) || base->isModelLastLeaf(nodeType))
 								{
 									CLOG(LTRACE)<<"LastLeaf"<<" childNodeName "<<childNodeName;
-									readFile(modelOrViewName, nodeType, type, childsVector[i]);
+									readFile(modelOrViewName, nodeType, type, childsVector[i], models);
 								}
-								else if(childNodeName=="View" || childNodeName=="Model")
+								else if(childNodeName=="Model")
 								{
+									CLOG(LTRACE)<<"setModelOrViewName";
 									setModelOrViewName(childNodeName, childObj);
+								}
+								else if(childNodeName=="SOM" || childNodeName=="SSOM")
+								{
+									if(modelType==childNodeName)
+									{
+										CLOG(LINFO)<<"modelType==childNodeName";
+										readFromMongoDB(childNodeName, modelOrViewName, type);
+									}
 								}
 								else
 									readFromMongoDB(childNodeName, modelOrViewName, type);
@@ -200,10 +328,17 @@ void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrV
 				CLOG(LERROR)<<"Wrong name";
 			CLOG(LTRACE)<<"No results";
 		}
+		if(nodeTypeProp==nodeType)
+		{
+			CLOG(LINFO)<<"nodeTypeProp - nodeType: "<<nodeTypeProp<< " - " << nodeType;
+			CLOG(LTRACE)<<"Send models to sink";
+			out_models.write(models);
+		}
 	}//try
 	catch(DBException &e)
 	{
 		CLOG(LERROR) <<"ReadFromMongoDB(). Something goes wrong... :<";
+		e.what();
 		exit(1);
 	}
 }

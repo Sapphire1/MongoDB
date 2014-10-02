@@ -27,9 +27,6 @@ set( LIBS_TO_LINK
 
 ADD_LIBRARY(ModelReader SHARED ${files} )
 
-target_link_libraries( ModelReader
-    pthread
-    ${LIBS_TO_LINK}
-)
+TARGET_LINK_LIBRARIES(ModelReader pthread ${LIBS_TO_LINK} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
 
 INSTALL_COMPONENT(ModelReader)
