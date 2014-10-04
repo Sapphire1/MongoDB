@@ -17,6 +17,7 @@ link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
 DISCODE_FIND_DCL(PCLCoreTypes)
+DISCODE_FIND_DCL(SIFTObjectModel)
 
 # Find Boost
 find_package( Boost COMPONENTS thread system program_options filesystem  REQUIRED ) #whatever libs you need
