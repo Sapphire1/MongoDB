@@ -242,14 +242,6 @@ void ModelReader::readFile(const string& modelOrViewName, const string& nodeType
 	}
 }
 
-void ModelReader::setModelOrViewName(const string& childNodeName, const BSONObj& childObj)
-{
-	CLOG(LTRACE)<<"ModelReader::setModelOrViewName";
-	string type = childNodeName;
-	string modelOrViewName = childObj.getField(type+"Name").str();
-	readFromMongoDB(childNodeName, modelOrViewName, type);
-}
-
 void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrViewName, const string& type)
 {
 	CLOG(LTRACE)<<"ModelReader::readFromMongoDB";
@@ -288,7 +280,10 @@ void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrV
 								else if(childNodeName=="Model")
 								{
 									CLOG(LTRACE)<<"setModelOrViewName";
-									setModelOrViewName(childNodeName, childObj);
+									string newName;
+									setModelOrViewName(childNodeName, childObj, newName);
+									readFromMongoDB(childNodeName, newName, type);
+
 								}
 								else if(childNodeName=="SOM" || childNodeName=="SSOM")
 								{

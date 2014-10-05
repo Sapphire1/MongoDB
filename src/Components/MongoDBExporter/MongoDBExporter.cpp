@@ -368,20 +368,6 @@ void MongoDBExporter::initModel(const string & modelName, bool addToModelFlag)
 	c->update(dbCollectionPath, QUERY("Type"<<"SSOM"<<"ObjectName"<<objectName<<"ModelName"<<modelName), BSON("$set"<<BSON("childOIDs"<<ssomArr)), false, true);
 }
 
-void  MongoDBExporter::setMime( const std::vector<string>::iterator itExtension,  string& mime)
-{
-	if (*itExtension=="*.png")
-		mime="image/png";
-	else if(*itExtension=="*.jpg")
-		mime= "image/jpeg";
-	else if(*itExtension=="*.txt" || *itExtension=="*.pcd")
-		mime="text/plain";
-	else
-	{
-		CLOG(LERROR) <<"I don't know such file extension! Please add extension to the `if` statement from http://www.sitepoint.com/web-foundations/mime-types-complete-list/";
-		return;
-	}
-}
 
 void MongoDBExporter::insertFileToGrid( const std::vector<string>::iterator itExtension, const std::vector<string>::iterator it, const string& newFileName, BSONArrayBuilder& bsonBuilder)
 {
@@ -389,7 +375,7 @@ void MongoDBExporter::insertFileToGrid( const std::vector<string>::iterator itEx
 	BSONElement bsonElement;
 	OID oid;
 	string mime="";
-	setMime(itExtension, mime);
+	setMime(*itExtension, mime);
 	GridFS fs(*c, collectionName);
 	o = fs.storeFile(*it, newFileName, mime);
 	BSONObj b = BSONObjBuilder().appendElements(o).append("ObjectName", objectName).obj();
@@ -429,13 +415,6 @@ void MongoDBExporter::writeNode2MongoDB(const string &source, const string &dest
 		CLOG(LERROR) <<"Something goes wrong... :<";
 		CLOG(LERROR) <<c->getLastError();
 	}
-}
-
-void MongoDBExporter::setModelOrViewName(const string& childNodeName, const BSONObj& childObj)
-{
-	string type = childNodeName;
-	string modelOrViewName = childObj.getField(type+"Name").str();
-	insert2MongoDB(childNodeName, modelOrViewName, type);
 }
 
 void MongoDBExporter::insert2MongoDB(const string &destination, const string&  modelOrViewName, const string&  type)
@@ -534,7 +513,9 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 									{
 										if(childNodeName=="View"||childNodeName=="Model")
 										{
-											setModelOrViewName(childNodeName, childObj);
+											string newName;
+											setModelOrViewName(childNodeName, childObj, newName);
+											insert2MongoDB(childNodeName, newName, type);
 										}
 										else
 											insert2MongoDB(childNodeName, modelOrViewName, type);

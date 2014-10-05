@@ -374,21 +374,6 @@ void ModelWriter::initModel(const string & modelName, bool addToModelFlag)
 	c->update(dbCollectionPath, QUERY("Type"<<"SSOM"<<"ObjectName"<<objectName<<"ModelName"<<modelName), BSON("$set"<<BSON("childOIDs"<<ssomArr)), false, true);
 }
 
-void  ModelWriter::setMime( const string& extension,  string& mime)
-{
-	if (extension=="png")
-		mime="image/png";
-	else if(extension=="jpg")
-		mime= "image/jpeg";
-	else if(extension=="txt" || extension=="pcd")
-		mime="text/plain";
-	else
-	{
-		CLOG(LERROR) <<"I don't know such file extension! Please add extension to the `if` statement from http://www.sitepoint.com/web-foundations/mime-types-complete-list/";
-		return;
-	}
-}
-
 void ModelWriter::insertFileToGrid(OID& oid)
 {
 	try{
@@ -468,13 +453,6 @@ void ModelWriter::writeNode2MongoDB(const string &destination, const string &typ
 		CLOG(LERROR) <<"Something goes wrong... :<";
 		CLOG(LERROR) <<c->getLastError();
 	}
-}
-
-void ModelWriter::setModelOrViewName(const string& childNodeName, const BSONObj& childObj)
-{
-	string type = childNodeName;
-	string modelOrViewName = childObj.getField(type+"Name").str();
-	insert2MongoDB(childNodeName, modelOrViewName, type);
 }
 
 void ModelWriter::insert2MongoDB(const string &destination, const string&  modelOrViewName, const string&  type)
@@ -572,7 +550,9 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 									{
 										if(childNodeName=="View"||childNodeName=="Model")
 										{
-											setModelOrViewName(childNodeName, childObj);
+											string newName;
+											setModelOrViewName(childNodeName, childObj, newName);
+											insert2MongoDB(childNodeName, newName, type);
 										}
 										else
 											insert2MongoDB(childNodeName, modelOrViewName, type);

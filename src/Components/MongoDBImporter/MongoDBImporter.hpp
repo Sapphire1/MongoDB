@@ -85,12 +85,6 @@ protected:
         /// Event handler.
         Base::EventHandler <MongoDBImporter> h_readfromDB;
 
-        /// Input data stream
-        Base::DataStreamIn <cv::Mat> in_img;
-
-        /// Output data stream - processed image
-        Base::DataStreamOut <Mat> out_img;
-
 private:
         Base::Property<string> mongoDBHost;
         Base::Property<string> objectName;
@@ -102,12 +96,10 @@ private:
         string dbCollectionPath;
         auto_ptr<DBClientCursor> cursorCollection;
         auto_ptr<DBClientCursor> childCursor;
-        //MongoBase::MongoBase* base;
 
         void readFromMongoDB(const string&, const string&, const string&);
         void readfromDB();
         void getFileFromGrid(const GridFile &, const string &, const string &, const string &);
-        void setModelOrViewName(const string&, const BSONObj&);
         void readFile(const string&, const string&, const string&, const OID&);
         void run();
 };

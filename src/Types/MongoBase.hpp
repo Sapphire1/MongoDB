@@ -29,6 +29,12 @@
 #include "Property.hpp"
 #include <dirent.h>
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/io/pcd_io.h>
+#include <Types/PointXYZSIFT.hpp>
+#include <Types/SIFTObjectModelFactory.hpp>
+
 
 namespace MongoBase {
 using namespace cv;
@@ -43,6 +49,32 @@ public:
 	vector<string>  docViewsNames;
 	vector<string>  docModelsNames;
 
+	 /// Input data stream
+	Base::DataStreamIn <cv::Mat> in_img;
+
+	/// Output data stream - processed image
+	Base::DataStreamOut <Mat> out_img;
+
+	/// Cloud containing points with Cartesian coordinates (XYZ).
+	Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZ>::Ptr > out_cloud_xyz;
+
+	/// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
+	Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > out_cloud_xyzrgb;
+
+	/// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
+	Base::DataStreamOut<pcl::PointCloud<PointXYZSIFT>::Ptr > out_cloud_xyzsift;
+
+	/// Cloud containing points with Cartesian coordinates (XYZ).
+	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZ>::Ptr > in_cloud_xyz;
+
+	/// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
+	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > in_cloud_xyzrgb;
+
+	/// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
+	Base::DataStreamIn<pcl::PointCloud<PointXYZSIFT>::Ptr> in_cloud_xyzsift;
+
+	Base::DataStreamOut<std::vector<AbstractObject*> > out_models;
+
 	MongoBase();
 	virtual ~MongoBase();
 	vector<string> getAllFiles(const string& pattern);
@@ -53,7 +85,10 @@ public:
 	void findDocumentInCollection(DBClientConnection&, string&, Base::Property<string> &, const string &, auto_ptr<DBClientCursor> &, const string &, const string & , int&);
 	void initViewNames();
 	void initModelNames();
+	void setMime(const string& extension,  string& mime);
 	void connectToMongoDB(string&);
+	void setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName);
+
 };
 
 MongoBase::MongoBase() {
@@ -64,11 +99,38 @@ MongoBase::MongoBase() {
 MongoBase::~MongoBase() {
 }
 
+void MongoBase::setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName)
+{
+	string type = childNodeName;
+	newName = childObj.getField(type+"Name").str();
+}
+
+void MongoBase::setMime( const string& extension,  string& mime)
+{
+	if (extension=="png")
+		mime="image/png";
+	else if(extension=="jpg")
+		mime= "image/jpeg";
+	else if(extension=="txt" || extension=="pcd")
+		mime="text/plain";
+	else
+	{
+		std::cout <<"I don't know such file extension! Please add extension to the `if` statement from http://www.sitepoint.com/web-foundations/mime-types-complete-list/";
+		return;
+	}
+}
+
 void MongoBase::connectToMongoDB(string& hostname)
 {
 	try{
-		if(!c->isStillConnected())
+		//if(!c->isStillConnected())
+		{
+	//		cout<<"\n\n\nNot Connected?\n\n\n";
 			c->connect(hostname);
+		}
+	//	else
+	//		cout<<"\n\n\nConnected?\n\n\n";
+
 	}catch(ConnectException& ex)
 	{
 		std::cout<<ex.what();

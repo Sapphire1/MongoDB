@@ -92,12 +92,6 @@ protected:
         /// Event handler.
         Base::EventHandler <ModelReader> h_readfromDB;
 
-        /// Input data stream
-        Base::DataStreamIn <cv::Mat> in_img;
-
-        /// Output data stream - processed image
-        Base::DataStreamOut <Mat> out_img;
-
 private:
         Base::Property<string> mongoDBHost;
         Base::Property<string> objectName;
@@ -114,25 +108,11 @@ private:
     	std::string name_cloud_xyzrgb;
     	std::string name_cloud_xyzsift;
 
-        /// Cloud containing points with Cartesian coordinates (XYZ).
-		Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZ>::Ptr > out_cloud_xyz;
-
-		/// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
-		Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > out_cloud_xyzrgb;
-
-		/// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
-		Base::DataStreamOut<pcl::PointCloud<PointXYZSIFT>::Ptr > out_cloud_xyzsift;
-
-
-		Base::DataStreamOut<std::vector<AbstractObject*> > out_models;
-
-
         void readFromMongoDB(const string&, const string&, const string&);
         void readfromDB();
         void loadModels(string&, string&, std::vector<AbstractObject*>&);
         void ReadPCDCloud(const string&);
         void getFileFromGrid(const GridFile &, const string &, const string &, const string &, const string &, const string &);
-        void setModelOrViewName(const string&, const BSONObj&);
         void readFile(const string&, const string&, const string&, const OID&, std::vector<AbstractObject*>&);
         void run();
 };

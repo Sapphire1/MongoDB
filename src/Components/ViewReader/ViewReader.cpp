@@ -177,13 +177,6 @@ void ViewReader::getFileFromGrid(const GridFile& file, const string& modelOrView
 	}
 }
 
-void ViewReader::setModelOrViewName(const string& childNodeName, const BSONObj& childObj)
-{
-	CLOG(LTRACE)<<"ViewReader::setModelOrViewName";
-	string type = childNodeName;
-	string modelOrViewName = childObj.getField(type+"Name").str();
-	readFromMongoDB(childNodeName, modelOrViewName, type);
-}
 void ViewReader::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID)
 {
 	CLOG(LTRACE)<<"ViewReader::readFile";
@@ -241,7 +234,9 @@ void ViewReader::readFromMongoDB(const string& nodeType, const string& modelOrVi
 								}
 								else if(childNodeName=="View" || childNodeName=="Model")
 								{
-									setModelOrViewName(childNodeName, childObj);
+									string newName;
+									setModelOrViewName(childNodeName, childObj, newName);
+									readFromMongoDB(childNodeName, newName, type);
 								}
 								else
 									readFromMongoDB(childNodeName, modelOrViewName, type);

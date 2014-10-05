@@ -91,8 +91,6 @@ protected:
         /// Event handler.
         Base::EventHandler <ModelWriter> h_write2DB;
 
-        /// Input data stream
-        Base::DataStreamIn <cv::Mat> in_img;
 
 
 private:
@@ -113,14 +111,6 @@ private:
 	   string cloudType;
 	   string dbCollectionPath;
 
-	   /// Cloud containing points with Cartesian coordinates (XYZ).
-	   Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZ>::Ptr > in_cloud_xyz;
-
-	   /// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
-	   Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > in_cloud_xyzrgb;
-
-	   /// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
-	   Base::DataStreamIn<pcl::PointCloud<PointXYZSIFT>::Ptr> in_cloud_xyzsift;
 	   void Write_xyz();
 	   void Write_xyzrgb();
 	   void Write_xyzsift();
@@ -132,8 +122,6 @@ private:
 	   void insertToModelOrView(const string &,const string &);
 	   void initView(const string &, bool);
 	   void initModel(const string &, bool);
-	   void setModelOrViewName(const string&, const BSONObj&);
-	   void setMime(const string&, string&);
 	   void insertFileToGrid(OID&);
 	   void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
 	   void addScenes(BSONObj&);

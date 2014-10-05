@@ -108,13 +108,6 @@ void MongoDBImporter::getFileFromGrid(const GridFile& file, const string& modelO
 	}
 }
 
-void MongoDBImporter::setModelOrViewName(const string& childNodeName, const BSONObj& childObj)
-{
-	CLOG(LTRACE)<<"MongoDBImporter::setModelOrViewName";
-	string type = childNodeName;
-	string modelOrViewName = childObj.getField(type+"Name").str();
-	readFromMongoDB(childNodeName, modelOrViewName, type);
-}
 void MongoDBImporter::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID)
 {
 	CLOG(LTRACE)<<"MongoDBImporter::readFile";
@@ -167,7 +160,9 @@ void MongoDBImporter::readFromMongoDB(const string& nodeType, const string& mode
 								}
 								else if(childNodeName=="View" || childNodeName=="Model")
 								{
-									setModelOrViewName(childNodeName, childObj);
+									string newName;
+									setModelOrViewName(childNodeName, childObj, newName);
+									readFromMongoDB(childNodeName, newName, type);
 								}
 								else
 									readFromMongoDB(childNodeName, modelOrViewName, type);

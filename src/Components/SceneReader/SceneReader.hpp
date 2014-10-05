@@ -85,12 +85,6 @@ protected:
         /// Event handler.
         Base::EventHandler <SceneReader> h_readfromDB;
 
-        /// Input data stream
-        Base::DataStreamIn <cv::Mat> in_img;
-
-        /// Output data stream - processed image
-        Base::DataStreamOut <Mat> out_img;
-
 private:
         Base::Property<string> mongoDBHost;
         Base::Property<string> sceneName;
@@ -103,7 +97,6 @@ private:
 		string dbCollectionPath;
 		auto_ptr<DBClientCursor> cursorCollection;
 		auto_ptr<DBClientCursor> childCursor;
-		//MongoBase::MongoBase* base;
 
         void readfromDB();
         void getObjects();

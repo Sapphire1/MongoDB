@@ -84,12 +84,6 @@ protected:
         /// Event handler.
         Base::EventHandler <SceneWriter> h_write2DB;
 
-        /// Input data stream
-        Base::DataStreamIn <cv::Mat> in_img;
-
-        /// Output data stream - processed image
-        Base::DataStreamOut <Mat> out_img;
-
 private:
         Base::Property<string> mongoDBHost;
         Base::Property<string> objectName;
@@ -110,8 +104,6 @@ private:
         void insertToModelOrView(const string &,const string &);
         void initView(const string &, bool);
         void initModel(const string &, bool);
-        void setModelOrViewName(const string&, const BSONObj&);
-        void setMime(const std::vector<string>::iterator, string&);
         void insertFileToGrid(const std::vector<string>::iterator, const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
         void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
         void addScenes(BSONObj&);
