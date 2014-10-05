@@ -38,7 +38,7 @@ using namespace mongo;
 using namespace std;
 
 
-class ModelWriter: public Base::Component
+class ModelWriter: public Base::Component, MongoBase::MongoBase
 {
 public:
         /*!
@@ -115,7 +115,7 @@ private:
 	   vector<string>  docViewsNames;
 	   vector<string>  docModelsNames;
 	   string dbCollectionPath;
-	   MongoBase::MongoBase* base;
+	   //MongoBase::MongoBase* base;
 
 	   /// Cloud containing points with Cartesian coordinates (XYZ).
 	   Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZ>::Ptr > in_cloud_xyz;

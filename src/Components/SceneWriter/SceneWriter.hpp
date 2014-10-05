@@ -31,7 +31,7 @@ using namespace mongo;
 using namespace std;
 
 
-class SceneWriter: public Base::Component
+class SceneWriter: public Base::Component, MongoBase::MongoBase
 {
 public:
         /*!
@@ -105,7 +105,7 @@ private:
   	    vector<string>  docModelsNames;
 
         string dbCollectionPath;
-        MongoBase::MongoBase* base;
+        //MongoBase::MongoBase* base;
 
         void run();
         void initObject();

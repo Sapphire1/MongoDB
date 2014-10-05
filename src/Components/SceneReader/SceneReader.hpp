@@ -32,7 +32,7 @@ using namespace cv;
 using namespace mongo;
 
 
-class SceneReader: public Base::Component
+class SceneReader: public Base::Component, MongoBase::MongoBase
 {
 public:
         /*!
@@ -104,7 +104,7 @@ private:
 		string dbCollectionPath;
 		auto_ptr<DBClientCursor> cursorCollection;
 		auto_ptr<DBClientCursor> childCursor;
-		MongoBase::MongoBase* base;
+		//MongoBase::MongoBase* base;
 
         void readfromDB();
         void getObjects();

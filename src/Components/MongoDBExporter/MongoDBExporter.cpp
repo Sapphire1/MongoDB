@@ -37,7 +37,7 @@ MongoDBExporter::MongoDBExporter(const string & name) : Base::Component(name),
         registerProperty(modelNameProp);
         registerProperty(sceneNamesProp);
 
-        base = new MongoBase::MongoBase();
+        //base = new MongoBase::MongoBase();
 
         CLOG(LTRACE) << "Hello MongoDBExporter";
 }
@@ -180,7 +180,7 @@ void MongoDBExporter::addScenes(BSONObj& object)
 			CLOG(LTRACE)<<scene;
 
 			vector<OID> childsVector;
-			if(base->getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
+			if(getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
 			{
 				for (unsigned int i = 0; i<childsVector.size(); i++)
 				{
@@ -256,7 +256,7 @@ void MongoDBExporter::initObject()
 
 		addScenes(object);
 
-		vector<string> models = base->getAllFolders((string)folderName+"/Model/");
+		vector<string> models = getAllFolders((string)folderName+"/Model/");
 		for(std::vector<string>::iterator it = models.begin(); it != models.end(); ++it)
 		{
 			string type = "Model";
@@ -264,7 +264,7 @@ void MongoDBExporter::initObject()
 			createModelOrView(it, type, bsonBuilder);
 		}
 
-		vector<string> views = base->getAllFolders((string)folderName+"/View/");
+		vector<string> views = getAllFolders((string)folderName+"/View/");
 		for(std::vector<string>::iterator it = views.begin(); it != views.end(); ++it)
 		{
 			string type = "View";
@@ -291,9 +291,9 @@ void MongoDBExporter::addToObject(const Base::Property<string>& nodeTypeProp,con
 	nodeType = nodeTypeProp;
 	if(nodeType=="View"||nodeType=="Model")
 		type=nodeType;
-	else if(base->isModelLastLeaf(nodeTypeProp))
+	else if(isModelLastLeaf(nodeTypeProp))
 		type="Model";
-	else if(base->isViewLastLeaf(nodeTypeProp))
+	else if(isViewLastLeaf(nodeTypeProp))
 		type="View";
 	CLOG(LTRACE)<<"Type: " <<type;
 
@@ -443,7 +443,7 @@ void MongoDBExporter::writeNode2MongoDB(const string &source, const string &dest
     try{
     	for(std::vector<string>::iterator itExtension = fileExtensions.begin(); itExtension != fileExtensions.end(); ++itExtension) {
     		CLOG(LTRACE) <<"source+*itExtension "<<source+*itExtension;
-			vector<string> files = base->getAllFiles(source+*itExtension);
+			vector<string> files = getAllFiles(source+*itExtension);
 			for(std::vector<string>::iterator it = files.begin(); it != files.end(); ++it)
 			{
 				string fileName = *it;
@@ -495,7 +495,7 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 					return;
 			}
 		}
-		if(base->isViewLastLeaf(destination) || base->isModelLastLeaf(destination))
+		if(isViewLastLeaf(destination) || isModelLastLeaf(destination))
 		{
 			unsigned long long nr = c.count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"));
 			if(nr==0)
@@ -519,7 +519,7 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 				BSONObj obj = cursorCollection->next();
 				vector<OID> childsVector;
 				// check if node has some files
-				if(base->getChildOIDS(obj, "childOIDs", "childOID", childsVector)>0 && childsVector.size()>0)
+				if(getChildOIDS(obj, "childOIDs", "childOID", childsVector)>0 && childsVector.size()>0)
 				{
 					CLOG(LTRACE)<<type <<"There are some files in Mongo in this node!";
 				}
@@ -549,7 +549,7 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 					}
 				}
 			}
-			base->findDocumentInCollection(c, dbCollectionPath, objectName, destination, cursorCollection, modelOrViewName, type, items);
+			findDocumentInCollection(c, dbCollectionPath, objectName, destination, cursorCollection, modelOrViewName, type, items);
 			if(items>0)
 			{
 				while (cursorCollection->more())
@@ -557,7 +557,7 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 						BSONObj obj = cursorCollection->next();
 						CLOG(LTRACE)<< obj;
 						vector<OID> childsVector;
-						if(base->getChildOIDS(obj, "childOIDs", "childOID", childsVector)>0)
+						if(getChildOIDS(obj, "childOIDs", "childOID", childsVector)>0)
 						{
 							for (unsigned int i = 0; i<childsVector.size(); i++)
 							{

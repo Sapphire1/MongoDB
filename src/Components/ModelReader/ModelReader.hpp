@@ -39,7 +39,7 @@ using namespace cv;
 using namespace mongo;
 
 
-class ModelReader: public Base::Component, SIFTObjectModelFactory
+class ModelReader: public Base::Component, SIFTObjectModelFactory, MongoBase::MongoBase
 {
 public:
         /*!
@@ -110,7 +110,7 @@ private:
         string dbCollectionPath;
         auto_ptr<DBClientCursor> cursorCollection;
         auto_ptr<DBClientCursor> childCursor;
-        MongoBase::MongoBase* base;
+       // MongoBase::MongoBase* base;
     	std::string name_cloud_xyz;
     	std::string name_cloud_xyzrgb;
     	std::string name_cloud_xyzsift;

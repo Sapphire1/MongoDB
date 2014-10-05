@@ -30,7 +30,7 @@ ModelReader::ModelReader(const std::string & name) : Base::Component(name),
 		registerProperty(modelType);
         CLOG(LTRACE) << "Hello ModelReader";
 
-        base = new MongoBase::MongoBase();
+        //base = new MongoBase::MongoBase();
 }
 
 ModelReader::~ModelReader()
@@ -272,7 +272,7 @@ void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrV
 	std::vector<AbstractObject*> models;
 	try{
 		int items=0;
-		base->findDocumentInCollection(c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
+		findDocumentInCollection(c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
 		if(items>0)
 		{
 			CLOG(LINFO)<<"Founded some data";
@@ -281,7 +281,7 @@ void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrV
 				BSONObj obj = cursorCollection->next();
 				CLOG(LTRACE)<<obj;
 				vector<OID> childsVector;
-				int items =  base->getChildOIDS(obj, "childOIDs", "childOID", childsVector);
+				int items =  getChildOIDS(obj, "childOIDs", "childOID", childsVector);
 				if(items>0)
 				{
 					CLOG(LTRACE)<<"There are childs "<<childsVector.size();
@@ -295,7 +295,7 @@ void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrV
 							CLOG(LTRACE)<<childNodeName;
 							if(childNodeName!="EOO")
 							{
-								if(base->isViewLastLeaf(nodeType) || base->isModelLastLeaf(nodeType))
+								if(isViewLastLeaf(nodeType) || isModelLastLeaf(nodeType))
 								{
 									CLOG(LTRACE)<<"LastLeaf"<<" childNodeName "<<childNodeName;
 									readFile(modelOrViewName, nodeType, type, childsVector[i], models);

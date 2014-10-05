@@ -37,7 +37,7 @@ using namespace cv;
 using namespace mongo;
 
 
-class ViewReader: public Base::Component
+class ViewReader: public Base::Component, MongoBase::MongoBase
 {
 public:
         /*!
@@ -107,7 +107,7 @@ private:
         string dbCollectionPath;
         auto_ptr<DBClientCursor> cursorCollection;
         auto_ptr<DBClientCursor> childCursor;
-        MongoBase::MongoBase* base;
+        //MongoBase::MongoBase* base;
 
         /// Cloud containing points with Cartesian coordinates (XYZ).
         Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZ>::Ptr > out_cloud_xyz;

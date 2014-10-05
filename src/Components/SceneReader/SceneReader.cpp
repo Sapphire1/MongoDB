@@ -30,10 +30,7 @@ SceneReader::SceneReader(const std::string & name) : Base::Component(name),
 		registerProperty(getObjectsActive);
 		registerProperty(getScenesActive);
 		registerProperty(getObjectFromSceneActive);
-		base = new MongoBase::MongoBase();
         CLOG(LTRACE) << "Hello SceneReader";
-
-        base = new MongoBase::MongoBase();
 }
 
 SceneReader::~SceneReader()
@@ -73,7 +70,7 @@ void SceneReader::getObjects()
 		cursorCollection  =c.query(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
 		vector<OID> childsVector;
 		BSONObj scene = cursorCollection->next();
-		if(base->getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
+		if(getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
 		{
 			for (unsigned int i = 0; i<childsVector.size(); i++)
 			{
@@ -109,7 +106,7 @@ void SceneReader::getScenes()
 		cursorCollection  =c.query(dbCollectionPath, (QUERY("ObjectName"<<objectName)));
 		vector<OID> childsVector;
 		BSONObj object = cursorCollection->next();
-		if(base->getChildOIDS(object, "sceneOIDs", "sceneOID", childsVector)>0)
+		if(getChildOIDS(object, "sceneOIDs", "sceneOID", childsVector)>0)
 		{
 			for (unsigned int i = 0; i<childsVector.size(); i++)
 			{
@@ -147,7 +144,7 @@ void SceneReader::getObjectFromScene()
 		cursorCollection  =c.query(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
 		vector<OID> childsVector;
 		BSONObj scene = cursorCollection->next();
-		if(base->getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
+		if(getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
 		{
 			for (unsigned int i = 0; i<childsVector.size(); i++)
 			{

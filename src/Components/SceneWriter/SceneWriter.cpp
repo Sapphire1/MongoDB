@@ -28,8 +28,6 @@ SceneWriter::SceneWriter(const string & name) : Base::Component(name),
         registerProperty(collectionName);
         registerProperty(nodeTypeProp);
         registerProperty(sceneNamesProp);
-        base = new MongoBase::MongoBase();
-
         CLOG(LTRACE) << "Hello SceneWriter";
 }
 
@@ -124,7 +122,7 @@ try{
 			CLOG(LINFO)<<"Add scene to the object items>0!";
 
 			vector<OID> childsVector;
-			if(base->getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
+			if(getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
 			{
 
 				CLOG(LINFO)<<"Sprawdzam czy scena zawiera juz ten obiekt";

@@ -44,7 +44,7 @@ ModelWriter::ModelWriter(const string & name) : Base::Component(name),
 	registerProperty(binary);
 	registerProperty(suffix);
 
-	base = new MongoBase::MongoBase();
+	//base = new MongoBase::MongoBase();
     CLOG(LTRACE) << "Hello ModelWriter";
 }
 
@@ -239,7 +239,7 @@ void ModelWriter::addScenes(BSONObj& object)
 			CLOG(LTRACE)<<scene;
 
 			vector<OID> childsVector;
-			if(base->getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
+			if(getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
 			{
 				for (unsigned int i = 0; i<childsVector.size(); i++)
 				{
@@ -327,9 +327,9 @@ void ModelWriter::addToObject(const Base::Property<string>& nodeTypeProp,const s
 	nodeType = nodeTypeProp;
 	if(nodeType=="View"||nodeType=="Model")
 		type=nodeType;
-	else if(base->isModelLastLeaf(nodeTypeProp))
+	else if(isModelLastLeaf(nodeTypeProp))
 		type="Model";
-	else if(base->isViewLastLeaf(nodeTypeProp))
+	else if(isViewLastLeaf(nodeTypeProp))
 		type="View";
 	CLOG(LTRACE)<<"Type: " <<type;
 
@@ -509,7 +509,7 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 					return;
 			}
 		}
-		if(base->isViewLastLeaf(destination) || base->isModelLastLeaf(destination))
+		if(isViewLastLeaf(destination) || isModelLastLeaf(destination))
 		{
 			unsigned long long nr = c.count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"));
 			if(nr==0)
@@ -533,7 +533,7 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 				BSONObj obj = cursorCollection->next();
 				vector<OID> childsVector;
 				// check if node has some files
-				if(base->getChildOIDS(obj, "childOIDs", "childOID", childsVector)>0 && childsVector.size()>0)
+				if(getChildOIDS(obj, "childOIDs", "childOID", childsVector)>0 && childsVector.size()>0)
 				{
 					CLOG(LTRACE)<<type <<"There are some files in Mongo in this node!";
 				}
@@ -562,7 +562,7 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 					}
 				}
 			}
-			base->findDocumentInCollection(c, dbCollectionPath, objectName, destination, cursorCollection, modelOrViewName, type, items);
+			findDocumentInCollection(c, dbCollectionPath, objectName, destination, cursorCollection, modelOrViewName, type, items);
 			if(items>0)
 			{
 				while (cursorCollection->more())
@@ -570,7 +570,7 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 						BSONObj obj = cursorCollection->next();
 						CLOG(LTRACE)<< obj;
 						vector<OID> childsVector;
-						if(base->getChildOIDS(obj, "childOIDs", "childOID", childsVector)>0)
+						if(getChildOIDS(obj, "childOIDs", "childOID", childsVector)>0)
 						{
 							for (unsigned int i = 0; i<childsVector.size(); i++)
 							{

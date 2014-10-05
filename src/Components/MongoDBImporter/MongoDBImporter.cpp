@@ -30,8 +30,6 @@ MongoDBImporter::MongoDBImporter(const std::string & name) : Base::Component(nam
 		registerProperty(folderName);
 		registerProperty(type);
         CLOG(LTRACE) << "Hello MongoDBImporter";
-
-        base = new MongoBase::MongoBase();
 }
 
 MongoDBImporter::~MongoDBImporter()
@@ -153,7 +151,7 @@ void MongoDBImporter::readFromMongoDB(const string& nodeType, const string& mode
 	string name;
 	try{
 		int items=0;
-		base->findDocumentInCollection(c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
+		findDocumentInCollection(c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
 
 		if(items>0)
 		{
@@ -163,7 +161,7 @@ void MongoDBImporter::readFromMongoDB(const string& nodeType, const string& mode
 				BSONObj obj = cursorCollection->next();
 				CLOG(LTRACE)<<obj;
 				vector<OID> childsVector;
-				int items =  base->getChildOIDS(obj, "childOIDs", "childOID", childsVector);
+				int items =  getChildOIDS(obj, "childOIDs", "childOID", childsVector);
 				if(items>0)
 				{
 					CLOG(LTRACE)<<"There are childs "<<childsVector.size();
@@ -176,7 +174,7 @@ void MongoDBImporter::readFromMongoDB(const string& nodeType, const string& mode
 							string childNodeName= childObj.getField("Type").str();
 							if(childNodeName!="EOO")
 							{
-								if(base->isViewLastLeaf(nodeType) || base->isModelLastLeaf(nodeType))
+								if(isViewLastLeaf(nodeType) || isModelLastLeaf(nodeType))
 								{
 									CLOG(LTRACE)<<"LastLeaf"<<" childNodeName "<<childNodeName;
 									readFile(modelOrViewName, nodeType, type, childsVector[i]);

@@ -31,7 +31,7 @@ using namespace mongo;
 using namespace std;
 
 
-class MongoDBExporter: public Base::Component
+class MongoDBExporter: public Base::Component, MongoBase::MongoBase
 {
 public:
         /*!
@@ -110,7 +110,7 @@ private:
   	    vector<string>  docModelsNames;
 
         string dbCollectionPath;
-        MongoBase::MongoBase* base;
+        //MongoBase::MongoBase* base;
 
         void run();
         void initObject();
