@@ -1,14 +1,33 @@
 /*
- * MongoBase.cpp
+ * MongoBase.hpp
  *
  *  Created on: Sep 23, 2014
  *      Author: lzmuda
  */
 
-#include "MongoBase.hpp"
-using namespace cv;
-using namespace mongo;
-using namespace std;
+#ifndef MONGOBASE_HPP_
+#define MONGOBASE_HPP_
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <boost/algorithm/string.hpp>
+
+#include <cstdlib>
+#include <iostream>
+#include <glob.h>
+#include <memory>
+#include <string>
+#include <vector>
+#include <fstream>
+
+#include "Logger.hpp"
+#include "mongo/client/dbclient.h"
+#include "Component_Aux.hpp"
+#include "Component.hpp"
+#include "DataStream.hpp"
+#include "Property.hpp"
+#include <dirent.h>
 
 
 namespace MongoBase {
@@ -16,6 +35,19 @@ using namespace cv;
 using namespace mongo;
 using namespace std;
 using namespace boost;
+
+class MongoBase {
+public:
+	MongoBase();
+	virtual ~MongoBase();
+	vector<string> getAllFiles(const string& pattern);
+	vector<string> getAllFolders(const string& pattern);
+	int getChildOIDS(BSONObj &obj, const string&,  const string&, vector<OID>&);
+	bool isModelLastLeaf(const string&);
+	bool isViewLastLeaf(const string&);
+	void findDocumentInCollection(DBClientConnection&, string&, Base::Property<string> &, const string &, auto_ptr<DBClientCursor> &, const string &, const string & , int&);
+
+};
 
 MongoBase::MongoBase() {
 	//this->c=c;
@@ -127,46 +159,5 @@ bool MongoBase::isModelLastLeaf(const string& nodeType)
 		return false;
 }
 
-void MongoBase::writeNode2MongoDB(const string &destination, const string &type,string modelOrViewName)
-{
-	//CLOG(LTRACE) <<"writeNode2MongoDB";
-	OID oid;
-	//CLOG(LTRACE) <<"Filename: " << fileName << " destination: "<< destination<<" dbCollectionPath: "<<dbCollectionPath;
-    try{
-		insertFileToGrid(oid);
-		//c.update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
-		//CLOG(LTRACE) <<"Files saved successfully";
-    }
-	catch(DBException &e)
-	{
-		//CLOG(LERROR) <<"Something goes wrong... :<";
-		//CLOG(LERROR) <<c.getLastError();
-	}
-}
-
-void MongoBase::insertFileToGrid(OID& oid)
-{
-	/*
-	BSONObj object;
-	BSONElement bsonElement;
-	string mime="";
-	setMime(extension, mime);
-	cv::Mat tempImg = in_img.read();
-	std::stringstream ss;
-	boost::posix_time::time_facet *facet = new boost::posix_time::time_facet("%d_%m_%Y_%H_%M_%S");
-	ss.imbue(locale(cout.getloc(), facet));
-	ss<<second_clock::local_time();
-	CLOG(LINFO) << ss.str() << endl;
-	string tempFileName = string(fileName)+"."+string(extension);
-	cv::imwrite(tempFileName, tempImg);
-	GridFS fs(c, collectionName);
-	string fileNameInmongo = (string)remoteFileName + ss.str();
-	object = fs.storeFile(tempFileName, fileNameInmongo, mime);
-	BSONObj b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
-	c.insert(dbCollectionPath, b);
-	b.getObjectID(bsonElement);
-	oid=bsonElement.__oid();
-	*/
-}
-
 } /* namespace MongoBase */
+#endif /* MONGOBASE_HPP_ */

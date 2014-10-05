@@ -27,7 +27,7 @@
 #include "DataStream.hpp"
 #include "Property.hpp"
 #include <dirent.h>
-#include "MongoBase.hpp"
+#include <Types/MongoBase.hpp>
 #include <Types/PointXYZSIFT.hpp>
 
 namespace Processors {

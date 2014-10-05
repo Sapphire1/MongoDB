@@ -23,7 +23,7 @@
 #include "mongo/client/dbclient.h"
 #include "mongo/bson/bson.h"
 #include "Logger.hpp"
-#include "MongoBase.hpp"
+#include <Types/MongoBase.hpp>
 
 namespace Processors {
 namespace SceneReader {
