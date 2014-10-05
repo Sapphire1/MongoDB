@@ -86,10 +86,9 @@ bool ViewReader::onStart()
         return true;
 }
 
-void ViewReader::ReadPCDCloud(const string& filename)
+void ViewReader::ReadPCDCloud(const string& filename, const string& tempFile)
 {
 	CLOG(LTRACE) << "ViewReader::ReadPCDCloud";
-	string tempFile="tempFile";
 	// Try to read the cloud of XYZRGB points.
 	if(filename.find("xyzrgb")!=string::npos)
 	{
@@ -133,29 +132,12 @@ void ViewReader::ReadPCDCloud(const string& filename)
 		}
 }
 
-void ViewReader::getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeType, const string& type, const string& fileName, const string& mime)
+void ViewReader::writeToSink(string& mime, string& tempFilename, string& fileName)
 {
-	CLOG(LTRACE)<<"ViewReader::getFileFromGrid";
-	CLOG(LINFO)<<"Filename: "<< fileName<< " Mime: "<<mime;
-	stringstream ss;
-	string str = ss.str();
-	string fn = "tempFile";
-	char *filename = (char*)fn.c_str();
-	ofstream ofs(filename);
-	gridfs_offset off = file.write(ofs);
-	if (off != file.getContentLength())
-	{
-		CLOG(LERROR) << "Failed to read a file from mongoDB";
-	}
-	else
-	{
-		CLOG(LTRACE) << "Success read a file from mongoDB";
-	}
-
 	if(mime=="image/png" || mime=="image/jpeg")
 	{
 		// read from disc
-		cv::Mat image = imread(filename, CV_LOAD_IMAGE_UNCHANGED);
+		cv::Mat image = imread(tempFilename, CV_LOAD_IMAGE_UNCHANGED);
 		out_img.write(image);
 	}
 	else if(mime=="text/plain")
@@ -165,7 +147,7 @@ void ViewReader::getFileFromGrid(const GridFile& file, const string& modelOrView
 		if((fileName.find("pcd"))!=string::npos)
 		{
 			CLOG(LINFO)<<"pcd :)";
-			ReadPCDCloud(fileName);
+			ReadPCDCloud(fileName, tempFilename);
 		}
 		else if(fileName.find("txt")!=string::npos)
 		{
@@ -176,7 +158,6 @@ void ViewReader::getFileFromGrid(const GridFile& file, const string& modelOrView
 			CLOG(LERROR)<<"Nie wiem co to za plik :/";
 	}
 }
-
 void ViewReader::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID)
 {
 	CLOG(LTRACE)<<"ViewReader::readFile";
@@ -194,7 +175,9 @@ void ViewReader::readFile(const string& modelOrViewName, const string& nodeType,
 		string filename = file.getFileField("filename").str();
 		// get mime from file
 		string mime = file.getContentType();
-		getFileFromGrid(file, modelOrViewName, nodeType, type, filename, mime);
+		string tempFile = "tempFile";
+		getFileFromGrid(file, modelOrViewName, nodeType, type, filename, mime, tempFile);
+		writeToSink(mime, tempFile, filename);
 	}
 }
 

@@ -102,9 +102,9 @@ private:
         auto_ptr<DBClientCursor> childCursor;
 
         void readFromMongoDB(const string&, const string&, const string&);
-        void ReadPCDCloud(const string&);
+        void ReadPCDCloud(const string&, const string&);
         void readfromDB();
-        void getFileFromGrid(const GridFile &, const string &, const string &, const string &, const string &, const string &);
+        void writeToSink(string& mime, string& filename, string& fileName);
         void readFile(const string&, const string&, const string&, const OID&);
         void run();
 };

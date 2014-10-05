@@ -103,7 +103,6 @@ private:
         string dbCollectionPath;
         auto_ptr<DBClientCursor> cursorCollection;
         auto_ptr<DBClientCursor> childCursor;
-       // MongoBase::MongoBase* base;
     	std::string name_cloud_xyz;
     	std::string name_cloud_xyzrgb;
     	std::string name_cloud_xyzsift;
@@ -111,10 +110,10 @@ private:
         void readFromMongoDB(const string&, const string&, const string&);
         void readfromDB();
         void loadModels(string&, string&, std::vector<AbstractObject*>&);
-        void ReadPCDCloud(const string&);
-        void getFileFromGrid(const GridFile &, const string &, const string &, const string &, const string &, const string &);
+        void ReadPCDCloud(const string&, const string&);
         void readFile(const string&, const string&, const string&, const OID&, std::vector<AbstractObject*>&);
         void run();
+        void writeToSink(string& mime, string& tempFilename, string& fileName);
 };
 }//: namespace ModelReader
 }//: namespace Processors

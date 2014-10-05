@@ -88,7 +88,7 @@ public:
 	void setMime(const string& extension,  string& mime);
 	void connectToMongoDB(string&);
 	void setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName);
-
+    void getFileFromGrid(const GridFile &, const string &, const string &, const string &, const string &, const string &, const string &);
 };
 
 MongoBase::MongoBase() {
@@ -97,6 +97,25 @@ MongoBase::MongoBase() {
 }
 
 MongoBase::~MongoBase() {
+}
+
+void MongoBase::getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeType, const string& type, const string& fileName, const string& mime, const string& tempFn)
+{
+	//CLOG(LTRACE)<<"ViewReader::getFileFromGrid";
+	//CLOG(LINFO)<<"Filename: "<< fileName<< " Mime: "<<mime;
+	stringstream ss;
+	string str = ss.str();
+	char *tempFilename = (char*)tempFn.c_str();
+	ofstream ofs(tempFilename);
+	gridfs_offset off = file.write(ofs);
+	if (off != file.getContentLength())
+	{
+		//CLOG(LERROR) << "Failed to read a file from mongoDB";
+	}
+	else
+	{
+		//CLOG(LTRACE) << "Success read a file from mongoDB";
+	}
 }
 
 void MongoBase::setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName)

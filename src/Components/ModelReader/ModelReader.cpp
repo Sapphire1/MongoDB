@@ -91,55 +91,9 @@ bool ModelReader::onStart()
         return true;
 }
 
-void ModelReader::getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeType, const string& type, const string& fileName, const string& mime)
-{
-	CLOG(LTRACE)<<"ViewReader::getFileFromGrid";
-	CLOG(LINFO)<<"Filename: "<< fileName<< " Mime: "<<mime;
-	stringstream ss;
-	string str = ss.str();
-	///TODO zmienic na parametr, albo chociaz zadeklarowac jako pole klasy
-	string fn = "tempFile";
-	char *filename = (char*)fn.c_str();
-	ofstream ofs(filename);
-	gridfs_offset off = file.write(ofs);
-	if (off != file.getContentLength())
-	{
-		CLOG(LERROR) << "Failed to read a file from mongoDB";
-	}
-	else
-	{
-		CLOG(LTRACE) << "Success read a file from mongoDB";
-	}
-
-	if(mime=="image/png" || mime=="image/jpeg")
-	{
-		// read from disc
-		cv::Mat image = imread(filename, CV_LOAD_IMAGE_UNCHANGED);
-		out_img.write(image);
-	}
-	else if(mime=="text/plain")
-	{
-		CLOG(LINFO)<<"mime==text/plain";
-		CLOG(LINFO)<<"fileName.find(pcd): "<<fileName.find("pcd");
-		if((fileName.find("pcd"))!=string::npos)
-		{
-			CLOG(LINFO)<<"pcd :)";
-			ReadPCDCloud(fileName);
-		}
-		else if(fileName.find("txt")!=string::npos)
-		{
-			//TODO read text file
-			;
-		}
-		else
-			CLOG(LERROR)<<"Nie wiem co to za plik :/";
-	}
-}
-
-void ModelReader::ReadPCDCloud(const string& filename)
+void ModelReader::ReadPCDCloud(const string& filename, const string& tempFile)
 {
 	CLOG(LTRACE) << "ViewReader::ReadPCDCloud";
-	string tempFile="tempFile";
 	// Try to read the cloud of XYZRGB points.
 	if(filename.find("xyzrgb")!=string::npos)
 	{
@@ -216,6 +170,32 @@ void ModelReader::loadModels(string& name_cloud, string& features_number, std::v
 	}
 }
 
+void ModelReader::writeToSink(string& mime, string& tempFilename, string& fileName)
+{
+	if(mime=="image/png" || mime=="image/jpeg")
+	{
+		// read from disc
+		cv::Mat image = imread(tempFilename, CV_LOAD_IMAGE_UNCHANGED);
+		out_img.write(image);
+	}
+	else if(mime=="text/plain")
+	{
+		CLOG(LINFO)<<"mime==text/plain";
+		CLOG(LINFO)<<"fileName.find(pcd): "<<fileName.find("pcd");
+		if((fileName.find("pcd"))!=string::npos)
+		{
+			CLOG(LINFO)<<"pcd :)";
+			ReadPCDCloud(fileName, tempFilename);
+		}
+		else if(fileName.find("txt")!=string::npos)
+		{
+			//TODO read text file
+			;
+		}
+		else
+			CLOG(LERROR)<<"Nie wiem co to za plik :/";
+	}
+}
 
 void ModelReader::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID, std::vector<AbstractObject*>& models)
 {
@@ -236,7 +216,9 @@ void ModelReader::readFile(const string& modelOrViewName, const string& nodeType
 			featuresNumber = file.getFileField("mean_viewpoint_features_number").str();
 		// get mime from file
 		string mime = file.getContentType();
-		getFileFromGrid(file, modelOrViewName, nodeType, type, filename, mime);
+		string tempFile = "tempFile";
+		getFileFromGrid(file, modelOrViewName, nodeType, type, filename, mime, tempFile);
+		writeToSink(mime, tempFile, filename);
 		CLOG(LTRACE)<<"Add to model";
 		loadModels(filename, featuresNumber, models);
 	}

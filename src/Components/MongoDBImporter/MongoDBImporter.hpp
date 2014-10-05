@@ -99,8 +99,8 @@ private:
 
         void readFromMongoDB(const string&, const string&, const string&);
         void readfromDB();
-        void getFileFromGrid(const GridFile &, const string &, const string &, const string &);
         void readFile(const string&, const string&, const string&, const OID&);
+        void getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeType, const string& type);
         void run();
 };
 }//: namespace MongoDBImporter
