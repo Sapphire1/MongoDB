@@ -59,16 +59,8 @@ bool ViewReader::onInit()
         CLOG(LTRACE) << "ViewReader::initialize";
         if(collectionName=="containers")
         	dbCollectionPath="images.containers";
-        try
-        {
-      	  c.connect(mongoDBHost);
-      	  //base = MongoBase::MongoBase(c,dbCollectionPath,objectName);
-         }
-         catch(DBException &e)
-         {
-        	 CLOG(LERROR) <<"Something goes wrong... :>";
-        	 CLOG(LERROR) <<c.getLastError();
-         }
+        string hostname = mongoDBHost;
+        connectToMongoDB(hostname);
         return true;
 }
 
@@ -195,7 +187,7 @@ void ViewReader::setModelOrViewName(const string& childNodeName, const BSONObj& 
 void ViewReader::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID)
 {
 	CLOG(LTRACE)<<"ViewReader::readFile";
-	GridFS fs(c,collectionName);
+	GridFS fs(*c,collectionName);
 	CLOG(LTRACE)<<"_id"<<childOID;
 	GridFile file = fs.findFile(QUERY("_id" << childOID));
 
@@ -219,7 +211,7 @@ void ViewReader::readFromMongoDB(const string& nodeType, const string& modelOrVi
 	string name;
 	try{
 		int items=0;
-		findDocumentInCollection(c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
+		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
 		if(items>0)
 		{
 			CLOG(LINFO)<<"Founded some data";
@@ -235,7 +227,7 @@ void ViewReader::readFromMongoDB(const string& nodeType, const string& modelOrVi
 					for (unsigned int i = 0; i<childsVector.size(); i++)
 					{
 						///TODO tutaj dodac jakies triggrowanie, albo na razie opoznienie czy cos
-						childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+						childCursor =c->query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
 						if(childCursor->more())
 						{
 							BSONObj childObj = childCursor->next();

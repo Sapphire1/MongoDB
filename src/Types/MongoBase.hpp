@@ -39,7 +39,7 @@ using namespace boost;
 class MongoBase {
 public:
 
-    DBClientConnection c;
+    boost::shared_ptr<DBClientConnection> c;
 	vector<string>  docViewsNames;
 	vector<string>  docModelsNames;
 
@@ -53,13 +53,26 @@ public:
 	void findDocumentInCollection(DBClientConnection&, string&, Base::Property<string> &, const string &, auto_ptr<DBClientCursor> &, const string &, const string & , int&);
 	void initViewNames();
 	void initModelNames();
+	void connectToMongoDB(string&);
 };
 
 MongoBase::MongoBase() {
-
+	DBClientConnection *c_ptr = new DBClientConnection();
+	c = boost::shared_ptr<DBClientConnection>(c_ptr);
 }
 
 MongoBase::~MongoBase() {
+}
+
+void MongoBase::connectToMongoDB(string& hostname)
+{
+	try{
+		if(!c->isStillConnected())
+			c->connect(hostname);
+	}catch(ConnectException& ex)
+	{
+		std::cout<<ex.what();
+	}
 }
 
 void MongoBase::initViewNames()

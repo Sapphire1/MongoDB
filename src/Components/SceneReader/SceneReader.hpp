@@ -100,7 +100,6 @@ private:
         Base::Property<bool> getScenesActive;
         Base::Property<bool> getObjectFromSceneActive;
 
-        DBClientConnection c;
 		string dbCollectionPath;
 		auto_ptr<DBClientCursor> cursorCollection;
 		auto_ptr<DBClientCursor> childCursor;

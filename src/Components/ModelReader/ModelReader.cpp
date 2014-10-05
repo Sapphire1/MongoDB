@@ -64,16 +64,8 @@ bool ModelReader::onInit()
 	name_cloud_xyzrgb="";
 	name_cloud_xyzsift="";
 
-	try
-	{
-		c.connect(mongoDBHost);
-		//base = MongoBase::MongoBase(c,dbCollectionPath,objectName);
-	}
-	catch(DBException &e)
-	{
-		CLOG(LERROR) <<"Something goes wrong... :>";
-		CLOG(LERROR) <<c.getLastError();
-	}
+	string hostname = mongoDBHost;
+	connectToMongoDB(hostname);
 	return true;
 }
 
@@ -228,10 +220,9 @@ void ModelReader::loadModels(string& name_cloud, string& features_number, std::v
 void ModelReader::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID, std::vector<AbstractObject*>& models)
 {
 	CLOG(LTRACE)<<"ModelReader::readFile";
-	GridFS fs(c,collectionName);
+	GridFS fs(*c,collectionName);
 	CLOG(LTRACE)<<"_id"<<childOID;
 	GridFile file = fs.findFile(QUERY("_id" << childOID));
-
 	if (!file.exists())
 	{
 		CLOG(LERROR) << "File not found in grid";
@@ -266,7 +257,7 @@ void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrV
 	std::vector<AbstractObject*> models;
 	try{
 		int items=0;
-		findDocumentInCollection(c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
+		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
 		if(items>0)
 		{
 			CLOG(LINFO)<<"Founded some data";
@@ -281,7 +272,7 @@ void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrV
 					CLOG(LTRACE)<<"There are childs "<<childsVector.size();
 					for (unsigned int i = 0; i<childsVector.size(); i++)
 					{
-						childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+						childCursor =c->query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
 						if(childCursor->more())
 						{
 							BSONObj childObj = childCursor->next();

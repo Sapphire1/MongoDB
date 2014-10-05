@@ -58,16 +58,8 @@ bool MongoDBImporter::onInit()
         CLOG(LTRACE) << "MongoDBImporter::initialize";
         if(collectionName=="containers")
         	dbCollectionPath="images.containers";
-        try
-        {
-      	  c.connect(mongoDBHost);
-      	  //base = MongoBase::MongoBase(c,dbCollectionPath,objectName);
-         }
-         catch(DBException &e)
-         {
-        	 CLOG(LERROR) <<"Something goes wrong... :>";
-        	 CLOG(LERROR) <<c.getLastError();
-         }
+        string hostname = mongoDBHost;
+        connectToMongoDB(hostname);
         return true;
 }
 
@@ -126,7 +118,7 @@ void MongoDBImporter::setModelOrViewName(const string& childNodeName, const BSON
 void MongoDBImporter::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID)
 {
 	CLOG(LTRACE)<<"MongoDBImporter::readFile";
-	GridFS fs(c,collectionName);
+	GridFS fs(*c,collectionName);
 	CLOG(LTRACE)<<"_id"<<childOID;
 	GridFile file = fs.findFile(QUERY("_id" << childOID));
 	if (!file.exists())
@@ -145,7 +137,7 @@ void MongoDBImporter::readFromMongoDB(const string& nodeType, const string& mode
 	string name;
 	try{
 		int items=0;
-		findDocumentInCollection(c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
+		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
 
 		if(items>0)
 		{
@@ -161,7 +153,7 @@ void MongoDBImporter::readFromMongoDB(const string& nodeType, const string& mode
 					CLOG(LTRACE)<<"There are childs "<<childsVector.size();
 					for (unsigned int i = 0; i<childsVector.size(); i++)
 					{
-						childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+						childCursor =c->query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
 						if(childCursor->more())
 						{
 							BSONObj childObj = childCursor->next();

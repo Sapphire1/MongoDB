@@ -55,14 +55,15 @@ bool SceneWriter::onInit()
       CLOG(LTRACE) << "SceneWriter::initialize";
       try
       {
-		  c.connect(mongoDBHost);
+    	  string hostname = mongoDBHost;
+    	  connectToMongoDB(hostname);
 		  if(collectionName=="containers")
 			dbCollectionPath="images.containers";
       }
 	 catch(DBException &e)
 	 {
 		 CLOG(LERROR) <<"Something goes wrong... :<";
-		 CLOG(LERROR) <<c.getLastError();
+		 CLOG(LERROR) <<c->getLastError();
 	 }
 	 return true;
 }
@@ -110,12 +111,12 @@ try{
 	{
 		CLOG(LTRACE)<<"Scene: "<<*itSceneName;
 		// if scene exist
-		items = c.count(dbCollectionPath, (QUERY("SceneName"<<*itSceneName)));
+		items = c->count(dbCollectionPath, (QUERY("SceneName"<<*itSceneName)));
 
 		// jesli scena istnieje
 		if(items>0)
 		{
-			auto_ptr<DBClientCursor> cursorCollection =c.query(dbCollectionPath, (QUERY("SceneName"<<*itSceneName)));
+			auto_ptr<DBClientCursor> cursorCollection =c->query(dbCollectionPath, (QUERY("SceneName"<<*itSceneName)));
 			BSONObj scene = cursorCollection->next();
 			scene.getObjectID(sceneOI);
 			sceneOID=sceneOI.__oid();
@@ -143,28 +144,28 @@ try{
 			{
 				CLOG(LINFO)<<"objectOID.str(): "<<objectOID.str();
 				CLOG(LINFO)<<"Adding object to the scene and scene to the object";
-				c.update(dbCollectionPath, QUERY("SceneName"<<*itSceneName), BSON("$addToSet"<<BSON("objectsOIDs"<<BSON("objectOID"<<objectOID.str()))), false, true);
+				c->update(dbCollectionPath, QUERY("SceneName"<<*itSceneName), BSON("$addToSet"<<BSON("objectsOIDs"<<BSON("objectOID"<<objectOID.str()))), false, true);
 				// jak nie ma obiektu w scenie to w obiekcie nie ma sceny
 				CLOG(LINFO)<<"sceneOID.str(): "<<sceneOID.str();
-				c.update(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<sceneOID.str()))), false, true);
+				c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<sceneOID.str()))), false, true);
 			}
 		}//if
 		else
 		{
 			CLOG(LINFO)<<"Create scene and add object to array list";
 			BSONObj scene = BSONObjBuilder().genOID().append("SceneName", *itSceneName).obj();
-			c.insert(dbCollectionPath, scene);
+			c->insert(dbCollectionPath, scene);
 
 			CLOG(LINFO)<<"Adding object to the scene";
 			if(object.isEmpty())
 				CLOG(LINFO)<<"Object is empty";
 			CLOG(LINFO)<<"OID: "<< objectOID.str();
-			c.update(dbCollectionPath, QUERY("SceneName"<<*itSceneName), BSON("$addToSet"<<BSON("objectsOIDs"<<BSON("objectOID"<<objectOID.str()))), false, true);
+			c->update(dbCollectionPath, QUERY("SceneName"<<*itSceneName), BSON("$addToSet"<<BSON("objectsOIDs"<<BSON("objectOID"<<objectOID.str()))), false, true);
 
 			CLOG(LINFO)<<"Add scene to object!";
 			scene.getObjectID(sceneOI);
 			sceneOID=sceneOI.__oid();
-			c.update(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<sceneOID.str()))), false, true);
+			c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<sceneOID.str()))), false, true);
 		}
 	}
 }catch(DBException & ex)
@@ -183,11 +184,11 @@ void SceneWriter::initObject()
 	BSONElement oi;
 	try
 	{
-		int items = c.count(dbCollectionPath, (QUERY("Type"<<"Object"<<"ObjectName"<<objectName)));
+		int items = c->count(dbCollectionPath, (QUERY("Type"<<"Object"<<"ObjectName"<<objectName)));
 		if(items>0)
 		{
 			CLOG(LTRACE)<<"Object exist";
-			auto_ptr<DBClientCursor> cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<"Object"<<"ObjectName"<<objectName)));
+			auto_ptr<DBClientCursor> cursorCollection =c->query(dbCollectionPath, (QUERY("Type"<<"Object"<<"ObjectName"<<objectName)));
 			object=cursorCollection->next();
 			OID objectOID;
 			object.getObjectID(oi);
@@ -198,14 +199,14 @@ void SceneWriter::initObject()
 		{
 			CLOG(LTRACE)<<"Object does not exist, create object";
 			object = BSONObjBuilder().genOID().append("Type", "Object").append("ObjectName", objectName).append("description", description).obj();
-			c.insert(dbCollectionPath, object);
+			c->insert(dbCollectionPath, object);
 		}
 		addScenes(object);
   }
 	  catch(DBException &e)
 	  {
 		CLOG(LERROR) <<"Something goes wrong... :<";
-		CLOG(LERROR) <<c.getLastError();
+		CLOG(LERROR) <<c->getLastError();
 	  }
 }
 

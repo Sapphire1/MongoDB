@@ -64,17 +64,17 @@ void SceneReader::getObjects()
 	BSONElement sceneOI;
 	BSONElement objectOI;
 	auto_ptr<DBClientCursor> cursorCollection;
-	int items = c.count(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
+	int items = c->count(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
 	if(items>0)
 	{
-		cursorCollection  =c.query(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
+		cursorCollection  =c->query(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
 		vector<OID> childsVector;
 		BSONObj scene = cursorCollection->next();
 		if(getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
 		{
 			for (unsigned int i = 0; i<childsVector.size(); i++)
 			{
-				auto_ptr<DBClientCursor> childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+				auto_ptr<DBClientCursor> childCursor =c->query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
 				while(childCursor->more())
 				{
 					BSONObj objectDocument = childCursor->next();
@@ -100,17 +100,17 @@ void SceneReader::getScenes()
 	BSONElement sceneOI;
 	BSONElement objectOI;
 	auto_ptr<DBClientCursor> cursorCollection;
-	int items = c.count(dbCollectionPath, (QUERY("ObjectName"<<objectName)));
+	int items = c->count(dbCollectionPath, (QUERY("ObjectName"<<objectName)));
 	if(items>0)
 	{
-		cursorCollection  =c.query(dbCollectionPath, (QUERY("ObjectName"<<objectName)));
+		cursorCollection  =c->query(dbCollectionPath, (QUERY("ObjectName"<<objectName)));
 		vector<OID> childsVector;
 		BSONObj object = cursorCollection->next();
 		if(getChildOIDS(object, "sceneOIDs", "sceneOID", childsVector)>0)
 		{
 			for (unsigned int i = 0; i<childsVector.size(); i++)
 			{
-				auto_ptr<DBClientCursor> childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+				auto_ptr<DBClientCursor> childCursor =c->query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
 				while(childCursor->more())
 				{
 					BSONObj objectDocument = childCursor->next();
@@ -138,17 +138,17 @@ void SceneReader::getObjectFromScene()
 	BSONElement objectOI;
 	bool objectFound = false;
 	auto_ptr<DBClientCursor> cursorCollection;
-	int items = c.count(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
+	int items = c->count(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
 	if(items>0)
 	{
-		cursorCollection  =c.query(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
+		cursorCollection  =c->query(dbCollectionPath, (QUERY("SceneName"<<sceneName)));
 		vector<OID> childsVector;
 		BSONObj scene = cursorCollection->next();
 		if(getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
 		{
 			for (unsigned int i = 0; i<childsVector.size(); i++)
 			{
-				auto_ptr<DBClientCursor> childCursor =c.query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+				auto_ptr<DBClientCursor> childCursor =c->query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
 				while(childCursor->more())
 				{
 					BSONObj objectDocument = childCursor->next();
@@ -184,15 +184,8 @@ bool SceneReader::onInit()
         CLOG(LTRACE) << "SceneReader::initialize";
         if(collectionName=="containers")
         	dbCollectionPath="images.containers";
-		try
-		{
-			c.connect(mongoDBHost);
-		}
-		catch(DBException &e)
-		{
-			CLOG(LERROR) <<"Something goes wrong... :>";
-			CLOG(LERROR) <<c.getLastError();
-		}
+        string hostname = mongoDBHost;
+        connectToMongoDB(hostname);
 		return true;
 }
 

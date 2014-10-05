@@ -99,7 +99,6 @@ private:
         Base::Property<string> folderName;
         Base::Property<string> viewOrModelName;
         Base::Property<string> type;
-        DBClientConnection c;
         string dbCollectionPath;
         auto_ptr<DBClientCursor> cursorCollection;
         auto_ptr<DBClientCursor> childCursor;
