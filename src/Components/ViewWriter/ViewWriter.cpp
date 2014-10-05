@@ -159,30 +159,7 @@ bool ViewWriter::onInit()
 		  c.connect(mongoDBHost);
 		  if(collectionName=="containers")
 			dbCollectionPath="images.containers";
-		  docViewsNames.push_back("Stereo");
-		  docViewsNames.push_back("Kinect");
-		  docViewsNames.push_back("ToF");
-		  docViewsNames.push_back("StereoPC");
-		  docViewsNames.push_back("StereoPCXYZRGB");
-		  docViewsNames.push_back("StereoPCXYZSIFT");
-		  docViewsNames.push_back("StereoPCXYZSHOT");
-		  docViewsNames.push_back("StereoLR");
-		  docViewsNames.push_back("StereoRX");
-		  docViewsNames.push_back("StereoRXM");
-		  docViewsNames.push_back("KinectPC");
-  		  docViewsNames.push_back("KinectPCXYZRGB");
-  		  docViewsNames.push_back("KinectPCXYZSIFT");
-  		  docViewsNames.push_back("KinectPCXYZSHOT");
-		  docViewsNames.push_back("KinectRGBD");
-		  docViewsNames.push_back("KinectRX");
-		  docViewsNames.push_back("KinectRXM");
-		  docViewsNames.push_back("ToFPC");
-		  docViewsNames.push_back("ToFPCXYZRGB");
-		  docViewsNames.push_back("ToFPCXYZSIFT");
-		  docViewsNames.push_back("ToFPCXYZSHOT");
-		  docViewsNames.push_back("ToFRGBD");
-		  docViewsNames.push_back("ToFSiRX");
-		  docViewsNames.push_back("ToFSiRXM");
+		 initViewNames();
       }
 	 catch(DBException &e)
 	 {

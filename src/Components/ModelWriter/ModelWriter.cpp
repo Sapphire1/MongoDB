@@ -167,20 +167,7 @@ bool ModelWriter::onInit()
 		  c.connect(mongoDBHost);
 		  if(collectionName=="containers")
 			dbCollectionPath="images.containers";
-		  else if(collectionName=="food")
-			dbCollectionPath="images.food";
-		  else if(collectionName=="dish")
-			dbCollectionPath="images.dish";
-		  else if(collectionName=="other")
-			dbCollectionPath="images.other";
-
-		  docModelsNames.push_back("SomXYZRgb");
-		  docModelsNames.push_back("SomXYZSift");
-		  docModelsNames.push_back("SsomXYZRgb");
-		  docModelsNames.push_back("SsomXYZSift");
-		  docModelsNames.push_back("SsomXYZShot");
-		  docModelsNames.push_back("SSOM");
-		  docModelsNames.push_back("SOM");
+		  initModelNames();
       }
 	 catch(DBException &e)
 	 {

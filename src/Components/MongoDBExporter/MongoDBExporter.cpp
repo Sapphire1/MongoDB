@@ -82,46 +82,8 @@ bool MongoDBExporter::onInit()
 		  c.connect(mongoDBHost);
 		  if(collectionName=="containers")
 			dbCollectionPath="images.containers";
-		  else if(collectionName=="food")
-			dbCollectionPath="images.food";
-		  else if(collectionName=="dish")
-			dbCollectionPath="images.dish";
-		  else if(collectionName=="other")
-			dbCollectionPath="images.other";
-
-
-		  docViewsNames.push_back("Stereo");
-		  docViewsNames.push_back("Kinect");
-		  docViewsNames.push_back("ToF");
-		  docViewsNames.push_back("StereoPC");
-		  docViewsNames.push_back("StereoPCXYZRGB");
-		  docViewsNames.push_back("StereoPCXYZSIFT");
-		  docViewsNames.push_back("StereoPCXYZSHOT");
-		  docViewsNames.push_back("StereoLR");
-		  docViewsNames.push_back("StereoRX");
-		  docViewsNames.push_back("StereoRXM");
-		  docViewsNames.push_back("KinectPC");
-  		  docViewsNames.push_back("KinectPCXYZRGB");
-  		  docViewsNames.push_back("KinectPCXYZSIFT");
-  		  docViewsNames.push_back("KinectPCXYZSHOT");
-		  docViewsNames.push_back("KinectRGBD");
-		  docViewsNames.push_back("KinectRX");
-		  docViewsNames.push_back("KinectRXM");
-		  docViewsNames.push_back("ToFPC");
-		  docViewsNames.push_back("ToFPCXYZRGB");
-		  docViewsNames.push_back("ToFPCXYZSIFT");
-		  docViewsNames.push_back("ToFPCXYZSHOT");
-		  docViewsNames.push_back("ToFRGBD");
-		  docViewsNames.push_back("ToFSiRX");
-		  docViewsNames.push_back("ToFSiRXM");
-
-		  docModelsNames.push_back("SomXYZRgb");
-		  docModelsNames.push_back("SomXYZSift");
-		  docModelsNames.push_back("SsomXYZRgb");
-		  docModelsNames.push_back("SsomXYZSift");
-		  docModelsNames.push_back("SsomXYZShot");
-		  docModelsNames.push_back("SSOM");
-		  docModelsNames.push_back("SOM");
+		  initViewNames();
+		  initModelNames();
       }
 	 catch(DBException &e)
 	 {

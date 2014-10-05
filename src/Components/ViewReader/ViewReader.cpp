@@ -59,12 +59,6 @@ bool ViewReader::onInit()
         CLOG(LTRACE) << "ViewReader::initialize";
         if(collectionName=="containers")
         	dbCollectionPath="images.containers";
-        else if(collectionName=="food")
-            dbCollectionPath="images.food";
-        else if(collectionName=="dish")
-            dbCollectionPath="images.dish";
-        else if(collectionName=="other")
-            dbCollectionPath="images.other";
         try
         {
       	  c.connect(mongoDBHost);

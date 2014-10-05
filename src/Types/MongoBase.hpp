@@ -38,6 +38,11 @@ using namespace boost;
 
 class MongoBase {
 public:
+
+    DBClientConnection c;
+	vector<string>  docViewsNames;
+	vector<string>  docModelsNames;
+
 	MongoBase();
 	virtual ~MongoBase();
 	vector<string> getAllFiles(const string& pattern);
@@ -46,16 +51,55 @@ public:
 	bool isModelLastLeaf(const string&);
 	bool isViewLastLeaf(const string&);
 	void findDocumentInCollection(DBClientConnection&, string&, Base::Property<string> &, const string &, auto_ptr<DBClientCursor> &, const string &, const string & , int&);
-
+	void initViewNames();
+	void initModelNames();
 };
 
 MongoBase::MongoBase() {
-	//this->c=c;
-	//this->dbCollectionPath = dbCollectionPath;
-	//this->objectName = objectName;
+
 }
 
 MongoBase::~MongoBase() {
+}
+
+void MongoBase::initViewNames()
+{
+	docViewsNames.push_back("Stereo");
+	docViewsNames.push_back("Kinect");
+	docViewsNames.push_back("ToF");
+	docViewsNames.push_back("StereoPC");
+	docViewsNames.push_back("StereoPCXYZRGB");
+	docViewsNames.push_back("StereoPCXYZSIFT");
+	docViewsNames.push_back("StereoPCXYZSHOT");
+	docViewsNames.push_back("StereoLR");
+	docViewsNames.push_back("StereoRX");
+	docViewsNames.push_back("StereoRXM");
+	docViewsNames.push_back("KinectPC");
+	docViewsNames.push_back("KinectPCXYZRGB");
+	docViewsNames.push_back("KinectPCXYZSIFT");
+	docViewsNames.push_back("KinectPCXYZSHOT");
+	docViewsNames.push_back("KinectRGBD");
+	docViewsNames.push_back("KinectRX");
+	docViewsNames.push_back("KinectRXM");
+	docViewsNames.push_back("ToFPC");
+	docViewsNames.push_back("ToFPCXYZRGB");
+	docViewsNames.push_back("ToFPCXYZSIFT");
+	docViewsNames.push_back("ToFPCXYZSHOT");
+	docViewsNames.push_back("ToFRGBD");
+	docViewsNames.push_back("ToFSiRX");
+	docViewsNames.push_back("ToFSiRXM");
+
+}
+
+void MongoBase::initModelNames()
+{
+	docModelsNames.push_back("SomXYZRgb");
+	docModelsNames.push_back("SomXYZSift");
+	docModelsNames.push_back("SsomXYZRgb");
+	docModelsNames.push_back("SsomXYZSift");
+	docModelsNames.push_back("SsomXYZShot");
+	docModelsNames.push_back("SSOM");
+	docModelsNames.push_back("SOM");
 }
 
 vector<string> MongoBase::getAllFiles(const string& pattern)

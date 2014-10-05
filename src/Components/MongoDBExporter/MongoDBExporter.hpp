@@ -105,9 +105,7 @@ private:
         //string sceneName;
         std::vector<std::string> splitedSceneNames;
 
-        DBClientConnection c;
-  	    vector<string>  docViewsNames;
-  	    vector<string>  docModelsNames;
+
 
         string dbCollectionPath;
         //MongoBase::MongoBase* base;
