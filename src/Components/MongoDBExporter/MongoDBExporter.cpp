@@ -53,7 +53,7 @@ void MongoDBExporter::write2DB()
         string ext =extensions;
         boost::split(fileExtensions, ext, is_any_of(","));
         string sceneNames = sceneNamesProp;
-        boost::split(splitedSceneNames, sceneNames, is_any_of(","));
+        boost::split(MongoBase::splitedSceneNames, sceneNames, is_any_of(","));
         if(modelNameProp!="")
         	insert2MongoDB(nodeTypeProp,modelNameProp, "Model");
         else if(viewNameProp!="")

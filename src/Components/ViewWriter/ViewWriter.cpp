@@ -55,7 +55,7 @@ void ViewWriter::write2DB()
 {
 	CLOG(LNOTICE) << "ViewWriter::write2DB";
 	string sceneNames = sceneNamesProp;
-	boost::split(splitedSceneNames, sceneNames, is_any_of(","));
+	boost::split(MongoBase::splitedSceneNames, sceneNames, is_any_of(","));
 	CLOG(LERROR)<<"cloudType: "<<cloudType;
 	if(viewNameProp!="")
 		insert2MongoDB(nodeTypeProp,viewNameProp, "View");
