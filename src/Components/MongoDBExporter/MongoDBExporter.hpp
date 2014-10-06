@@ -107,11 +107,11 @@ private:
         void insert2MongoDB(const string &destination,  const string&,  const string& );
         void write2DB();
         void insertToModelOrView(const string &,const string &);
-        void initView(const string &, bool);
-        void initModel(const string &, bool);
+        //void initView(const string &, bool);
+        //void initModel(const string &, bool);
         void insertFileToGrid(const std::vector<string>::iterator, const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
-        void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
-        void addScenes(BSONObj&);
+        //void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
+        //void addScenes(BSONObj&);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
 };
 }//: namespace MongoDBExporter

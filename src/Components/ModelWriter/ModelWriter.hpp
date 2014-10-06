@@ -109,7 +109,7 @@ private:
 	   Base::Property<bool> binary;
 	   Base::Property<bool> suffix;
 	   string cloudType;
-	   string dbCollectionPath;
+
 
 	   void Write_xyz();
 	   void Write_xyzrgb();
@@ -120,11 +120,11 @@ private:
 	   void insert2MongoDB(const string &destination,  const string&,  const string& );
 	   void write2DB();
 	   void insertToModelOrView(const string &,const string &);
-	   void initView(const string &, bool);
-	   void initModel(const string &, bool);
+	   //void initView(const string &, bool);
+	   //void initModel(const string &, bool);
 	   void insertFileToGrid(OID&);
-	   void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
-	   void addScenes(BSONObj&);
+	  // void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
+	   //void addScenes(BSONObj&);
 	   void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
 };
 }//: namespace ModelWriter

@@ -113,17 +113,16 @@ private:
 		void Write_xyz();
 		void Write_xyzrgb();
 		void Write_xyzsift();
-        void run();
         void initObject();
         void writeNode2MongoDB(const string &destination, const string &option, string );
         void insert2MongoDB(const string &destination,  const string&,  const string& );
         void write2DB();
         void insertToModelOrView(const string &,const string &);
-        void initView(const string &, bool);
-        void initModel(const string &, bool);
+        //void initView(const string &, bool);
+       // void initModel(const string &, bool);
         void insertFileToGrid(OID&);
-        void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
-        void addScenes(BSONObj&);
+        //void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
+        //void addScenes(BSONObj&);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
 };
 }//: namespace ViewWriter
