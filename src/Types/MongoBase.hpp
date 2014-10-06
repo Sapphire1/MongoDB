@@ -159,6 +159,10 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
     c->update(dbCollectionPath, QUERY("Type"<<"StereoPC"<<"ObjectName"<<objectName<<"ViewName"<<viewName), BSON("$set"<<BSON("childOIDs"<<stereoPC)), false, true);
     c->update(dbCollectionPath, QUERY("Type"<<"ToFPCX"<<"ObjectName"<<objectName<<"ViewName"<<viewName), BSON("$set"<<BSON("childOIDs"<<tofPCArr)), false, true);
 
+    c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
+    c->createIndex(dbCollectionPath, BSON("ViewName"<<1));
+    c->createIndex(dbCollectionPath, BSON("Type"<<1));
+
 }
 
 void MongoBase::addToObject(const Base::Property<string>& nodeTypeProp,const string & name, Base::Property<string>& objectName, Base::Property<string>& description)
@@ -247,6 +251,7 @@ void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
 		}//if
 		else
 		{
+			c->createIndex(dbCollectionPath, BSON("SceneName"<<1));
 			//CLOG(LINFO)<<"Create scene and add object to array list";
 			BSONObj scene = BSONObjBuilder().genOID().append("SceneName", *itSceneName).obj();
 			c->insert(dbCollectionPath, scene);
@@ -291,6 +296,9 @@ void MongoBase::initModel(const string & modelName, bool addToModelFlag,  Base::
 		else if(*it=="SsomXYZRgb" || *it=="SsomXYZSift" || *it=="SsomXYZShot")
 			ssomArrayBuilder.append(BSONObjBuilder().append("childOID", o.str()).obj());
 	}
+	c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
+	c->createIndex(dbCollectionPath, BSON("ModelName"<<1));
+	c->createIndex(dbCollectionPath, BSON("Type"<<1));
 
 	BSONArray modelArr = modelArrayBuilder.arr();
 	BSONArray somArr = somArrayBuilder.arr();

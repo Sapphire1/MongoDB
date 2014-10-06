@@ -224,7 +224,7 @@ void ModelWriter::initObject()
 	{
 		BSONObj object = BSONObjBuilder().genOID().append("Type", "Object").append("ObjectName", objectName).append("description", description).obj();
 		c->insert(dbCollectionPath, object);
-
+		c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
 		addScenes(object, objectName);
 	}
 	catch(DBException &e)
@@ -288,9 +288,7 @@ void ModelWriter::insertFileToGrid(OID& oid)
 			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
 		cloudType="";
 
-		//dodac indexy przy inicjalizacji obiektu, widoku/modelu, wczytywaniu pliku
-		// indeks na objectName, OIDScenes, OIDChilds, viewName, modelName
-		//c->createIndex(dbCollectionPath, BSON("objectName"<<1));
+		c->createIndex(dbCollectionPath, BSON("filename"<<1));
 
 		c->insert(dbCollectionPath, b);
 		b.getObjectID(bsonElement);

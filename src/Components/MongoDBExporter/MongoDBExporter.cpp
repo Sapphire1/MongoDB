@@ -143,7 +143,7 @@ void MongoDBExporter::initObject()
 	{
 		BSONObj object = BSONObjBuilder().genOID().append("Type", "Object").append("ObjectName", objectName).append("description", description).obj();
 		c->insert(dbCollectionPath, object);
-
+		c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
 		addScenes(object, objectName);
 
 		vector<string> models = getAllFolders((string)folderName+"/Model/");
@@ -184,6 +184,7 @@ void MongoDBExporter::insertFileToGrid( const std::vector<string>::iterator itEx
 	GridFS fs(*c, collectionName);
 	o = fs.storeFile(*it, newFileName, mime);
 	BSONObj b = BSONObjBuilder().appendElements(o).append("ObjectName", objectName).obj();
+	c->createIndex(dbCollectionPath, BSON("filename"<<1));
 	c->insert(dbCollectionPath, b);
 	b.getObjectID(bsonElement);
 	oid=bsonElement.__oid();

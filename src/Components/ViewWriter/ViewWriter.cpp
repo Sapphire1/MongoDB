@@ -222,6 +222,7 @@ void ViewWriter::initObject()
 	{
 		BSONObj object = BSONObjBuilder().genOID().append("Type", "Object").append("ObjectName", objectName).append("description", description).obj();
 		c->insert(dbCollectionPath, object);
+		c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
 		addScenes(object, objectName);
 
 	}
@@ -300,6 +301,7 @@ void ViewWriter::insertFileToGrid(OID& oid)
 		oid=bsonElement.__oid();
 		CLOG(LINFO)<<"6";
 		cloudType="";
+		c->createIndex(dbCollectionPath, BSON("filename"<<1));
 	}catch(DBException &e)
 	{
 		CLOG(LERROR) <<"Something goes wrong... :<";
