@@ -52,6 +52,9 @@ void ModelReader::prepareInterface() {
 	registerStream("out_cloud_xyzrgb", &out_cloud_xyzrgb);
 	registerStream("out_cloud_xyzsift", &out_cloud_xyzsift);
 	registerStream("out_img", &out_img);
+	registerStream("in_trigger", &in_trigger);
+	registerHandler("onTriggeredReadAllFiles", boost::bind(&ModelReader::readAllFilesTriggered, this));
+	addDependency("onTriggeredReadAllFiles", &in_trigger);
 }
 
 bool ModelReader::onInit()
@@ -91,9 +94,27 @@ bool ModelReader::onStart()
         return true;
 }
 
+void ModelReader::addToAllChilds(std::vector<OID> & childsVector)
+{
+	CLOG(LTRACE)<<"ModelReader::addToAllChilds";
+	allChildsVector+=childsVector;
+}
+
+void ModelReader::readAllFilesTriggered()
+{
+	CLOG(LTRACE)<<"ModelReader::readAllFilesTriggered";
+	std::vector<AbstractObject*> models;
+	for(std::vector<OID>::iterator it = allChildsVector.begin(); it != allChildsVector.end(); ++it)
+	{
+		readFile(*it, models);
+	}
+	CLOG(LTRACE)<<"Send models to sink";
+	out_models.write(models);
+}
+
 void ModelReader::ReadPCDCloud(const string& filename, const string& tempFile)
 {
-	CLOG(LTRACE) << "ViewReader::ReadPCDCloud";
+	CLOG(LTRACE) << "ModelReader::ReadPCDCloud";
 	// Try to read the cloud of XYZRGB points.
 	if(filename.find("xyzrgb")!=string::npos)
 	{
@@ -197,7 +218,7 @@ void ModelReader::writeToSink(string& mime, string& tempFilename, string& fileNa
 	}
 }
 
-void ModelReader::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID, std::vector<AbstractObject*>& models)
+void ModelReader::readFile(const OID& childOID, std::vector<AbstractObject*>& models)
 {
 	CLOG(LTRACE)<<"ModelReader::readFile";
 	GridFS fs(*c,collectionName);
@@ -241,45 +262,49 @@ void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrV
 				CLOG(LTRACE)<<obj;
 				vector<OID> childsVector;
 				int items =  getChildOIDS(obj, "childOIDs", "childOID", childsVector);
+				// if node has a child
 				if(items>0)
 				{
-					CLOG(LTRACE)<<"There are childs "<<childsVector.size();
-					for (unsigned int i = 0; i<childsVector.size(); i++)
+					if(isViewLastLeaf(nodeType) || isModelLastLeaf(nodeType))
+						addToAllChilds(childsVector);
+					else
 					{
-						childCursor =c->query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
-						if(childCursor->more())
+						CLOG(LTRACE)<<"There are childs "<<childsVector.size();
+						for (unsigned int i = 0; i<childsVector.size(); i++)
 						{
-							BSONObj childObj = childCursor->next();
-							string childNodeName= childObj.getField("Type").str();
-							CLOG(LTRACE)<<childNodeName;
-							if(childNodeName!="EOO")
+							childCursor =c->query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+							if(childCursor->more())
 							{
-								if(isViewLastLeaf(nodeType) || isModelLastLeaf(nodeType))
+								BSONObj childObj = childCursor->next();
+								string childNodeName= childObj.getField("Type").str();
+								CLOG(LTRACE)<<childNodeName;
+								if(childNodeName!="EOO")
 								{
-									CLOG(LTRACE)<<"LastLeaf"<<" childNodeName "<<childNodeName;
-									readFile(modelOrViewName, nodeType, type, childsVector[i], models);
-								}
-								else if(childNodeName=="Model")
-								{
-									CLOG(LTRACE)<<"setModelOrViewName";
-									string newName;
-									setModelOrViewName(childNodeName, childObj, newName);
-									readFromMongoDB(childNodeName, newName, type);
-
-								}
-								else if(childNodeName=="SOM" || childNodeName=="SSOM")
-								{
-									if(modelType==childNodeName)
+									if(childNodeName=="Model")
 									{
-										CLOG(LINFO)<<"modelType==childNodeName";
-										readFromMongoDB(childNodeName, modelOrViewName, type);
+										CLOG(LTRACE)<<"setModelOrViewName";
+										string newName;
+										setModelOrViewName(childNodeName, childObj, newName);
+										readFromMongoDB(childNodeName, newName, type);
 									}
+									else if(childNodeName=="View")
+									{
+										CLOG(LTRACE)<<"It's a view. Do nothing.";
+									}
+									else if(childNodeName=="SOM" || childNodeName=="SSOM")
+									{
+										if(modelType==childNodeName)
+										{
+											CLOG(LINFO)<<"modelType==childNodeName";
+											readFromMongoDB(childNodeName, modelOrViewName, type);
+										}
+									}
+									else
+										readFromMongoDB(childNodeName, modelOrViewName, type);
 								}
-								else
-									readFromMongoDB(childNodeName, modelOrViewName, type);
-							}
-						}//if(childNodeName!="EOO")
-					}//for
+							}//if(childNodeName!="EOO")
+						}//for
+					}
 				}//if
 			}//while
 		}//if
@@ -290,12 +315,13 @@ void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrV
 				CLOG(LERROR)<<"Wrong name";
 			CLOG(LTRACE)<<"No results";
 		}
+		/*
+		// stworz model i wyslij do sinka, jesli przegladanie drzewa jest zakonczone
 		if(nodeTypeProp==nodeType)
 		{
-			CLOG(LINFO)<<"nodeTypeProp - nodeType: "<<nodeTypeProp<< " - " << nodeType;
-			CLOG(LTRACE)<<"Send models to sink";
-			out_models.write(models);
+			readAllFilesTriggered();
 		}
+		*/
 	}//try
 	catch(DBException &e)
 	{

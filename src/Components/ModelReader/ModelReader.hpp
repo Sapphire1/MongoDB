@@ -31,6 +31,7 @@
 
 #include <Types/SIFTObjectModelFactory.hpp>
 #include <Types/MongoBase.hpp>
+#include <Types/AddVector.hpp>
 
 namespace Processors {
 namespace ModelReader {
@@ -106,14 +107,21 @@ private:
     	std::string name_cloud_xyz;
     	std::string name_cloud_xyzrgb;
     	std::string name_cloud_xyzsift;
+		// vector consisting all files OIDS
+		std::vector<OID> allChildsVector;
+		// position of allChildsVector
+		/// Trigger - used for writing clouds
+		Base::DataStreamIn<Base::UnitType> in_trigger;
 
         void readFromMongoDB(const string&, const string&, const string&);
         void readfromDB();
         void loadModels(string&, string&, std::vector<AbstractObject*>&);
         void ReadPCDCloud(const string&, const string&);
-        void readFile(const string&, const string&, const string&, const OID&, std::vector<AbstractObject*>&);
+        void readFile(const OID& childOID, std::vector<AbstractObject*>& models);
         void run();
         void writeToSink(string& mime, string& tempFilename, string& fileName);
+        void addToAllChilds(std::vector<OID>&);
+        void readAllFilesTriggered();
 };
 }//: namespace ModelReader
 }//: namespace Processors
