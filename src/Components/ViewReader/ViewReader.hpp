@@ -29,6 +29,7 @@
 #include "mongo/bson/bson.h"
 #include "Logger.hpp"
 #include <Types/MongoBase.hpp>
+#include <Types/AddVector.hpp>
 
 namespace Processors {
 namespace ViewReader {
@@ -100,13 +101,21 @@ private:
         string dbCollectionPath;
         auto_ptr<DBClientCursor> cursorCollection;
         auto_ptr<DBClientCursor> childCursor;
+        Base::DataStreamIn<Base::UnitType> in_trigger;
+
+        // vector consisting all files OIDS
+		std::vector<OID> allChildsVector;
+        // position of allChildsVector
+        int position;
 
         void readFromMongoDB(const string&, const string&, const string&);
         void ReadPCDCloud(const string&, const string&);
         void readfromDB();
         void writeToSink(string& mime, string& filename, string& fileName);
-        void readFile(const string&, const string&, const string&, const OID&);
-        void run();
+        void readFile(const OID& childOID);
+        void readAllFilesTriggered();
+        void addToAllChilds(std::vector<OID>&);
+
 };
 }//: namespace ViewReader
 }//: namespace Processors

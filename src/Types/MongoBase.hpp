@@ -88,7 +88,7 @@ public:
 	void setMime(const string& extension,  string& mime);
 	void connectToMongoDB(string&);
 	void setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName);
-    void getFileFromGrid(const GridFile &, const string &, const string &, const string &, const string &, const string &, const string &);
+    void getFileFromGrid(const GridFile &, const string &);
 };
 
 MongoBase::MongoBase() {
@@ -99,7 +99,7 @@ MongoBase::MongoBase() {
 MongoBase::~MongoBase() {
 }
 
-void MongoBase::getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeType, const string& type, const string& fileName, const string& mime, const string& tempFn)
+void MongoBase::getFileFromGrid(const GridFile& file, const string& tempFn)
 {
 	//CLOG(LTRACE)<<"ViewReader::getFileFromGrid";
 	//CLOG(LINFO)<<"Filename: "<< fileName<< " Mime: "<<mime;

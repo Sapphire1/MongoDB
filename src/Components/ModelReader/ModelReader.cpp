@@ -217,7 +217,7 @@ void ModelReader::readFile(const string& modelOrViewName, const string& nodeType
 		// get mime from file
 		string mime = file.getContentType();
 		string tempFile = "tempFile";
-		getFileFromGrid(file, modelOrViewName, nodeType, type, filename, mime, tempFile);
+		getFileFromGrid(file, tempFile);
 		writeToSink(mime, tempFile, filename);
 		CLOG(LTRACE)<<"Add to model";
 		loadModels(filename, featuresNumber, models);
