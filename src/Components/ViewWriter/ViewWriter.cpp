@@ -19,8 +19,8 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	objectName("objectName", string("GreenCup")),
 	description("description", string("My green coffe cup")),
 	collectionName("collectionName", string("containers")),
-	//extension("extension", string("pcd")),
-	extension("extension", string("png")),
+	extension("extension", string("pcd")),
+	//extension("extension", string("png")),
 	viewNameProp("viewName", string("lab012")),
 	fileName("fileName", string("tempFile")),
 	nodeTypeProp("nodeTypeProp", string("StereoLR")),
@@ -56,7 +56,7 @@ void ViewWriter::write2DB()
 	CLOG(LNOTICE) << "ViewWriter::write2DB";
 	string sceneNames = sceneNamesProp;
 	boost::split(splitedSceneNames, sceneNames, is_any_of(","));
-
+	CLOG(LERROR)<<"cloudType: "<<cloudType;
 	if(viewNameProp!="")
 		insert2MongoDB(nodeTypeProp,viewNameProp, "View");
 	else
@@ -68,7 +68,6 @@ void ViewWriter::prepareInterface() {
 	CLOG(LTRACE) << "ViewWriter::prepareInterface";
 	h_write2DB.setup(this, &ViewWriter::write2DB);
 	registerHandler("writeView2DB", &h_write2DB);
-	registerHandler("write2DB", &h_write2DB);
 	registerHandler("Write_xyz", boost::bind(&ViewWriter::Write_xyz, this));
 	registerHandler("Write_xyzrgb", boost::bind(&ViewWriter::Write_xyzrgb, this));
 	registerHandler("Write_xyzsift", boost::bind(&ViewWriter::Write_xyzsift, this));
@@ -79,7 +78,7 @@ void ViewWriter::prepareInterface() {
 	registerStream("in_cloud_xyzsift", &in_cloud_xyzsift);
 
 	//addDependency("writeView2DB", &in_img);
-	addDependency("write2DB", &in_img);
+	//addDependency("write2DB", &in_img);
 	addDependency("Write_xyzrgb", &in_cloud_xyzrgb);
 	addDependency("Write_xyz", &in_cloud_xyz);
 	addDependency("Write_xyzsift", &in_cloud_xyzsift);
@@ -147,6 +146,7 @@ void ViewWriter::Write_xyzrgb()
 	CLOG(LINFO) <<"FileName:"<<fn;
 	pcl::io::savePCDFile (fn, *cloud, binary);
 	//CLOG(LINFO) << "Saved " << cloud->points.size() << " XYZRGB points to "<< fileName << "\n";
+	CLOG(LERROR)<<"cloudType: "<<cloudType;
 	write2DB();
 }
 
@@ -436,6 +436,7 @@ void ViewWriter::insertFileToGrid(OID& oid)
 		setMime(extension, mime);
 		std::stringstream time;
 		string tempFileName;
+		CLOG(LERROR)<<"cloudType: "<<cloudType;
 		if (extension=="png" || extension=="jpg")
 		{
 			CLOG(LINFO)<<"Image!";
@@ -471,24 +472,33 @@ void ViewWriter::insertFileToGrid(OID& oid)
 
 		GridFS fs(*c, collectionName);
 		string fileNameInMongo;
+		CLOG(LINFO)<<"1";
 		if(cloudType!="")
 			fileNameInMongo = (string)remoteFileName+"_"+ cloudType + time.str()+"."+string(extension);
 		else
 			fileNameInMongo = (string)remoteFileName + time.str()+"."+string(extension);
+		CLOG(LINFO)<<"2";
+		CLOG(LERROR)<<"tempFileName: "<<tempFileName;
 		object = fs.storeFile(tempFileName, fileNameInMongo, mime);
 		BSONObj b;
+		CLOG(LINFO)<<"3";
 		if(cloudType=="xyzsift")
 			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
 		else
 			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
+		CLOG(LINFO)<<"4";
 		c->insert(dbCollectionPath, b);
+		CLOG(LINFO)<<"5";
 		b.getObjectID(bsonElement);
+		CLOG(LINFO)<<"5";
 		oid=bsonElement.__oid();
+		CLOG(LINFO)<<"6";
 		cloudType="";
 	}catch(DBException &e)
 	{
 		CLOG(LERROR) <<"Something goes wrong... :<";
 		CLOG(LERROR) <<c->getLastError();
+		CLOG(LERROR) << e.what();
 	}
 }
 
@@ -496,6 +506,7 @@ void ViewWriter::writeNode2MongoDB(const string &destination, const string &type
 {
 	CLOG(LTRACE) <<"writeNode2MongoDB";
 	OID oid;
+	CLOG(LERROR)<<"cloudType: "<<cloudType;
 	CLOG(LTRACE) <<"Filename: " << fileName << " destination: "<< destination<<" dbCollectionPath: "<<dbCollectionPath;
     try{
 		insertFileToGrid(oid);
@@ -515,6 +526,7 @@ void ViewWriter::insert2MongoDB(const string &destination, const string&  modelO
 	auto_ptr<DBClientCursor> cursorCollection;
 	string source;
 	int items=0;
+	CLOG(LERROR)<<"cloudType: "<<cloudType;
 	try{
 		if(destination=="Object")
 		{
