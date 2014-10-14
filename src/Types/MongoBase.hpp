@@ -57,6 +57,9 @@ public:
 	/// Output data stream - processed image
 	Base::DataStreamOut <Mat> out_img;
 
+	/// Matrixes of projection, distortion etc.
+	Base::DataStreamIn <std::string> cipFile;
+
 	/// Cloud containing points with Cartesian coordinates (XYZ).
 	Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZ>::Ptr > out_cloud_xyz;
 

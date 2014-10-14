@@ -76,6 +76,7 @@ void ViewWriter::prepareInterface() {
 	registerStream("in_cloud_xyz", &in_cloud_xyz);
 	registerStream("in_cloud_xyzrgb", &in_cloud_xyzrgb);
 	registerStream("in_cloud_xyzsift", &in_cloud_xyzsift);
+	registerStream("cipFile", &cipFile);
 
 	//addDependency("writeView2DB", &in_img);
 	//addDependency("write2DB", &in_img);
@@ -243,6 +244,9 @@ void ViewWriter::insertFileToGrid(OID& oid)
 		setMime(extension, mime);
 		std::stringstream time;
 		string tempFileName;
+		///TODO
+		/// zamienic na czytanie wejsc i uruchamianie w zaleznosci od tego co jest na wejsciu
+		/// if(in_img.read()) ...
 		CLOG(LERROR)<<"cloudType: "<<cloudType;
 		if (extension=="png" || extension=="jpg")
 		{
@@ -263,11 +267,19 @@ void ViewWriter::insertFileToGrid(OID& oid)
 
 			CLOG(LINFO) << "cloudType: "<< cloudType << endl;
 		}
-		///TODO
-		/// add txt extension
+		else if(extension=="txt")	// save to file pcd
+		{
+			CLOG(LINFO) << "CIP file";
+			string CIP = cipFile.read();
+			string tempFileName = string(fileName)+"."+string(extension);
+			char const* ca = tempFileName.c_str();
+			std::ofstream out(ca);
+			out << CIP;
+			out.close();
+		}
 		else
 		{
-			CLOG(LERROR)<<"I dont know such extension file :(";
+			CLOG(LERROR)<<"I don't know such extension file :(";
 			exit(1);
 		}
 		CLOG(LINFO) << "tempFileName: "<< tempFileName << endl;
@@ -279,27 +291,21 @@ void ViewWriter::insertFileToGrid(OID& oid)
 
 		GridFS fs(*c, collectionName);
 		string fileNameInMongo;
-		CLOG(LINFO)<<"1";
 		if(cloudType!="")
 			fileNameInMongo = (string)remoteFileName+"_"+ cloudType + time.str()+"."+string(extension);
 		else
 			fileNameInMongo = (string)remoteFileName + time.str()+"."+string(extension);
-		CLOG(LINFO)<<"2";
 		CLOG(LERROR)<<"tempFileName: "<<tempFileName;
 		object = fs.storeFile(tempFileName, fileNameInMongo, mime);
 		BSONObj b;
-		CLOG(LINFO)<<"3";
 		if(cloudType=="xyzsift")
 			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
 		else
 			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
-		CLOG(LINFO)<<"4";
 		c->insert(dbCollectionPath, b);
 		CLOG(LINFO)<<"5";
 		b.getObjectID(bsonElement);
-		CLOG(LINFO)<<"5";
 		oid=bsonElement.__oid();
-		CLOG(LINFO)<<"6";
 		cloudType="";
 		c->createIndex(dbCollectionPath, BSON("filename"<<1));
 	}catch(DBException &e)
