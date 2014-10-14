@@ -26,6 +26,7 @@ void CIPGenerator::prepareInterface() {
 
         h_generateCIP.setup(this, &CIPGenerator::generateCIP);
         registerHandler("generateCIP", &h_generateCIP);
+        registerStream("CIPString", &CIPString);
 }
 
 bool CIPGenerator::onInit()

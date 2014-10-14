@@ -80,6 +80,7 @@ void ViewWriter::prepareInterface() {
 
 	//addDependency("writeView2DB", &in_img);
 	//addDependency("write2DB", &in_img);
+	addDependency("writeView2DB", &cipFile);
 	addDependency("Write_xyzrgb", &in_cloud_xyzrgb);
 	addDependency("Write_xyz", &in_cloud_xyz);
 	addDependency("Write_xyzsift", &in_cloud_xyzsift);
@@ -271,7 +272,7 @@ void ViewWriter::insertFileToGrid(OID& oid)
 		{
 			CLOG(LINFO) << "CIP file";
 			string CIP = cipFile.read();
-			string tempFileName = string(fileName)+"."+string(extension);
+			tempFileName = string(fileName)+"."+string(extension);
 			char const* ca = tempFileName.c_str();
 			std::ofstream out(ca);
 			out << CIP;

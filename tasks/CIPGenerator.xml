@@ -19,12 +19,18 @@
 			<Executor name="Processing"  period="1">
 			      <Component name="CIPGenerator" type="MongoDB:CIPGenerator" priority="2">
 			      </Component>
+			      <Component name="Writer" type="MongoDB:ViewWriter" priority="4">
+				  <param name="suffix">1</param>
+			      </Component>
 			</Executor>
 		</Subtask>
 	</Subtasks>			
 
 	<!-- pipes connecting datastreams -->
 	<DataStreams>
+		<Source name="CIPGenerator.CIPString">
+			<sink>Writer.cipFile</sink>
+		</Source>
 	</DataStreams>
 </Task>
 
