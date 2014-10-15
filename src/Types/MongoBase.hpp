@@ -58,7 +58,10 @@ public:
 	Base::DataStreamOut <Mat> out_img;
 
 	/// Matrixes of projection, distortion etc.
-	Base::DataStreamIn <std::string> cipFile;
+	Base::DataStreamIn <std::string> cipFileIn;
+
+	/// Matrixes of projection, distortion etc.
+	Base::DataStreamOut <std::string> cipFileOut;
 
 	/// Cloud containing points with Cartesian coordinates (XYZ).
 	Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZ>::Ptr > out_cloud_xyz;
@@ -318,15 +321,16 @@ void MongoBase::getFileFromGrid(const GridFile& file, const string& tempFn)
 	stringstream ss;
 	string str = ss.str();
 	char *tempFilename = (char*)tempFn.c_str();
+	std::cout<<"\n\ntempFilename: "<<tempFilename<<"\n";
 	ofstream ofs(tempFilename);
 	gridfs_offset off = file.write(ofs);
 	if (off != file.getContentLength())
 	{
-		//CLOG(LERROR) << "Failed to read a file from mongoDB";
+		std::cout << "\nFailed to read a file from mongoDB\n";
 	}
 	else
 	{
-		//CLOG(LTRACE) << "Success read a file from mongoDB";
+		std::cout << "\nSuccess read a file from mongoDB\n";
 	}
 }
 
@@ -456,23 +460,28 @@ int MongoBase::getChildOIDS(BSONObj &obj, const string & fieldName, const string
 
 void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbCollectionPath, Base::Property<string>& objectName, const string &nodeType, auto_ptr<DBClientCursor> & cursorCollection, const string & modelOrViewName, const string & type, int& items)
 {
+	  std::cout<<"\nMongoBase::findDocumentInCollection\n";
+
       try{
     	  if(type!="")
     	  {
 			  if(type=="View")
 			  {
+				  std::cout<<"\nView\n";
 				  items = c.count(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName)));
 				  if(items>0)
 					  cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName)));
 			  }
 			  else if(type=="Model")
 			  {
+				  std::cout<<"\nModel\n";
 				  items = c.count(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName)));
 				  if (items>0)
 					  cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName)));
 			  }
 			  else
 			  {
+				  std::cout<<"\nObjects child\n";
 				  items = c.count(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<type<<modelOrViewName)));
 				  if(items>0)
 					  cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName<<type<<modelOrViewName)));
@@ -480,6 +489,7 @@ void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbColle
 		  }
     	  else
     	  {
+    		  std::cout<<"\nObject\n";
     		  items = c.count(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName)));
     		  if(items>0)
     			  cursorCollection =c.query(dbCollectionPath, (QUERY("Type"<<nodeType<<"ObjectName"<<objectName)));

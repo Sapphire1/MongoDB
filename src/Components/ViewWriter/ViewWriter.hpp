@@ -89,7 +89,6 @@ protected:
          */
 
         /// Event handler.
-        Base::EventHandler <ViewWriter> h_write2DB;
 
 
 private:
@@ -99,7 +98,6 @@ private:
         Base::Property<string> collectionName;
         Base::Property<string> viewNameProp;
         Base::Property<string> sceneNamesProp;
-        Base::Property<string> extension;
         Base::Property<string> fileName;
         Base::Property<int> mean_viewpoint_features_number;
         Base::Property<string> remoteFileName;
@@ -114,15 +112,13 @@ private:
 		void Write_xyzrgb();
 		void Write_xyzsift();
         void initObject();
-        void writeNode2MongoDB(const string &destination, const string &option, string );
-        void insert2MongoDB(const string &destination,  const string&,  const string& );
-        void write2DB();
+        void writeNode2MongoDB(const string &destination, const string &option, string,  const string& fileType);
+        void insert2MongoDB(const string &destination,  const string&,  const string&,  const string& fileType );
+        void writeTXT2DB();
+        void writeImage2DB();
+        void writePCD2DB();
         void insertToModelOrView(const string &,const string &);
-        //void initView(const string &, bool);
-       // void initModel(const string &, bool);
-        void insertFileToGrid(OID&);
-        //void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
-        //void addScenes(BSONObj&);
+        void insertFileToGrid(OID&, const string& fileType);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
 };
 }//: namespace ViewWriter

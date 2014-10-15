@@ -29,7 +29,7 @@
 	<!-- pipes connecting datastreams -->
 	<DataStreams>
 		<Source name="CIPGenerator.CIPString">
-			<sink>Writer.cipFile</sink>
+			<sink>Writer.cipFileIn</sink>
 		</Source>
 	</DataStreams>
 </Task>

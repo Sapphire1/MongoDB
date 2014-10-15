@@ -50,7 +50,7 @@ void ViewReader::prepareInterface() {
         registerStream("out_cloud_xyzsift", &out_cloud_xyzsift);
         registerStream("out_img", &out_img);
         registerStream("in_trigger", &in_trigger);
-
+        registerStream("cipFileOut", &cipFileOut);
 		registerHandler("onTriggeredReadAllFiles", boost::bind(&ViewReader::readAllFilesTriggered, this));
 		addDependency("onTriggeredReadAllFiles", &in_trigger);
 }
@@ -163,14 +163,13 @@ void ViewReader::writeToSink(string& mime, string& tempFilename, string& fileNam
 	CLOG(LNOTICE)<<"ViewReader::writeToSink";
 	if(mime=="image/png" || mime=="image/jpeg")
 	{
-		// read from disc
 		cv::Mat image = imread(tempFilename, CV_LOAD_IMAGE_UNCHANGED);
 		out_img.write(image);
 	}
 	else if(mime=="text/plain")
 	{
 		CLOG(LINFO)<<"mime==text/plain";
-		CLOG(LINFO)<<"fileName.find(pcd): "<<fileName.find("pcd");
+		//CLOG(LINFO)<<"fileName.find(pcd): "<<fileName.find("pcd");
 		if((fileName.find("pcd"))!=string::npos)
 		{
 			CLOG(LINFO)<<"pcd :)";
@@ -178,8 +177,16 @@ void ViewReader::writeToSink(string& mime, string& tempFilename, string& fileNam
 		}
 		else if(fileName.find("txt")!=string::npos)
 		{
-			//TODO read text file
-			;
+			CLOG(LINFO)<<"txt :)";
+			string CIPFile;
+			char const* charFileName = tempFilename.c_str();
+			CLOG(LINFO)<<tempFilename;
+			std::ifstream t(charFileName);
+			std::stringstream buffer;
+			buffer << t.rdbuf();
+			CIPFile = buffer.str();
+			cipFileOut.write(CIPFile);
+			CLOG(LINFO)<<CIPFile;
 		}
 		else
 			CLOG(LERROR)<<"Nie wiem co to za plik :/";
