@@ -19,6 +19,8 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
+#include <pcl/compression/octree_pointcloud_compression.h>
+#include <pcl/io/openni_grabber.h>
 
 #include "Logger.hpp"
 #include "mongo/client/dbclient.h"
@@ -107,18 +109,34 @@ private:
 		Base::Property<bool> suffix;
 		string cloudType;
         string dbCollectionPath;
+        float sizeOfCloud;
+
+    	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ;
+    	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB;
+    	pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT;
+    	cv::Mat tempImg;
+
+        template <class PointT>
+        void Write_cloud();
 
 		void Write_xyz();
 		void Write_xyzrgb();
 		void Write_xyzsift();
+
+		void saveXYZFileOnDisc();
+		void saveXYZRGBFileOnDisc();
+		void saveXYZSIFTFileOnDisc();
+
         void initObject();
         void writeNode2MongoDB(const string &destination, const string &option, string,  const string& fileType);
         void insert2MongoDB(const string &destination,  const string&,  const string&,  const string& fileType );
         void writeTXT2DB();
         void writeImage2DB();
         void writePCD2DB();
+        int getFileSize(const string& fileType, string& tempFileName);
         void insertToModelOrView(const string &,const string &);
-        void insertFileToGrid(OID&, const string& fileType);
+        void insertFileIntoGrid(OID&, const string&, string&);
+        void insertFileIntoCollection(const string& fileType, const string& tempFileName, int);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
 };
 }//: namespace ViewWriter

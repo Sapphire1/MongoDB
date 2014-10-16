@@ -40,6 +40,8 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	registerProperty(remoteFileName);
 	registerProperty(binary);
 	registerProperty(suffix);
+
+	sizeOfCloud=0.0;
 	CLOG(LTRACE) << "Hello ViewWriter";
 
 }
@@ -53,9 +55,9 @@ void ViewWriter::prepareInterface() {
 	CLOG(LTRACE) << "ViewWriter::prepareInterface";
 	registerHandler("writeViewTXT2DB", boost::bind(&ViewWriter::writeTXT2DB, this));
 	registerHandler("writeViewImage2DB", boost::bind(&ViewWriter::writeImage2DB, this));
-	registerHandler("Write_xyz", boost::bind(&ViewWriter::Write_xyz, this));
-	registerHandler("Write_xyzrgb", boost::bind(&ViewWriter::Write_xyzrgb, this));
-	registerHandler("Write_xyzsift", boost::bind(&ViewWriter::Write_xyzsift, this));
+	registerHandler("Write_xyz", boost::bind(&ViewWriter::Write_cloud<pcl::PointXYZ>, this));
+	registerHandler("Write_xyzrgb", boost::bind(&ViewWriter::Write_cloud<pcl::PointXYZRGB>, this));
+	registerHandler("Write_xyzsift", boost::bind(&ViewWriter::Write_cloud<PointXYZSIFT>, this));
 
 	registerStream("in_img", &in_img);
 	registerStream("in_cloud_xyz", &in_cloud_xyz);
@@ -107,35 +109,51 @@ void ViewWriter::writePCD2DB()
 		CLOG(LERROR)<<"Add view name and try again";
 }
 
-void ViewWriter::Write_xyzsift()
+template <class PointT>
+void ViewWriter::Write_cloud()
 {
-	CLOG(LTRACE) << "ModelWriter::Write_xyzsift";
+	CLOG(LTRACE) << "ViewWriter::Write_cloud()";
+	std::vector< pcl::PCLPointField> fields;
+	pcl::getFields<PointT>(fields);
 
-	cloudType="xyzsift";
-	pcl::PointCloud<PointXYZSIFT>::Ptr cloud = in_cloud_xyzsift.read();
-	std::string fn = fileName;
-	if(suffix){
-		size_t f = fn.find(".pcd");
-		if(f != std::string::npos)
-		{
-			fn.erase(f);
-		}
-		fn = std::string(fn) + std::string("_xyzsift.pcd");
+	if(typeid(PointT) == typeid(pcl::PointXYZ))
+	{
+		cloudType="xyz";
+		cloudXYZ = in_cloud_xyz.read();
+		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
+			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZ->size();
+		sizeOfCloud/=(1000*1000);
 	}
-	pcl::io::savePCDFile (fn, *cloud, binary);
+	else if(typeid(PointT) == typeid(pcl::PointXYZRGB))
+	{
+		cloudType="xyzrgb";
+		cloudXYZRGB = in_cloud_xyzrgb.read();
+		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
+			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZRGB->size();
+		sizeOfCloud/=(1000*1000);
+	}
+	else if(typeid(PointT) == typeid(PointXYZSIFT))
+	{
+		cloudType="xyzsift";
+		cloudXYZSIFT = in_cloud_xyzsift.read();
+
+		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
+			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZSIFT->size();
+		sizeOfCloud/=(1000*1000);
+	}
+	CLOG(LINFO)<<"CloudType: "<<cloudType;
+	CLOG(LINFO)<<"PointCloudSize = "<< sizeOfCloud;
+	if(sizeOfCloud>15)
+		CLOG(LERROR)<<"File should be written to GRIDFS!";
 	writePCD2DB();
-	//CLOG(LINFO) << "Saved " << cloud->points.size() << " XYZ points to "<< fileName << "\n";
+
 }
 
-void ViewWriter::Write_xyz()
+void ViewWriter::saveXYZFileOnDisc()
 {
-	cloudType="xyz";
-	CLOG(LTRACE)<<"Set cloudType: "<<cloudType;
-	CLOG(LTRACE) << "ModelWriter::Write_xyz";
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = in_cloud_xyz.read();
 	std::string fn = fileName;
-	if(suffix){
-		CLOG(LTRACE)<<"suffix: "<<suffix;
+	if(suffix)
+	{
 		size_t f = fn.find(".pcd");
 		if(f != std::string::npos)
 		{
@@ -143,19 +161,12 @@ void ViewWriter::Write_xyz()
 		}
 		fn = std::string(fn) + std::string("_xyz.pcd");
 	}
-	pcl::io::savePCDFile (fn, *cloud, binary);
 	CLOG(LINFO) <<"FileName:"<<fn;
-	//CLOG(LINFO) << "Saved " << cloud->points.size() << " XYZ points to "<< fileName << "\n";
-	writePCD2DB();
+	pcl::io::savePCDFile(fn, *cloudXYZ, binary);
 }
 
-void ViewWriter::Write_xyzrgb()
+void ViewWriter::saveXYZRGBFileOnDisc()
 {
-	cloudType="xyzrgb";
-	CLOG(LNOTICE) << "ModelWriter::Write_xyzrgb";
-	CLOG(LNOTICE)<<"Set cloudType: "<<cloudType;
-	CLOG(LNOTICE)<<"suffix: "<<suffix;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud = in_cloud_xyzrgb.read();
 	std::string fn = fileName;
 	if(suffix)
 	{
@@ -167,10 +178,23 @@ void ViewWriter::Write_xyzrgb()
 		fn = std::string(fn) + std::string("_xyzrgb.pcd");
 	}
 	CLOG(LINFO) <<"FileName:"<<fn;
-	pcl::io::savePCDFile (fn, *cloud, binary);
-	//CLOG(LINFO) << "Saved " << cloud->points.size() << " XYZRGB points to "<< fileName << "\n";
-	CLOG(LERROR)<<"cloudType: "<<cloudType;
-	writePCD2DB();
+	pcl::io::savePCDFile(fn, *cloudXYZRGB, binary);
+}
+
+void ViewWriter::saveXYZSIFTFileOnDisc()
+{
+	std::string fn = fileName;
+	if(suffix)
+	{
+		size_t f = fn.find(".pcd");
+		if(f != std::string::npos)
+		{
+			fn.erase(f);
+		}
+		fn = std::string(fn) + std::string("_xyzsift.pcd");
+	}
+	CLOG(LINFO) <<"FileName:"<<fn;
+	pcl::io::savePCDFile(fn, *cloudXYZSIFT, binary);
 }
 
 bool ViewWriter::onInit()
@@ -257,7 +281,7 @@ void ViewWriter::initObject()
 }
 ////////////////////////////INIT_END////////////////////////////////////
 
-void ViewWriter::insertFileToGrid(OID& oid, const string& fileType)
+void ViewWriter::insertFileIntoGrid(OID& oid, const string& fileType, string& tempFileName)
 {
 	try{
 		BSONObj object;
@@ -265,26 +289,13 @@ void ViewWriter::insertFileToGrid(OID& oid, const string& fileType)
 		string mime="";
 		setMime(fileType, mime);
 		std::stringstream time;
-		string tempFileName;
-		CLOG(LERROR)<<"cloudType: "<<cloudType;
+		CLOG(LNOTICE)<<"File should be written to GRIDFS!";
+
+		// save file on disc in order to write it to gridFS
 		if (fileType=="png" || fileType=="jpg")
 		{
-			CLOG(LINFO)<<"Image!";
-			cv::Mat tempImg = in_img.read();
 			tempFileName = string(fileName)+"."+string(fileType);
 			cv::imwrite(tempFileName, tempImg);
-		}
-		else if(fileType=="pcd")	// save to file pcd
-		{
-			CLOG(LINFO)<<"Cloud!";
-			if(cloudType=="xyzrgb")
-				tempFileName=std::string(fileName) + std::string("_xyzrgb.pcd");
-			else if(cloudType=="xyz")
-				tempFileName=std::string(fileName) + std::string("_xyz.pcd");
-			else if(cloudType=="xyzsift")
-				tempFileName=std::string(fileName) + std::string("_xyzsift.pcd");
-
-			CLOG(LINFO) << "cloudType: "<< cloudType << endl;
 		}
 		else if(fileType=="txt")	// save to file pcd
 		{
@@ -295,19 +306,35 @@ void ViewWriter::insertFileToGrid(OID& oid, const string& fileType)
 			std::ofstream out(ca);
 			out << CIP;
 			out.close();
+			CLOG(LINFO)<<"Size of CIP is lower then 16 MB: ";
+		}
+		else if(fileType=="pcd")
+		{
+			CLOG(LINFO) << "PCD file";
+			if(cloudType=="xyz")
+				saveXYZFileOnDisc();
+			else if(cloudType=="xyzrgb")
+				saveXYZRGBFileOnDisc();
+			else if(cloudType=="xyzsift")
+				saveXYZSIFTFileOnDisc();
 		}
 		else
 		{
 			CLOG(LERROR)<<"I don't know such extension file :(";
 			exit(1);
 		}
-		CLOG(LINFO) << "tempFileName: "<< tempFileName << endl;
+		CLOG(LERROR)<<"cloudType: "<<cloudType;
 
+
+		// TODO add XYZ mat <float> 3C - CV_32F3C, or sth similiar
+
+		CLOG(LINFO) << "tempFileName: "<< tempFileName << endl;
 		boost::posix_time::time_facet *facet = new boost::posix_time::time_facet("%d_%m_%Y_%H_%M_%S");
 		time.imbue(locale(cout.getloc(), facet));
 		time<<second_clock::local_time();
 		CLOG(LINFO) << "Time: "<< time.str() << endl;
 
+		// create GridFS client
 		GridFS fs(*c, collectionName);
 		string fileNameInMongo;
 		if(cloudType!="")
@@ -315,7 +342,10 @@ void ViewWriter::insertFileToGrid(OID& oid, const string& fileType)
 		else
 			fileNameInMongo = (string)remoteFileName + time.str()+"."+string(fileType);
 		CLOG(LERROR)<<"tempFileName: "<<tempFileName;
+
+		// save in grid
 		object = fs.storeFile(tempFileName, fileNameInMongo, mime);
+
 		BSONObj b;
 		if(cloudType=="xyzsift")
 			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
@@ -325,7 +355,9 @@ void ViewWriter::insertFileToGrid(OID& oid, const string& fileType)
 		CLOG(LINFO)<<"5";
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
+
 		cloudType="";
+
 		c->createIndex(dbCollectionPath, BSON("filename"<<1));
 	}catch(DBException &e)
 	{
@@ -334,23 +366,136 @@ void ViewWriter::insertFileToGrid(OID& oid, const string& fileType)
 		CLOG(LERROR) << e.what();
 	}
 }
+int ViewWriter::getFileSize(const string& fileType, string& tempFileName)
+{
+	float size = 0.0;
+	if (fileType=="png" || fileType=="jpg")
+	{
+		CLOG(LINFO)<<"Image!";
+		tempImg = in_img.read();
+		size = (float)tempImg.elemSize1()*(float)tempImg.total();
+		size = size/(1024*1024);
+		CLOG(LINFO)<<"Size of image file: " << size<<" MB";
+	}
+	else if(fileType=="pcd")	// save to file pcd
+	{
+		CLOG(LINFO)<<"Cloud!";
+
+		if(cloudType=="xyzrgb")
+			tempFileName=std::string(fileName) + std::string("_xyzrgb.pcd");
+		else if(cloudType=="xyz")
+			tempFileName=std::string(fileName) + std::string("_xyz.pcd");
+		else if(cloudType=="xyzsift")
+			tempFileName=std::string(fileName) + std::string("_xyzsift.pcd");
+
+		size=sizeOfCloud;
+		CLOG(LINFO) << "cloudType: "<< cloudType << endl;
+		CLOG(LINFO)<<"Size of PCD cloud: " << size<<" MB";
+	}
+	else if(fileType=="txt")	// save to file pcd
+	{
+		CLOG(LINFO) << "CIP file";
+		size=1.0;
+	}
+	else
+	{
+		CLOG(LERROR)<<"I don't know such extension file :(";
+		exit(1);
+	}
+	return size;
+}
 
 void ViewWriter::writeNode2MongoDB(const string &destination, const string &type,string modelOrViewName, const string& fileType)
 {
 	CLOG(LTRACE) <<"writeNode2MongoDB";
 	OID oid;
-	CLOG(LERROR)<<"cloudType: "<<cloudType;
+	CLOG(LERROR)<<"ViewWriter::writeNode2MongoDB, cloudType: "<<cloudType;
 	CLOG(LTRACE) <<"Filename: " << fileName << " destination: "<< destination<<" dbCollectionPath: "<<dbCollectionPath;
     try{
-		insertFileToGrid(oid, fileType);
-		c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
-		CLOG(LTRACE) <<"Files saved successfully";
+    	string tempFileName="";
+    	int sizeOfFile = getFileSize(fileType, tempFileName);
+    	//TODO odwrocic ta relacje
+    	if(sizeOfFile<15)
+    	{
+    	//	CLOG(LERROR)<<"ViewWriter::writeNode2MongoDB, cloudType: "<<cloudType;
+		//	insertFileIntoGrid(oid, fileType, tempFileName);
+		//	c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
+    	}
+    	//TODO dodac tego else'a!!!
+		//else
+    	CLOG(LERROR)<<"ViewWriter::writeNode2MongoDB, cloudType: "<<cloudType;
+			insertFileIntoCollection(fileType, tempFileName, sizeOfFile);
+		CLOG(LTRACE) <<"File saved successfully";
     }
 	catch(DBException &e)
 	{
 		CLOG(LERROR) <<"Something goes wrong... :<";
 		CLOG(LERROR) <<c->getLastError();
 	}
+}
+
+void ViewWriter::insertFileIntoCollection(const string& fileType, const string& tempFileName, int size)
+{
+	CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection";
+	CLOG(LERROR)<<"ViewWriter::insertFileIntoCollection, cloudType: "<<cloudType;
+	BSONObjBuilder builder;
+	BSONObj b;
+	// todo dodac obsluge cv mat xyz std::vector<float> buf;
+	if (fileType=="png" || fileType=="jpg")	// save image
+	{
+		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, Image file";
+		std::vector<uchar> buf;
+		std::vector<int> params(2);
+		params[0] = CV_IMWRITE_JPEG_QUALITY;
+		params[1] = 95;
+		cv::imencode(".jpg", tempImg, buf, params);
+		b=BSONObjBuilder().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("place", "collection").append("extension", fileType).obj();
+		// insert img file to collection
+		c->insert(dbCollectionPath, b);
+	}
+	else if(fileType=="pcd")	// save cloud
+	{
+		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, PCD file";
+		CLOG(LERROR)<<"ViewWriter::insertFileIntoCollection, cloudType: "<<cloudType;
+		std::stringstream compressedData;
+		compressedData.str("some text for the stream");
+		//pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudDecoder;
+		if(cloudType=="xyzrgb")
+		{
+			CLOG(LERROR)<<"WriteXYZRGB!";
+			pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>* PointCloudEncoder;
+			bool showStatistics = true;
+			// for a full list of profiles see: /io/include/pcl/compression/compression_profiles.h
+			pcl::io::compression_Profiles_e compressionProfile = pcl::io::HIGH_RES_OFFLINE_COMPRESSION_WITHOUT_COLOR;
+			PointCloudEncoder = new pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB> (compressionProfile, showStatistics);
+			CLOG(LERROR)<<"cloudXYZRGB->size(): " << cloudXYZRGB->size();
+			PointCloudEncoder->encodePointCloud (cloudXYZRGB, compressedData);
+			compressedData.seekg(0, ios::end);
+			int size = compressedData.tellg();
+			CLOG(LERROR)<<"compressedData1 Size: "<<size;
+		}
+		else if(cloudType=="xyz")
+		{
+			pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudEncoder;
+			PointCloudEncoder->encodePointCloud (cloudXYZ, compressedData);
+		}
+		else if(cloudType=="xyzsift")
+		{
+			pcl::io::OctreePointCloudCompression<PointXYZSIFT>* PointCloudEncoder;
+			PointCloudEncoder->encodePointCloud (cloudXYZSIFT, compressedData);
+		}
+		//TODO sprawdzic czy to dziala!!!
+		compressedData.seekg(0, ios::end);
+		int size = compressedData.tellg();
+		CLOG(LERROR)<<"compressedData Size2: "<<size;
+		b = BSONObjBuilder().appendBinData(tempFileName, size, BinDataGeneral,  &compressedData).append("place", "collection").append("extension", fileType).obj();
+		c->insert(dbCollectionPath, b);
+		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, PCD file end";
+	}
+	else if(fileType=="txt")
+		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, txt file";
+
+	cloudType="";
 }
 
 void ViewWriter::insert2MongoDB(const string &destination, const string&  modelOrViewName, const string&  type,  const string&  fileType)
