@@ -460,41 +460,74 @@ void ViewWriter::insertFileIntoCollection(const string& fileType, const string& 
 		std::stringstream compressedData;
 		compressedData.str("some text for the stream");
 		//pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudDecoder;
-		if(cloudType=="xyzrgb")
+		bool showStatistics = true;
+		pcl::io::compression_Profiles_e compressionProfile = pcl::io::HIGH_RES_OFFLINE_COMPRESSION_WITHOUT_COLOR;
+		if(cloudType!="xyzsift")
 		{
-			CLOG(LERROR)<<"WriteXYZRGB!";
-			pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>* PointCloudEncoder;
-			bool showStatistics = true;
-			// for a full list of profiles see: /io/include/pcl/compression/compression_profiles.h
-			pcl::io::compression_Profiles_e compressionProfile = pcl::io::HIGH_RES_OFFLINE_COMPRESSION_WITHOUT_COLOR;
-			PointCloudEncoder = new pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB> (compressionProfile, showStatistics);
-			CLOG(LERROR)<<"cloudXYZRGB->size(): " << cloudXYZRGB->size();
-			PointCloudEncoder->encodePointCloud (cloudXYZRGB, compressedData);
+			if(cloudType=="xyzrgb")
+			{
+				CLOG(LERROR)<<"WriteXYZRGB!";
+				std::stringstream uncompressedData2;
+				//uncompressedData2<<*cloudXYZRGB.;
+				//cloudXYZRGB->
+				cloudXYZRGB->points;
+				cloudXYZRGB->header;
+				CLOG(LNOTICE)<<uncompressedData2.str();
+				uncompressedData2.seekg(0, ios::end);
+				int size = uncompressedData2.tellg();
+				CLOG(LNOTICE)<<"Size : " <<size;
+				pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>* PointCloudEncoder =
+						new pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB> (compressionProfile, showStatistics);
+				PointCloudEncoder->encodePointCloud (cloudXYZRGB, compressedData);
+				delete(PointCloudEncoder);
+			}
+			else if(cloudType=="xyz")
+			{
+				pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudEncoder =
+						new pcl::io::OctreePointCloudCompression<pcl::PointXYZ> (compressionProfile, showStatistics);
+				PointCloudEncoder->encodePointCloud (cloudXYZ, compressedData);
+				delete(PointCloudEncoder);
+			}
 			compressedData.seekg(0, ios::end);
 			int size = compressedData.tellg();
-			CLOG(LERROR)<<"compressedData1 Size: "<<size;
+			CLOG(LERROR)<<"compressedData Size2: "<<size;
+			b = BSONObjBuilder().appendBinData(tempFileName, size, BinDataGeneral,  &compressedData).append("place", "collection").append("extension", fileType).obj();
+			c->insert(dbCollectionPath, b);
 		}
-		else if(cloudType=="xyz")
-		{
-			pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudEncoder;
-			PointCloudEncoder->encodePointCloud (cloudXYZ, compressedData);
-		}
+
+		//TODO PRZETESTOWAC to!!!, dodac SHOT'Y
+		// to moze nie zadzialac :/, rozmiar moze byc za maly, bo tam oprocz chmury jest jeszcze header itd...
+		//TODO dodac obsluge sift zeby zapisywac wprost do dokumentu
 		else if(cloudType=="xyzsift")
 		{
-			pcl::io::OctreePointCloudCompression<PointXYZSIFT>* PointCloudEncoder;
-			PointCloudEncoder->encodePointCloud (cloudXYZSIFT, compressedData);
+			CLOG(LERROR)<<"Nie wiem jak zapisac taka chmure wprost do dokumentu!";
+			/*
+			compressedData<<*cloudXYZSIFT;
+			compressedData.seekg(0, ios::end);
+			int size = compressedData.tellg();
+			CLOG(LNOTICE)<<compressedData.str();
+			b = BSONObjBuilder().appendBinData(tempFileName, size, BinDataGeneral,  &compressedData).append("place", "collection").append("extension", fileType).obj();
+		*/
 		}
-		//TODO sprawdzic czy to dziala!!!
-		compressedData.seekg(0, ios::end);
-		int size = compressedData.tellg();
-		CLOG(LERROR)<<"compressedData Size2: "<<size;
-		b = BSONObjBuilder().appendBinData(tempFileName, size, BinDataGeneral,  &compressedData).append("place", "collection").append("extension", fileType).obj();
-		c->insert(dbCollectionPath, b);
+
+		/*else if(cloudType=="xyzsift")
+		{
+			pcl::io::OctreePointCloudCompression<PointXYZSIFT>* PointCloudEncoder =
+					new pcl::io::OctreePointCloudCompression<PointXYZSIFT> (compressionProfile, showStatistics);
+			PointCloudEncoder->encodePointCloud (cloudXYZSIFT, compressedData);
+			delete(PointCloudEncoder);
+		}*/
+
 		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, PCD file end";
 	}
 	else if(fileType=="txt")
+	{
 		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, txt file";
-
+		//std::stringstream compressedData.str(string);
+		//compressedData.seekg(0, ios::end);
+		//int size = compressedData.tellg();
+		//		b = BSONObjBuilder().appendBinData(tempFileName, size, BinDataGeneral,  &compressedData).append("place", "collection").append("extension", fileType).obj();
+	}
 	cloudType="";
 }
 
