@@ -18,7 +18,8 @@
 		<Subtask name="Processing">
 			<Executor name="Processing"  period="1">
 			 <Component name="Source" type="PCL:PCDReader" priority="1" bump="0">
-				<param name="filename">/home/lzmuda/PCL_Plane/table_scene_mug_stereo_texturedMod.pcd</param>
+				<!--param name="filename">/home/lzmuda/PCL_Plane/SiftCloud.pcd</param-->
+				<param name="filename">/home/lzmuda/PCL_Plane/table_scene_mug_stereo_textured_cylinder.pcd</param>
 			</Component>
 			<Component name="NextImageTrigger" type="DCL_CvBasic:Trigger" priority="2" bump="0"></Component>
 			<Component name="Input" type="DCL_CvBasic:Sequence" priority="3">
@@ -31,12 +32,12 @@
 			</Component>
 			</Executor>
 			<Executor name="Exec1" period="0.01">
-				<Component name="CvWindow" type="DCL_CvBasic:CvWindow" priority="1" bump="0">
+				<!--Component name="CvWindow" type="DCL_CvBasic:CvWindow" priority="1" bump="0">
 					<param name="count">1</param>
 					<param name="title">Source</param>
-				</Component>
-				<Component name="InputCloud" type="PCL:CloudViewer" priority="2" bump="0">
-				</Component>
+				</Component-->
+				<!--Component name="InputCloud" type="PCL:CloudViewer" priority="2" bump="0">
+				</Component-->
 			</Executor>
 		</Subtask->
 	</Subtasks>
@@ -45,14 +46,15 @@
 		<!--Source name="NextImageTrigger.out_trigger">
 			<sink>Input.in_trigger</sink>
 		</Source-->
-		<Source name="Source.out_cloud_xyzrgb">
-			<sink>Writer.in_cloud_xyzrgb</sink>
-			<sink>InputCloud.in_cloud_xyzrgb</sink>
+		<Source name="Source.out_cloud_xyz">
+			<!--sink>Writer.in_cloud_xyzsift</sink-->
+			<sink>Writer.in_cloud_xyz</sink>
+			<!--sink>InputCloud.in_cloud_xyzsift</sink-->
 		</Source>
-		<Source name="Input.out_img">
+		<!--Source name="Input.out_img">
 			<sink>Writer.in_img</sink>	
 			<sink>CvWindow.in_img</sink>
-		</Source>
+		</Source-->
 	</DataStreams>
 </Task>
 

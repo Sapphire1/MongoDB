@@ -33,6 +33,7 @@
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
 #include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZRGBSIFT.hpp>
 #include <Types/SIFTObjectModelFactory.hpp>
 
 
@@ -81,6 +82,9 @@ public:
 	/// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
 	Base::DataStreamIn<pcl::PointCloud<PointXYZSIFT>::Ptr> in_cloud_xyzsift;
 
+	/// Cloud containing points with Cartesian coordinates, RGB Color and SIFT descriptor (XYZ+ RGB + 128).
+		Base::DataStreamIn<pcl::PointCloud<PointXYZRGBSIFT>::Ptr> in_cloud_xyzrgbsift;
+
 	Base::DataStreamOut<std::vector<AbstractObject*> > out_models;
 
 	MongoBase();
@@ -107,7 +111,7 @@ public:
 MongoBase::MongoBase() {
 	DBClientConnection *c_ptr = new DBClientConnection();
 	c = boost::shared_ptr<DBClientConnection>(c_ptr);
-	dbCollectionPath="images.collectionName";
+	dbCollectionPath="";
 }
 
 MongoBase::~MongoBase() {
@@ -118,19 +122,21 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
 	BSONElement oi;
     OID o;
     BSONArrayBuilder stereoPCArrayBuilder, kinectPCArrayBuilder, tofPCArrayBuilder, objectArrayBuilder, viewArrayBuilder, stereoArrayBuilder, kinectArrayBuilder, tofArrayBuilder, viewBuilder;
-    //CLOG(LTRACE)<<"Init View";
+    cout<<"Init View\n";
     //add view to object
     if(addToObjectFlag)
-    //if(nodeTypeProp=="View")
     {
     	addToObject(nodeTypeProp, viewName, objectName, description);
+    	cout<<"Init View 11\n";
     }
+    cout<<"Init View2\n";
     // add childs to arraysBuilder
     for(std::vector<string>::iterator it = docViewsNames.begin(); it != docViewsNames.end(); ++it){
 		BSONObj document = BSONObjBuilder().genOID().append("Type", *it).append("ObjectName", objectName).append("ViewName", viewName).append("description", description).obj();
 		c->insert(dbCollectionPath, document);
 		document.getObjectID(oi);
 		o=oi.__oid();
+		cout<< "Add to "<< *it<<" , this: "<<o.str()<<" in "<<dbCollectionPath<<"\n";
 		if(*it=="Stereo" || *it=="Kinect" || *it=="ToF")
 			viewArrayBuilder.append(BSONObjBuilder().append("childOID", o.str()).obj());
 		else if(*it=="StereoLR" || *it=="StereoRX" || *it=="StereoRXM" || *it=="StereoPC")
@@ -146,7 +152,7 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
 		else if(*it== "ToFPCXYZRGB" || *it=="ToFPCXYZSIFT" || *it=="ToFPCXYZSHOT") //ToFPC
 			tofPCArrayBuilder.append(BSONObjBuilder().append("childOID", o.str()).obj());
     }
-
+    cout<<"Init View3\n";
     // create arrays
 	BSONArray viewArr = viewArrayBuilder.arr();
     BSONArray stereoArr = stereoArrayBuilder.arr();
@@ -155,7 +161,7 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
     BSONArray kinectPCArr = kinectPCArrayBuilder.arr();
     BSONArray stereoPC = stereoPCArrayBuilder.arr();
     BSONArray tofPCArr = tofPCArrayBuilder.arr();
-
+    cout<<"Init View4\n";
     // update documents
     c->update(dbCollectionPath, QUERY("Type"<<"View"<<"ObjectName"<<objectName<<"ViewName"<<viewName), BSON("$set"<<BSON("childOIDs"<<viewArr)), false, true);
     c->update(dbCollectionPath, QUERY("Type"<<"ToF"<<"ObjectName"<<objectName<<"ViewName"<<viewName), BSON("$set"<<BSON("childOIDs"<<tofArr)), false, true);
@@ -164,15 +170,16 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
     c->update(dbCollectionPath, QUERY("Type"<<"KinectPC"<<"ObjectName"<<objectName<<"ViewName"<<viewName), BSON("$set"<<BSON("childOIDs"<<kinectPCArr)), false, true);
     c->update(dbCollectionPath, QUERY("Type"<<"StereoPC"<<"ObjectName"<<objectName<<"ViewName"<<viewName), BSON("$set"<<BSON("childOIDs"<<stereoPC)), false, true);
     c->update(dbCollectionPath, QUERY("Type"<<"ToFPCX"<<"ObjectName"<<objectName<<"ViewName"<<viewName), BSON("$set"<<BSON("childOIDs"<<tofPCArr)), false, true);
-
+    cout<<"Init View 5 \n";
     c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
     c->createIndex(dbCollectionPath, BSON("ViewName"<<1));
     c->createIndex(dbCollectionPath, BSON("Type"<<1));
-
+    cout<<"Init View 6\n";
 }
 
 void MongoBase::addToObject(const Base::Property<string>& nodeTypeProp,const string & name, Base::Property<string>& objectName, Base::Property<string>& description)
 {
+	cout<<"Create View";
 	BSONElement oi;
 	OID o;
 	string type;
@@ -190,12 +197,14 @@ void MongoBase::addToObject(const Base::Property<string>& nodeTypeProp,const str
 	// add object
 	if(nr==0)
 	{
+		cout<<"Create Object";
 		//CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
 		BSONObj object = BSONObjBuilder().genOID().append("Type", "Object").append("ObjectName", objectName).append("description", description).obj();
 		c->insert(dbCollectionPath, object);
 		addScenes(object, objectName);
 	}
 	// add model/view
+	cout<<"Create Model/View";
 	BSONObj modelorView = BSONObjBuilder().genOID().append("Type", type).append("ObjectName", objectName).append(type+"Name", name).append("description", description).obj();
 	c->insert(dbCollectionPath, modelorView);
 	modelorView.getObjectID(oi);
@@ -221,7 +230,7 @@ void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
 		{
 			auto_ptr<DBClientCursor> cursorCollection =c->query(dbCollectionPath, (QUERY("SceneName"<<*itSceneName)));
 			BSONObj scene = cursorCollection->next();
-			//CLOG(LINFO)<<"Add scene to the object!";
+			cout<<"Add scene to the object!";
 			scene.getObjectID(oi);
 			o=oi.__oid();
 
@@ -249,7 +258,7 @@ void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
 			}
 			if(!objectInTheScene)
 			{
-			//	CLOG(LINFO)<<"Adding object to the scene";
+				cout<<"Adding object to the scene";
 				object.getObjectID(oi);
 				o=oi.__oid();
 				c->update(dbCollectionPath, QUERY("SceneName"<<*itSceneName), BSON("$addToSet"<<BSON("objectsOIDs"<<BSON("objectOID"<<o.str()))), false, true);
@@ -258,7 +267,7 @@ void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
 		else
 		{
 			c->createIndex(dbCollectionPath, BSON("SceneName"<<1));
-			//CLOG(LINFO)<<"Create scene and add object to array list";
+			cout<<"Create scene and add object to array list";
 			BSONObj scene = BSONObjBuilder().genOID().append("SceneName", *itSceneName).obj();
 			c->insert(dbCollectionPath, scene);
 

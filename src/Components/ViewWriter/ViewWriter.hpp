@@ -31,6 +31,7 @@
 #include <dirent.h>
 #include <Types/MongoBase.hpp>
 #include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZRGBSIFT.hpp>
 
 namespace Processors {
 namespace ViewWriter {
@@ -114,6 +115,7 @@ private:
     	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ;
     	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB;
     	pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT;
+    	pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT;
     	cv::Mat tempImg;
 
         template <class PointT>
@@ -136,7 +138,7 @@ private:
         int getFileSize(const string& fileType, string& tempFileName);
         void insertToModelOrView(const string &,const string &);
         void insertFileIntoGrid(OID&, const string&, string&);
-        void insertFileIntoCollection(const string& fileType, const string& tempFileName, int);
+        void insertFileIntoCollection(OID& oid, const string& fileType, const string& tempFileName, int);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
 };
 }//: namespace ViewWriter
