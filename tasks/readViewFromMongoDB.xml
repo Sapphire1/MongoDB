@@ -22,14 +22,15 @@
 			<Component name="CIPReader" type="MongoDB:CIPReader" priority="2">
 			</Component>
 			</Executor>
-			<!--Executor name="Exec1" period="0.01">
+			
+			<Executor name="Exec1" period="0.01">
 				<Component name="CvWindow" type="DCL_CvBasic:CvWindow" priority="1" bump="0">
 					<param name="count">1</param>
 					<param name="title">Source</param>
 				</Component>
-				<Component name="InputCloud" type="PCL:CloudViewer" priority="2" bump="0">
-				</Component>
-			</Executor-->
+				<!--Component name="InputCloud" type="PCL:CloudViewer" priority="2" bump="0">
+				</Component-->
+			</Executor>
 		</Subtask->
 	</Subtasks>
 	<!-- pipes connecting datastreams -->
@@ -37,8 +38,11 @@
 		<!--Source name="ViewReader.out_img">
 			<sink>CvWindow.in_img</sink>
 		</Source-->
-		<Source name="ViewReader.cipFileOut">
+		<!--Source name="ViewReader.cipFileOut">
 			<sink>CIPReader.CIPFileIn</sink>
+		</Source-->
+		<Source name="ViewReader.out_img">
+			<sink>CvWindow.in_img</sink>
 		</Source>
 		<!--Source name="ViewReader.out_cloud_xyz">
 			<sink>InputCloud.in_cloud_xyz</sink>

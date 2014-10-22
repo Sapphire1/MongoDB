@@ -11,25 +11,33 @@
 #include <iostream>
 #include <fstream>
 #include <memory>
+#include <cstring>
+#include <cstdlib>
+#include <glob.h>
+#include <memory>
 #include <string>
+#include <vector>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
-#include <Types/PointXYZSIFT.hpp>
+#include <pcl/compression/octree_pointcloud_compression.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/foreach.hpp>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
 
 #include "mongo/client/dbclient.h"
 #include "mongo/bson/bson.h"
 #include "Logger.hpp"
-#include <Types/MongoBase.hpp>
 #include <Types/AddVector.hpp>
+#include <Types/MongoBase.hpp>
+#include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZRGBSIFT.hpp>
 
 namespace Processors {
 namespace ViewReader {
@@ -111,10 +119,12 @@ private:
         void readFromMongoDB(const string&, const string&, const string&);
         void ReadPCDCloud(const string&, const string&);
         void readfromDB();
-        void writeToSink(string& mime, string& filename, string& fileName);
-        void readFile(const OID& childOID);
+        void writeToSinkFromFile(string& mime, string& filename, string& fileName);
+        void readFile(OID& childOID);
         void readAllFilesTriggered();
         void addToAllChilds(std::vector<OID>&);
+        void cloudEncoding(OID& oid, string& tempFileName, string & cloudType);
+
 
 };
 }//: namespace ViewReader

@@ -15,12 +15,12 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <cstring>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/compression/octree_pointcloud_compression.h>
-#include <pcl/io/openni_grabber.h>
 
 #include "Logger.hpp"
 #include "mongo/client/dbclient.h"
@@ -135,10 +135,10 @@ private:
         void writeTXT2DB();
         void writeImage2DB();
         void writePCD2DB();
-        int getFileSize(const string& fileType, string& tempFileName);
+        float getFileSize(const string& fileType, string& tempFileName);
         void insertToModelOrView(const string &,const string &);
         void insertFileIntoGrid(OID&, const string&, string&);
-        void insertFileIntoCollection(OID& oid, const string& fileType, const string& tempFileName, int);
+        void insertFileIntoCollection(OID& oid, const string& fileType, string& tempFileName, int);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
 };
 }//: namespace ViewWriter

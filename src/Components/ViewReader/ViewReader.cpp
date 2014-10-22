@@ -11,7 +11,9 @@ namespace Processors {
 namespace ViewReader  {
 using namespace cv;
 using namespace mongo;
-using namespace boost::property_tree;
+using namespace std;
+using namespace boost;
+using namespace boost::posix_time;
 
 ViewReader::ViewReader(const std::string & name) : Base::Component(name),
 		mongoDBHost("mongoDBHost", string("localhost")),
@@ -59,7 +61,7 @@ bool ViewReader::onInit()
 {
         CLOG(LTRACE) << "ViewReader::initialize";
         if(collectionName=="containers")
-        	dbCollectionPath="images.containers";
+      		MongoBase::dbCollectionPath=dbCollectionPath="images.containers";
         string hostname = mongoDBHost;
         connectToMongoDB(hostname);
         return true;
@@ -93,6 +95,81 @@ void ViewReader::addToAllChilds(std::vector<OID> & childsVector)
 	allChildsVector+=childsVector;
 }
 
+void ViewReader::cloudEncoding(OID& oid, string& tempFileName, string & cloudType)
+{
+	try{
+		pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudDecoderXYZ;
+		pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>* PointCloudDecoderXYZRGB;
+		int queryOptions = 0;
+		const BSONObj *fieldsToReturn = 0;
+		CLOG(LERROR)<<"dbCollectionPath: "<<dbCollectionPath<<"\n\n";
+		// get bson object from collection
+		BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << oid), fieldsToReturn, queryOptions);
+		CLOG(LERROR)<<"2\n";
+		// read data to buffer
+		CLOG(LERROR)<<"3"<<"\n\n";
+		int readSize;
+		CLOG(LERROR)<<obj<<"\n";
+		int size=21473;
+		std::stringstream* newTable = new std::stringstream("jajko");
+
+		newTable->str("jajko2");
+		CLOG(LERROR)<<newTable->str();
+		CLOG(LERROR)<<"obj[tempFileName]: "<<obj[tempFileName]<<"\n";;
+		CLOG(LERROR)<<"obj[tempFileName].binData(readSize): "<< (std::stringstream*)obj[tempFileName].binData(readSize)<<"\n";
+		const char* charPtr= (const char*)(obj[tempFileName].binData(readSize));
+		char temp[readSize];
+		memcpy(temp, charPtr, readSize);
+		cout<<"Readed: "<<readSize<<" B.";
+		cout<<"charPtr: "<<temp;
+		stringstream * strPtr;
+		strPtr= (stringstream*) temp;
+
+		cout<<"strPtr: "<<strPtr;
+		cout<<"temp[0]: "<<temp[0];
+
+		cout<<*charPtr;
+
+		// tu sie wypieprza, czemu? nie wiem... jest seg fault...
+		cout<<*strPtr;
+		/*
+		cout<<strPtr->str();
+		 */
+		//memcpy (newTable, charPtr, readSize);
+		// CLOG(LERROR)<<newTable[0];
+		// CLOG(LERROR)<<*charPtr;
+		// CLOG(LERROR)<<newTable->str();
+		//cout<<"Readed: "<<readSize<<" B.";
+		//cout<<"charPtr: "<<charPtr;
+		//stringstream * strPtr = (stringstream*)charPtr;
+		//cout<<"strPtr: "<<strPtr;
+		//cout<<"charPtr[0]: "<<charPtr[0];
+		//cout<<"strlen(charPtr): "<<strlen(charPtr);
+		//cout<<*charPtr;
+		//cout<<*strPtr;
+		//CLOG(LERROR)<<(stringstream *)obj[tempFileName].binData(readSize)<<"\n\n";
+		//stringstream* buffi = (stringstream *)obj[tempFileName].binData(readSize);
+
+		//cout<<buffi[0];
+		//cout<<*buffi;
+		//cout<<buffi;
+		if(cloudType=="xyz")
+		{
+			PointCloudDecoderXYZ=new pcl::io::OctreePointCloudCompression<pcl::PointXYZ>();
+			pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ (new pcl::PointCloud<pcl::PointXYZ>);
+			//PointCloudDecoderXYZ->decodePointCloud (*strPtr, cloudXYZ);
+		//	pcl::io::savePCDFile("newCloud2.pcd", *cloudXYZ, false);
+		}
+		else if(cloudType=="xyzrgb")
+		{
+			PointCloudDecoderXYZRGB=new pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>();
+			pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB (new pcl::PointCloud<pcl::PointXYZRGB>);
+		//	PointCloudDecoderXYZRGB->decodePointCloud (*buffi, cloudXYZRGB);
+		//	pcl::io::savePCDFile("newCloud2.pcd", *cloudXYZRGB, false);
+		}
+		CLOG(LERROR)<<"ViewWriter::insertFileIntoCollection: END";
+	}catch(Exception &ex){cout<<ex.what();}
+}
 void ViewReader::readAllFilesTriggered()
 {
 	CLOG(LTRACE)<<"ViewReader::readAllFiles";
@@ -158,7 +235,7 @@ void ViewReader::ReadPCDCloud(const string& filename, const string& tempFile)
 		}
 }
 
-void ViewReader::writeToSink(string& mime, string& tempFilename, string& fileName)
+void ViewReader::writeToSinkFromFile(string& mime, string& tempFilename, string& fileName)
 {
 	CLOG(LNOTICE)<<"ViewReader::writeToSink";
 	if(mime=="image/png" || mime=="image/jpeg")
@@ -192,26 +269,156 @@ void ViewReader::writeToSink(string& mime, string& tempFilename, string& fileNam
 			CLOG(LERROR)<<"Nie wiem co to za plik :/";
 	}
 }
-void ViewReader::readFile(const OID& childOID)
+void ViewReader::readFile(OID& childOID)
 {
 	CLOG(LTRACE)<<"ViewReader::readFile";
-	GridFS fs(*c,collectionName);
-	CLOG(LTRACE)<<"_id"<<childOID;
-	GridFile file = fs.findFile(QUERY("_id" << childOID));
+	int queryOptions = 0;
+	const BSONObj *fieldsToReturn = 0;
 
-	if (!file.exists())
+	// get bson object from collection
+	BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << childOID), fieldsToReturn, queryOptions);
+
+	CLOG(LERROR)<<"obj: "<<obj<<", childOID: "<<childOID;
+	string place = obj.getField("place").str();
+	int size = obj.getField("size").Int();
+	string tempFileName = obj.getField("fileName").str();
+	CLOG(LERROR)<<"place: "<<place<<" size: "<<size<<", fileName: "<<tempFileName;
+
+	//TODO 		read from collection
+
+	if(place=="collection")
 	{
-		CLOG(LERROR) << "File not found in grid";
+		//readFromCollection();
+		string extension = obj.getField("extension").str();
+		if(extension=="jpg" || extension=="png")
+		{
+			CLOG(LERROR)<<"Read image\n";
+			BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << childOID), fieldsToReturn, queryOptions);
+
+			int len;
+			uchar *data = (uchar*)obj[tempFileName].binData(len);
+
+			std::vector<uchar> v(data, data+len);
+			CLOG(LERROR)<<*data;
+			cv::Mat image = cv::imdecode(cv::Mat(v), -1);
+			CLOG(LERROR)<<image.total();
+			out_img.write(image);
+			 imwrite( "Gray_Image.jpg", image );
+		}
+
+		else if(extension=="pcd")
+		{
+			CLOG(LERROR)<<"pcd ";
+			string cloudType;
+			if (tempFileName.find("xyzrgb") != std::string::npos)
+			{
+				cloudType="xyzrgb";
+			}
+			else if (tempFileName.find("xyzsift") != std::string::npos)
+			{
+				cloudType="xyzsift";
+			}
+			else if (tempFileName.find("xyzshot") != std::string::npos)
+			{
+				cloudType="xyzshot";
+			}
+			else if (tempFileName.find("xyz") != std::string::npos)
+			{
+				CLOG(LERROR)<<"xyz";
+				cloudType="xyz";
+			}
+			else
+			{
+				CLOG(LERROR)<<"Don't know such PC!!!";
+			}
+
+			// cloud encoding
+			//CLOG(LERROR)<<" cloud encoding";
+			//cloudEncoding(childOID, tempFileName, cloudType);
+			try
+			{
+				if(cloudType=="xyz")
+				{
+
+				}
+				else if(cloudType=="xyzrgb")
+				{
+
+				}
+				else if(cloudType=="xyzsift")
+				{
+					/// NIE DZIALA!!!! TODO
+					// read object
+					const BSONObj *fieldsToReturn = 0;
+					int queryOptions = 0;
+
+					// get bson object
+					pcl::PCLPointCloud2* msg2;
+					pcl::PCLPointCloud2 temp;
+
+					// read data to buffer
+				//	msg2 = (pcl::PCLPointCloud2*) obj[tempFileName].binData(size);
+				//	memcpy(&temp,msg2,size);
+				//	pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT2 (new pcl::PointCloud<PointXYZSIFT>);
+				//	CLOG(LERROR)<<"temp->header"<<temp->header;
+
+					// convert PointCloud2 to cloud
+				//	fromPCLPointCloud2 (*msg2, *cloudXYZSIFT2);
+//
+			//		CLOG(LNOTICE)<< "Cloud size2: " <<  cloudXYZSIFT2->size();
+
+					// save cloud into file, its temporary, only for test purposes
+			////		string newCloud = "newCloud.pcd";
+			//		pcl::io::savePCDFile(newCloud, *cloudXYZSIFT2, true);
+				}
+				CLOG(LERROR)<<"ViewWriter::insertFileIntoCollection: END";
+			}catch(Exception &ex){CLOG(LERROR)<<ex.what();}
+		}//pcd
+		else if(extension=="txt")
+		{
+			// read object
+			const BSONObj *fieldsToReturn = 0;
+			int queryOptions = 0;
+			pcl::PCLPointCloud2* msg2;
+
+			// read data to buffer
+			msg2 = (pcl::PCLPointCloud2*) obj[tempFileName].binData(size);
+
+			pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT2 (new pcl::PointCloud<PointXYZSIFT>);
+
+			// convert PointCloud2 to cloud
+			fromPCLPointCloud2 (*msg2, *cloudXYZSIFT2);
+
+			//TODO zmienic to!
+			string newCloud = "newCloud.pcd";
+			CLOG(LNOTICE)<< "Cloud size2: " <<  cloudXYZSIFT2->size();
+
+			// save cloud into file, its temporary, only test purposes
+			pcl::io::savePCDFile(newCloud, *cloudXYZSIFT2, true);
+		}
 	}
+
 	else
 	{
-		// get filename
-		string filename = file.getFileField("filename").str();
-		// get mime from file
-		string mime = file.getContentType();
-		string tempFile = "tempFile";
-		getFileFromGrid(file, tempFile);
-		writeToSink(mime, tempFile, filename);
+		// if saved in grid
+		GridFS fs(*c,collectionName);
+		CLOG(LTRACE)<<"_id"<<childOID;
+		GridFile file = fs.findFile(QUERY("_id" << childOID));
+
+		if (!file.exists())
+		{
+			CLOG(LERROR) << "File not found in grid";
+		}
+		else
+		{
+			// get filename
+			string filename = file.getFileField("filename").str();
+			// get mime from file
+			string mime = file.getContentType();
+			string tempFile = "tempFile";
+			getFileFromGrid(file, tempFile);
+			writeToSinkFromFile(mime, tempFile, filename);
+		}
 	}
 }
 

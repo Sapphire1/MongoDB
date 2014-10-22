@@ -32,6 +32,8 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
+#include <pcl/compression/octree_pointcloud_compression.h>
+
 #include <Types/PointXYZSIFT.hpp>
 #include <Types/PointXYZRGBSIFT.hpp>
 #include <Types/SIFTObjectModelFactory.hpp>
@@ -105,7 +107,7 @@ public:
     void initModel(const string & modelName, bool addToModelFlag, Base::Property<string>& nodeTypeProp, Base::Property<string>& objectName, Base::Property<string>& description);
     void addToObject(const Base::Property<string>& nodeTypeProp,const string & name, Base::Property<string>& objectName, Base::Property<string>& description);
     void initView(const string & viewName, bool addToObjectFlag, Base::Property<string>& nodeTypeProp, Base::Property<string>& objectName, Base::Property<string>& description);
-
+    void cloudEncoding(OID& oid, string& tempFileName, string & cloudType);
 };
 
 MongoBase::MongoBase() {
@@ -117,6 +119,51 @@ MongoBase::MongoBase() {
 MongoBase::~MongoBase() {
 }
 
+void MongoBase::cloudEncoding(OID& oid, string& tempFileName, string & cloudType)
+{
+	try{
+		pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudDecoderXYZ;
+		pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>* PointCloudDecoderXYZRGB;
+		int queryOptions = 0;
+		const BSONObj *fieldsToReturn = 0;
+		cout<<"dbCollectionPath: "<<dbCollectionPath<<"\n\n";
+
+		// get bson object from collection
+		cout<<oid<<endl;
+		BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << oid), fieldsToReturn, queryOptions);
+
+		// read data to buffer
+		int readSize;
+		cout<<obj<<"\n";
+
+		const char* charPtr= (const char*)(obj[tempFileName].binData(readSize));
+		cout<<"Readed: "<<readSize<<" B.";
+		cout<<"charPtr: "<<charPtr;
+		stringstream * strPtr = (stringstream*)charPtr;
+		cout<<"strPtr: "<<strPtr;
+		cout<<"charPtr[0]: "<<charPtr[0];
+		cout<<*charPtr;
+		cout<<*strPtr;
+		cout<<strPtr->str();
+
+
+		if(cloudType=="xyz")
+		{
+			PointCloudDecoderXYZ=new pcl::io::OctreePointCloudCompression<pcl::PointXYZ>();
+			pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ (new pcl::PointCloud<pcl::PointXYZ>);
+			PointCloudDecoderXYZ->decodePointCloud (*strPtr, cloudXYZ);
+			pcl::io::savePCDFile("newCloud2.pcd", *cloudXYZ, false);
+		}
+		else if(cloudType=="xyzrgb")
+		{
+			PointCloudDecoderXYZRGB=new pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>();
+			pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB (new pcl::PointCloud<pcl::PointXYZRGB>);
+			PointCloudDecoderXYZRGB->decodePointCloud (*strPtr, cloudXYZRGB);
+			pcl::io::savePCDFile("newCloud2.pcd", *cloudXYZRGB, false);
+		}
+		cout<<"ViewWriter::insertFileIntoCollection: END";
+	}catch(Exception &ex){cout<<ex.what();}
+}
 void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Property<string>& nodeTypeProp, Base::Property<string>& objectName, Base::Property<string>& description)
 {
 	BSONElement oi;

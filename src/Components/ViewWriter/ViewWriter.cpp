@@ -13,7 +13,6 @@ using namespace mongo;
 using namespace std;
 using namespace boost;
 using namespace boost::posix_time;
-#include <cstring>
 
 ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	mongoDBHost("mongoDBHost", string("localhost")),
@@ -126,7 +125,10 @@ void ViewWriter::Write_cloud()
 		cloudXYZ = in_cloud_xyz.read();
 		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
 			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZ->size();
-		sizeOfCloud/=(1000*1000);
+		if(sizeOfCloud>1)
+			sizeOfCloud/=(1000*1000);
+		else
+			sizeOfCloud=-1;
 	}
 	else if(typeid(PointT) == typeid(pcl::PointXYZRGB))
 	{
@@ -134,7 +136,10 @@ void ViewWriter::Write_cloud()
 		cloudXYZRGB = in_cloud_xyzrgb.read();
 		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
 			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZRGB->size();
-		sizeOfCloud/=(1000*1000);
+		if(sizeOfCloud>1)
+			sizeOfCloud/=(1000*1000);
+		else
+			sizeOfCloud=-1;
 	}
 	else if(typeid(PointT) == typeid(PointXYZSIFT))
 	{
@@ -143,7 +148,10 @@ void ViewWriter::Write_cloud()
 
 		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
 			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZSIFT->size();
-		sizeOfCloud/=(1000*1000);
+		if(sizeOfCloud>1)
+			sizeOfCloud/=(1000*1000);
+		else
+			sizeOfCloud=-1;
 	}
 	else if(typeid(PointT) == typeid(PointXYZSIFT))
 	{
@@ -151,7 +159,10 @@ void ViewWriter::Write_cloud()
 		cloudXYZRGBSIFT = in_cloud_xyzrgbsift.read();
 		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
 			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZRGBSIFT->size();
-		sizeOfCloud/=(1000*1000);
+		if(sizeOfCloud>1)
+			sizeOfCloud/=(1000*1000);
+		else
+			sizeOfCloud=-1;
 	}
 	CLOG(LINFO)<<"CloudType: "<<cloudType;
 	CLOG(LINFO)<<"PointCloudSize = "<< sizeOfCloud;
@@ -357,9 +368,9 @@ void ViewWriter::insertFileIntoGrid(OID& oid, const string& fileType, string& te
 
 		BSONObj b;
 		if(cloudType=="xyzsift")
-			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
+			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("mean_viewpoint_features_number", mean_viewpoint_features_number).append("place", "grid").obj();
 		else
-			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
+			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("place", "grid").obj();
 		c->insert(dbCollectionPath, b);
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
@@ -374,7 +385,7 @@ void ViewWriter::insertFileIntoGrid(OID& oid, const string& fileType, string& te
 		CLOG(LERROR) << e.what();
 	}
 }
-int ViewWriter::getFileSize(const string& fileType, string& tempFileName)
+float ViewWriter::getFileSize(const string& fileType, string& tempFileName)
 {
 	float size = 0.0;
 	if (fileType=="png" || fileType=="jpg")
@@ -423,7 +434,7 @@ void ViewWriter::writeNode2MongoDB(const string &destination, const string &type
 	CLOG(LTRACE) <<"Filename: " << fileName << " destination: "<< destination<<" dbCollectionPath: "<<dbCollectionPath;
     try{
     	string tempFileName="";
-    	int sizeOfFile = getFileSize(fileType, tempFileName);
+    	float sizeOfFile = getFileSize(fileType, tempFileName);
     	//TODO odwrocic ta relacje
     	if(sizeOfFile<15)
     	{
@@ -434,10 +445,13 @@ void ViewWriter::writeNode2MongoDB(const string &destination, const string &type
     	//TODO dodac tego else'a!!!
 		//else
 			CLOG(LERROR)<<"ViewWriter::writeNode2MongoDB, cloudType: "<<cloudType;
-			insertFileIntoCollection(oid, fileType, tempFileName, sizeOfFile);
-			CLOG(LERROR)<<"UPDATE: "<<oid.str();
-			c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
-
+			if(sizeOfFile>0.0)
+			{
+				CLOG(LERROR)<<"sizeOfFile: "<<sizeOfFile;
+				insertFileIntoCollection(oid, fileType, tempFileName, sizeOfFile);
+				CLOG(LERROR)<<"UPDATE: "<<oid.str();
+				c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
+			}
 		CLOG(LTRACE) <<"File saved successfully";
     }
 	catch(DBException &e)
@@ -447,9 +461,10 @@ void ViewWriter::writeNode2MongoDB(const string &destination, const string &type
 	}
 }
 
-void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, const string& tempFileName, int size)
+void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, string& tempFileName, int size)
 {
 	CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection";
+	//TODO add fileName and size to document
 	BSONObjBuilder builder;
 	BSONObj b;
 	BSONElement bsonElement;
@@ -464,7 +479,7 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, cons
 		params[0] = CV_IMWRITE_JPEG_QUALITY;
 		params[1] = 95;
 		cv::imencode(".jpg", tempImg, buf, params);
-		b=BSONObjBuilder().genOID().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("place", "collection").append("extension", fileType).obj();
+		b=BSONObjBuilder().genOID().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "collection").append("extension", fileType).obj();
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
 		c->insert(dbCollectionPath, b);
@@ -477,7 +492,7 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, cons
 		pcl::io::compression_Profiles_e compressionProfile = pcl::io::HIGH_RES_OFFLINE_COMPRESSION_WITHOUT_COLOR;
 		if(cloudType!="xyzsift")
 		{
-			// cloud encoding
+			/*
 			if(cloudType=="xyzrgb")
 			{
 				CLOG(LERROR)<<"WriteXYZRGB!";
@@ -493,54 +508,56 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, cons
 				PointCloudEncoder->encodePointCloud (cloudXYZ, compressedData);
 				delete(PointCloudEncoder);
 			}
+			*/
 
-			//get size of compressed cloud
-			compressedData.seekp(0, ios::end);
-			stringstream::pos_type size = compressedData.tellp();
 
-			// convert size to int
-			int sizeInt = size;
 
-			//build bson object
-			b = BSONObjBuilder().genOID().appendBinData(tempFileName, size, BinDataGeneral,  &compressedData).append("place", "collection").append("extension", fileType).obj();
-			b.getObjectID(bsonElement);
-			oid=bsonElement.__oid();
-
-			// insert object to collection
-			c->insert(dbCollectionPath, b);
-
-			// create index on place field
-			c->createIndex(dbCollectionPath, BSON("place"<<1));
-
-			// cloud encoding
+/*
 			try{
-				pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudDecoderXYZ;
-				pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>* PointCloudDecoderXYZRGB;
+
 				int queryOptions = 0;
 				const BSONObj *fieldsToReturn = 0;
-
 				// get bson object from collection
+				CLOG(LERROR)<<oid<<endl;
 				BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << oid), fieldsToReturn, queryOptions);
+				CLOG(LERROR)<<"1";
 
-				// read data to buffor
-				stringstream* buff= (stringstream *)obj[tempFileName].binData(sizeInt);
+				// read data to buffer
+				int readSize;
+				CLOG(LERROR)<<obj<<"\n";
+				CLOG(LERROR)<<"2";
 
-				if(cloudType=="xyz")
-				{
-					PointCloudDecoderXYZ=new pcl::io::OctreePointCloudCompression<pcl::PointXYZ>();
-					pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ (new pcl::PointCloud<pcl::PointXYZ>);
-					PointCloudDecoderXYZ->decodePointCloud (*buff, cloudXYZ);
-					pcl::io::savePCDFile("newCloud2.pcd", *cloudXYZ, binary);
-				}
-				else if(cloudType=="xyzrgb")
-				{
-					PointCloudDecoderXYZRGB=new pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>();
-					pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB (new pcl::PointCloud<pcl::PointXYZRGB>);
-					PointCloudDecoderXYZRGB->decodePointCloud (*buff, cloudXYZRGB);
-					pcl::io::savePCDFile("newCloud2.pcd", *cloudXYZRGB, binary);
-				}
+				const char* charPtr;
+				char table[size];
+				CLOG(LERROR)<<"3";
+		//		tmp2= (const char*)(obj[tempFileName].binData(readSize));
+		//		CLOG(LERROR)<<tmp2;
+		//		string str(tmp2);
+		//		CLOG(LERROR)<<str;
+				//memcpy(table, charPtr,readSize);
+				//CLOG(LERROR)<<"Readed: "<<readSize<<" B.";
+				//CLOG(LERROR)<<"charPtr: "<<charPtr;
+				//string str(table);
+				//CLOG(LERROR)<<str;
+			//	stringstream ss(str);
+			//	CLOG(LERROR)<<ss.str();
+				//pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudDecoderXYZ;
+				////PointCloudDecoderXYZ=new pcl::io::OctreePointCloudCompression<pcl::PointXYZ>();
+				//pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ (new pcl::PointCloud<pcl::PointXYZ>);
+				//PointCloudDecoderXYZ->decodePointCloud (ss, cloudXYZ);
+				//pcl::io::savePCDFile("newCloud2.pcd", *cloudXYZ, false);
+				//ss << *table;
+				//CLOG(LERROR)<<ss.str();
+				//stringstream * strPtr = (stringstream*)table;
+				//CLOG(LERROR)<<"strPtr: "<<strPtr;
+				//CLOG(LERROR)<<"charPtr[0]: "<<charPtr[0];
+				//CLOG(LERROR)<<*charPtr;
+				//CLOG(LERROR)<<*strPtr;
+				//CLOG(LERROR)<<strPtr->str();
+
 				CLOG(LERROR)<<"ViewWriter::insertFileIntoCollection: END";
-			}catch(Exception &ex){CLOG(LERROR)<<ex.what();}
+			}catch(Exception &ex){cout<<ex.what();}
+*/
 		}
 		//TODO dodac SHOT'Y
 		else if(cloudType=="xyzsift")
@@ -570,7 +587,7 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, cons
 			CLOG(LNOTICE)<<"fullSizeBytes: "<<fullSizeBytes<< " B";
 
 			// build bson object
-			b = BSONObjBuilder().genOID().appendBinData(tempFileName, fullSizeBytes, BinDataGeneral, &msg).append("place", "collection").append("extension", fileType).obj();
+			b = BSONObjBuilder().genOID().appendBinData(tempFileName, fullSizeBytes, BinDataGeneral, &msg).append("fileName", tempFileName).append("size", fullSizeBytes).append("place", "collection").append("extension", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 
@@ -585,7 +602,7 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, cons
 			BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << oid), fieldsToReturn, queryOptions);
 			pcl::PCLPointCloud2* msg2;
 
-			// read data to buffor
+			// read data to buffer
 			msg2 = (pcl::PCLPointCloud2*) obj[tempFileName].binData(fullSizeBytes);
 
 			pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT2 (new pcl::PointCloud<PointXYZSIFT>);
@@ -616,7 +633,7 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, cons
 		char const *cipCharTable = input.c_str();
 
 		// create bson object
-		b = BSONObjBuilder().genOID().appendBinData(tempFileName, size, BinDataGeneral,  cipCharTable).append("place", "collection").append("extension", fileType).obj();
+		b = BSONObjBuilder().genOID().appendBinData(tempFileName, size, BinDataGeneral,  cipCharTable).append("fileName", tempFileName).append("size", size).append("place", "collection").append("extension", fileType).obj();
 
 		// insert object into collection
 		c->insert(dbCollectionPath, b);
@@ -641,6 +658,8 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, cons
 	}
 	cloudType="";
 }
+
+
 
 void ViewWriter::insert2MongoDB(const string &destination, const string&  modelOrViewName, const string&  type,  const string&  fileType)
 {
