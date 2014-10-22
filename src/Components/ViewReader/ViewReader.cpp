@@ -303,7 +303,9 @@ void ViewReader::readFile(OID& childOID)
 			cv::Mat image = cv::imdecode(cv::Mat(v), -1);
 			CLOG(LERROR)<<image.total();
 			out_img.write(image);
-			 imwrite( "Gray_Image.jpg", image );
+
+			// only in test purposes, it's to remove
+			imwrite( "Gray_Image.jpg", image );
 		}
 
 		else if(extension=="pcd")
@@ -374,27 +376,28 @@ void ViewReader::readFile(OID& childOID)
 				CLOG(LERROR)<<"ViewWriter::insertFileIntoCollection: END";
 			}catch(Exception &ex){CLOG(LERROR)<<ex.what();}
 		}//pcd
+		//TODO sprawdzic czemu czasami nie zapetla sie na samych plikach txt!!!
 		else if(extension=="txt")
 		{
-			// read object
+			// read from collection
 			const BSONObj *fieldsToReturn = 0;
 			int queryOptions = 0;
-			pcl::PCLPointCloud2* msg2;
+			// get bson object
+			BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << childOID), fieldsToReturn, queryOptions);
+			const char *buffer;
 
-			// read data to buffer
-			msg2 = (pcl::PCLPointCloud2*) obj[tempFileName].binData(size);
+			// get data to buffer
+			buffer = obj[tempFileName].binData(size);
 
-			pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT2 (new pcl::PointCloud<PointXYZSIFT>);
+			for (int i=0; i<size;i++)
+				CLOG(LERROR)<<buffer[i];
 
-			// convert PointCloud2 to cloud
-			fromPCLPointCloud2 (*msg2, *cloudXYZSIFT2);
-
-			//TODO zmienic to!
-			string newCloud = "newCloud.pcd";
-			CLOG(LNOTICE)<< "Cloud size2: " <<  cloudXYZSIFT2->size();
-
-			// save cloud into file, its temporary, only test purposes
-			pcl::io::savePCDFile(newCloud, *cloudXYZSIFT2, true);
+			CLOG(LERROR)<<*buffer;
+			CLOG(LERROR)<<"size: "<<size;
+			string fromDB(buffer,size-1);
+			CLOG(LERROR)<<"ReadedFile: \n"<<fromDB;
+			CLOG(LERROR)<<"Save to sink";
+			cipFileOut.write(fromDB);
 		}
 	}
 

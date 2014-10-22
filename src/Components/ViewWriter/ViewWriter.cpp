@@ -510,8 +510,6 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 			}
 			*/
 
-
-
 /*
 			try{
 
@@ -625,13 +623,14 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 		string input;
 
 		// read string from input
-		input =cipFileIn.read();
-		int size = input.size();
+		input =cipFileIn.read()+" ";
+		CLOG(LERROR)<<"Input:"<< input;
 
 		// convert to char*
-		// TODO check if it's neccessary
 		char const *cipCharTable = input.c_str();
-
+		int size = strlen(cipCharTable);
+		CLOG(LERROR)<<string(cipCharTable);
+		CLOG(LERROR)<<"Size: "<<size;
 		// create bson object
 		b = BSONObjBuilder().genOID().appendBinData(tempFileName, size, BinDataGeneral,  cipCharTable).append("fileName", tempFileName).append("size", size).append("place", "collection").append("extension", fileType).obj();
 
@@ -640,21 +639,6 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
-
-		// read from collection
-		const BSONObj *fieldsToReturn = 0;
-		int queryOptions = 0;
-
-		// get bson object
-		BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << oid), fieldsToReturn, queryOptions);
-
-		const char *buffer;
-
-		// get data to buffer
-		buffer = obj[tempFileName].binData(size);
-
-		CLOG(LERROR)<<*buffer;
-		CLOG(LERROR)<<"size: "<<size;
 	}
 	cloudType="";
 }
