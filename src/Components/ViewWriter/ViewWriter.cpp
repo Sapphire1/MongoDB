@@ -6,6 +6,13 @@
 
 
 #include "ViewWriter.hpp"
+#include <pcl/point_representation.h>
+#include <Eigen/Core>
+
+#define siftPointSize 133
+#define xyzPointSize 3
+#define xyzrgbPointSize 4
+
 namespace Processors {
 namespace ViewWriter  {
 using namespace cv;
@@ -13,8 +20,6 @@ using namespace mongo;
 using namespace std;
 using namespace boost;
 using namespace boost::posix_time;
-#include <pcl/point_representation.h>
-#include <Eigen/Core>
 using namespace Eigen;
 
 ViewWriter::ViewWriter(const string & name) : Base::Component(name),
@@ -464,6 +469,21 @@ void ViewWriter::writeNode2MongoDB(const string &destination, const string &type
 	}
 }
 
+void ViewWriter::copyXYZPointToFloatArray (const pcl::PointXYZ &p, float * out) const
+{
+	out[0] = p.x;	// 4 bytes
+	out[1] = p.y;	// 4 bytes
+	out[2] = p.z;	// 4 bytes
+}
+
+void ViewWriter::copyXYZRGBPointToFloatArray (const pcl::PointXYZRGB &p, float * out) const
+{
+	out[0] = p.x;	// 4 bytes
+	out[1] = p.y;	// 4 bytes
+	out[2] = p.z;	// 4 bytes
+	out[3] = p.rgb;	// 4 bytes
+}
+
 void ViewWriter::copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const
 {
 	Eigen::Vector3f outCoordinates = p.getArray3fMap();
@@ -474,23 +494,6 @@ void ViewWriter::copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * ou
 	memcpy(&out[3], &p.multiplicity, sizeof(int)); // 4 bytes
 	memcpy(&out[4], &p.pointId, sizeof(int));	// 4 bytes
 	memcpy(&out[5], &p.descriptor, 128*sizeof(float)); // 128 * 4 bytes = 512 bytes
-
-
-	CLOG(LERROR)<<(p.descriptor[27]);
-	CLOG(LERROR)<<(p.descriptor[28]);
-	CLOG(LERROR)<<*(p.descriptor+27)+1;
-	CLOG(LERROR)<<*(p.descriptor+27)+2;
-	CLOG(LERROR)<<*(p.descriptor+27)+3;
-	CLOG(LERROR)<<*(p.descriptor+27)+4;
-	CLOG(LERROR)<<*(p.descriptor+28)+1;
-	CLOG(LERROR)<<*(p.descriptor+28)+2;
-	CLOG(LERROR)<<*(p.descriptor+28)+3;
-	CLOG(LERROR)<<*(p.descriptor+28)+4;
-	CLOG(LERROR)<<(p.descriptor[29]);
-
-	CLOG(LERROR)<<(out[27+5]);
-	CLOG(LERROR)<<(out[28+5]);
-	CLOG(LERROR)<<(out[29+5]);
 }
 
 void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, string& tempFileName, int size)
@@ -518,107 +521,48 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 	}
 	else if(fileType=="pcd")	// save cloud
 	{
-		std::stringstream compressedData;
-		//compressedData.str("");
-		//bool showStatistics = true;
-		//pcl::io::compression_Profiles_e compressionProfile = pcl::io::HIGH_RES_OFFLINE_COMPRESSION_WITHOUT_COLOR;
-		if(cloudType!="xyzsift")
+		if(cloudType=="xyzrgb")
 		{
+			int cloudSize = cloudXYZRGB->size();
+			int fieldsNr = xyzrgbPointSize*cloudSize;
+			int totalSize = fieldsNr*sizeof(float);
+			float buff[fieldsNr];
 
-			if(cloudType=="xyzrgb")
-			{// point = 4*float
-				/*
-			}
-				copyToFloatArray (const PointXYZ &p, float * out) const
-				{
-				 out[0] = p.x;
-				 out[1] = p.y;
-				 out[2] = p.z;
-				 out[3] = p.rgb;
-				 */
-				/*
-				CLOG(LERROR)<<"WriteXYZRGB!";
-				pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>* PointCloudEncoder =
-						new pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB> (compressionProfile, showStatistics);
-				PointCloudEncoder->encodePointCloud (cloudXYZRGB, compressedData);
-				delete(PointCloudEncoder);
-				*/
-			}
-			else if(cloudType=="xyz")
+			// copy all points to memory
+			for(int iter=0; iter<cloudSize; iter++)
 			{
-				//point = 3*float
-				/*
-				copyToFloatArray (const PointXYZ &p, float * out) const
-				{
-		         out[0] = p.x;
-		         out[1] = p.y;
-		         out[2] = p.z;
-				 */
-				float *myArray = new float[ 3* cloudXYZ->size() ];
-				//pcl::DefaultPointRepresentation< pcl::PointXYZ>::copyToFloatArray (*cloudXYZ, myArray);
-
-				/*
-				pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudEncoder =
-						new pcl::io::OctreePointCloudCompression<pcl::PointXYZ> (compressionProfile, showStatistics);
-				PointCloudEncoder->encodePointCloud (cloudXYZ, compressedData);
-				delete(PointCloudEncoder);
-				*/
+				const pcl::PointXYZRGB p = cloudXYZRGB->points[iter];
+				copyXYZRGBPointToFloatArray (p, &buff[xyzrgbPointSize*iter]);
 			}
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			c->insert(dbCollectionPath, b);
+		}
+		else if(cloudType=="xyz")
+		{
+			int cloudSize = cloudXYZ->size();
 
-/*
-			try{
+			int fieldsNr = xyzPointSize*cloudSize;
+			int totalSize = fieldsNr*sizeof(float);
+			float buff[fieldsNr];
 
-				int queryOptions = 0;
-				const BSONObj *fieldsToReturn = 0;
-				// get bson object from collection
-				CLOG(LERROR)<<oid<<endl;
-				BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << oid), fieldsToReturn, queryOptions);
-				CLOG(LERROR)<<"1";
-
-				// read data to buffer
-				int readSize;
-				CLOG(LERROR)<<obj<<"\n";
-				CLOG(LERROR)<<"2";
-
-				const char* charPtr;
-				char table[size];
-				CLOG(LERROR)<<"3";
-		//		tmp2= (const char*)(obj[tempFileName].binData(readSize));
-		//		CLOG(LERROR)<<tmp2;
-		//		string str(tmp2);
-		//		CLOG(LERROR)<<str;
-				//memcpy(table, charPtr,readSize);
-				//CLOG(LERROR)<<"Readed: "<<readSize<<" B.";
-				//CLOG(LERROR)<<"charPtr: "<<charPtr;
-				//string str(table);
-				//CLOG(LERROR)<<str;
-			//	stringstream ss(str);
-			//	CLOG(LERROR)<<ss.str();std::vector<PointXYZSIFT>
-				//pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudDecoderXYZ;
-				////PointCloudDecoderXYZ=new pcl::io::OctreePointCloudCompression<pcl::PointXYZ>();
-				//pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ (new pcl::PointCloud<pcl::PointXYZ>);
-				//PointCloudDecoderXYZ->decodePointCloud (ss, cloudXYZ);
-				//pcl::io::savePCDFile("newCloud2.pcd", *cloudXYZ, false);
-				//ss << *table;
-				//CLOG(LERROR)<<ss.str();
-				//stringstream * strPtr = (stringstream*)table;
-				//CLOG(LERROR)<<"strPtr: "<<strPtr;
-				//CLOG(LERROR)<<"charPtr[0]: "<<charPtr[0];
-				//CLOG(LERROR)<<*charPtr;
-				//CLOG(LERROR)<<*strPtr;
-				//CLOG(LERROR)<<strPtr->str();
-
-				CLOG(LERROR)<<"ViewWriter::insertFileIntoCollection: END";
-			}catch(Exception &ex){cout<<ex.what();}
-*/
+			// copy all points to memory
+			for(int iter=0; iter<cloudSize; iter++)
+			{
+				const pcl::PointXYZ p = cloudXYZ->points[iter];
+				copyXYZPointToFloatArray (p, &buff[xyzPointSize*iter]);
+			}
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			c->insert(dbCollectionPath, b);
 		}
 		//TODO dodac SHOT'Y
 		else if(cloudType=="xyzsift")
 		{
-
 			int cloudSize = cloudXYZSIFT->size();
-			int sizeInMemory = 133; // 128+5
-			int fieldsNr = sizeInMemory*cloudSize;
+			int fieldsNr = siftPointSize*cloudSize;
 			int totalSize = fieldsNr*sizeof(float);
 			float buff[fieldsNr];
 
@@ -626,71 +570,12 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 			for(int iter=0; iter<cloudSize; iter++)
 			{
 				const PointXYZSIFT p = cloudXYZSIFT->points[iter];
-				copyXYZSiftPointToFloatArray (p, &buff[sizeInMemory*iter]);
+				copyXYZSiftPointToFloatArray (p, &buff[siftPointSize*iter]);
 		    }
 			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
-
-/*
-			pcl::PCLPointCloud2 msg;
-			size_t cloudSize=0;
-			//cloudXYZSIFT->points;
-			//cloudXYZSIFT->size();
-
-			//convert pcl cloud to PCLPointCloud2 blob
-			pcl::toPCLPointCloud2(*cloudXYZSIFT, msg);
-
-			// get fields
-			std::vector< pcl::PCLPointField> fields;
-			pcl::getFields<PointXYZSIFT>(fields);
-
-			// count cloud size
-			for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
-				cloudSize+=(float)pcl::getFieldSize(it->datatype)*cloudXYZSIFT->size();
-
-			static const size_t fieldSize = sizeof(pcl::PCLPointField);
-
-			// count full size of PCLPointCloud2 object
-			int fullSizeBytes = sizeof(msg.height)+sizeof(msg.width)
-					+sizeof(msg.is_bigendian)+sizeof(msg.point_step)+sizeof(msg.row_step)
-					+sizeof(msg.is_dense)+sizeof(msg.header)+cloudSize+sizeof(msg.fields)+fieldSize*6+2
-					+sizeof(msg.data)+msg.header.frame_id.size();
-
-			CLOG(LNOTICE)<<"fullSizeBytes: "<<fullSizeBytes<< " B";
-
-			// build bson object
-			b = BSONObjBuilder().genOID().appendBinData(tempFileName, fullSizeBytes, BinDataGeneral, &msg).append("fileName", tempFileName).append("size", fullSizeBytes).append("place", "collection").append("extension", fileType).obj();
-			b.getObjectID(bsonElement);
-			oid=bsonElement.__oid();
-
-			// insert object into collection
-			c->insert(dbCollectionPath, b);
-
-			// read object
-			const BSONObj *fieldsToReturn = 0;
-			int queryOptions = 0;
-
-			// get bson object
-			BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << oid), fieldsToReturn, queryOptions);
-			pcl::PCLPointCloud2* msg2;
-
-			// read data to buffer
-			msg2 = (pcl::PCLPointCloud2*) obj[tempFileName].binData(fullSizeBytes);
-
-			pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT2 (new pcl::PointCloud<PointXYZSIFT>);
-
-			// convert PointCloud2 to cloud
-			fromPCLPointCloud2 (*msg2, *cloudXYZSIFT2);
-
-			//TODO zmienic to!
-			string newCloud = "newCloud.pcd";
-			CLOG(LNOTICE)<< "Cloud size2: " <<  cloudXYZSIFT2->size();
-
-			// save cloud into file, its temporary, only test purposes
-			pcl::io::savePCDFile(newCloud, *cloudXYZSIFT2, binary);
-			*/
 		}
 		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, PCD file end";
 	}

@@ -141,6 +141,8 @@ private:
         void insertFileIntoCollection(OID& oid, const string& fileType, string& tempFileName, int);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
         void copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const;
+        void copyXYZPointToFloatArray (const pcl::PointXYZ &p, float * out) const;
+        void copyXYZRGBPointToFloatArray (const pcl::PointXYZRGB &p, float * out) const;
 };
 }//: namespace ViewWriter
 }//: namespace Processors

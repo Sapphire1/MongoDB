@@ -5,7 +5,9 @@
  */
 
 #include "ViewReader.hpp"
-
+#define siftPointSize 133
+#define xyzPointSize 3
+#define xyzrgbPointSize 4
 
 namespace Processors {
 namespace ViewReader  {
@@ -333,27 +335,13 @@ void ViewReader::readFile(OID& childOID)
 			{
 				CLOG(LERROR)<<"Don't know such PC!!!";
 			}
-
-			// cloud encoding
-			//CLOG(LERROR)<<" cloud encoding";
-			//cloudEncoding(childOID, tempFileName, cloudType);
 			try
 			{
+				const BSONObj *fieldsToReturn = 0;
+				int queryOptions = 0;
 				if(cloudType=="xyz")
 				{
-
-				}
-				else if(cloudType=="xyzrgb")
-				{
-
-				}
-				else if(cloudType=="xyzsift")
-				{
-
-					const BSONObj *fieldsToReturn = 0;
-					int queryOptions = 0;
 					BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << childOID), fieldsToReturn, queryOptions);
-
 					// read data to buffer
 					int totalSize;
 					float* buffer = (float*)obj[tempFileName].binData(totalSize);
@@ -361,55 +349,67 @@ void ViewReader::readFile(OID& childOID)
 					CLOG(LERROR)<<"bufferSize: "<<bufferSize;
 					float newBuffer[bufferSize];
 					memcpy(newBuffer, buffer, totalSize);
-					// row size in float is equal 128+5 =133  floats
-					int rowSize = 133;
+					pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ (new pcl::PointCloud<pcl::PointXYZ>);
+					pcl::PointXYZ pt;
+					for(int i=0; i<totalSize/(xyzPointSize*sizeof(float)); i++) // now it should be 10 iterations
+					{
+						pt.x=newBuffer[i*xyzPointSize];
+						pt.y=newBuffer[i*xyzPointSize+1];
+						pt.z=newBuffer[i*xyzPointSize+2];
+
+						cloudXYZ->push_back(pt);
+					}
+					// save to file, only in test purposes
+					pcl::io::savePCDFile("newCloudXYZ.pcd", *cloudXYZ, false);
+				}
+				else if(cloudType=="xyzrgb")
+				{
+					BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << childOID), fieldsToReturn, queryOptions);
+					// read data to buffer
+					int totalSize;
+					float* buffer = (float*)obj[tempFileName].binData(totalSize);
+					int bufferSize = totalSize/sizeof(float);
+					CLOG(LERROR)<<"bufferSize: "<<bufferSize;
+					float newBuffer[bufferSize];
+					memcpy(newBuffer, buffer, totalSize);
+					pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB (new pcl::PointCloud<pcl::PointXYZRGB>);
+					pcl::PointXYZRGB pt;
+					for(int i=0; i<totalSize/(xyzrgbPointSize*sizeof(float)); i++) // now it should be 10 iterations
+					{
+						pt.x=newBuffer[i*xyzrgbPointSize];
+						pt.y=newBuffer[i*xyzrgbPointSize+1];
+						pt.z=newBuffer[i*xyzrgbPointSize+2];
+						pt.rgb=newBuffer[i*xyzrgbPointSize+3];
+
+						cloudXYZRGB->push_back(pt);
+					}
+					// save to file, only in test purposes
+					pcl::io::savePCDFile("newCloudXYZRGB.pcd", *cloudXYZRGB, false);
+				}
+				else if(cloudType=="xyzsift")
+				{
+					BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << childOID), fieldsToReturn, queryOptions);
+					// read data to buffer
+					int totalSize;
+					float* buffer = (float*)obj[tempFileName].binData(totalSize);
+					int bufferSize = totalSize/sizeof(float);
+					CLOG(LERROR)<<"bufferSize: "<<bufferSize;
+					float newBuffer[bufferSize];
+					memcpy(newBuffer, buffer, totalSize);
+					// for sift row size in float is equal 128+5 =133  floats
 					pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT (new pcl::PointCloud<PointXYZSIFT>);
 					PointXYZSIFT pt;
-					/*
-					 * void ViewWriter::copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const
-					{
-					Eigen::Vector3f outCoordinates = p.getArray3fMap();
-					out[0] = outCoordinates[0];	// 4 bytes
-					out[1] = outCoordinates[1];	// 4 bytes
-					out[2] = outCoordinates[2];	// 4 bytes
-					//CLOG(LERROR)<<"out[0]: "<<out[0]<<"\t out[1]: "<<out[1]<<"\t out[2]: "<<out[2];
-					memcpy(&out[3], &p.multiplicity, sizeof(int)); // 4 bytes
-					memcpy(&out[4], &p.pointId, sizeof(int));	// 4 bytes
-					memcpy(&out[5], &p.descriptor, 128*sizeof(float)); // 128 * 4 bytes = 512 bytes
-					 */
-					//cloudXYZSIFT->resize(bufferSize/rowSize);
-					for(int i=0; i<totalSize/(rowSize*sizeof(float)); i++) // now it should be 10 iterations
+					for(int i=0; i<totalSize/(siftPointSize*sizeof(float)); i++) // now it should be 10 iterations
 					{
 						Eigen::Vector3f pointCoordinates;
-						pointCoordinates[0]=newBuffer[i*rowSize];
-						pointCoordinates[1]=newBuffer[i*rowSize+1];
-						pointCoordinates[2]=newBuffer[i*rowSize+2];
-						memcpy(&pt.multiplicity, &newBuffer[3+i*rowSize], sizeof(int)); // 4 bytes
-						memcpy(&pt.pointId, &newBuffer[4+i*rowSize], sizeof(int));	// 4 bytes
-						memcpy(&pt.descriptor, &newBuffer[5+i*rowSize], 128*sizeof(float)); // 128 * 4 bytes = 512 bytes
-
-						CLOG(LERROR)<<(pt.descriptor[27]);
-						CLOG(LERROR)<<(pt.descriptor[28]);
-						CLOG(LERROR)<<(pt.descriptor[29]);
-
-						CLOG(LERROR)<<*(pt.descriptor+27)+1;
-						CLOG(LERROR)<<*(pt.descriptor+27)+2;
-						CLOG(LERROR)<<*(pt.descriptor+27)+3;
-						CLOG(LERROR)<<*(pt.descriptor+27)+4;
-						CLOG(LERROR)<<*(pt.descriptor+28)+1;
-						CLOG(LERROR)<<*(pt.descriptor+28)+2;
-						CLOG(LERROR)<<*(pt.descriptor+28)+3;
-						CLOG(LERROR)<<*(pt.descriptor+28)+4;
-
-						CLOG(LERROR)<<(newBuffer[27+5+i*rowSize]);
-						CLOG(LERROR)<<(newBuffer[28+5+i*rowSize]);
-						CLOG(LERROR)<<(newBuffer[29+5+i*rowSize]);
+						pointCoordinates[0]=newBuffer[i*siftPointSize];
+						pointCoordinates[1]=newBuffer[i*siftPointSize+1];
+						pointCoordinates[2]=newBuffer[i*siftPointSize+2];
+						memcpy(&pt.multiplicity, &newBuffer[3+i*siftPointSize], sizeof(int)); // 4 bytes
+						memcpy(&pt.pointId, &newBuffer[4+i*siftPointSize], sizeof(int));	// 4 bytes
+						memcpy(&pt.descriptor, &newBuffer[5+i*siftPointSize], 128*sizeof(float)); // 128 * 4 bytes = 512 bytes
 
 						pt.getVector3fMap() = pointCoordinates;
-						CLOG(LERROR)<<"iteration: "<<i;
-						CLOG(LERROR)<<"pointCoordinates[0]: "<<pointCoordinates[0]<<"\tpointCoordinates[1]: "<<pointCoordinates[1]<<"\tpointCoordinates[2]: "<<pointCoordinates[2];
-						for(int i=0; i<128;i++)
-							CLOG(LERROR)<<pt.descriptor[i]<<"\t"<<i;
 						cloudXYZSIFT->push_back(pt);
 					}
 					// save to file, only in test purposes
