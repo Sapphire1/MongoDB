@@ -13,6 +13,9 @@ using namespace mongo;
 using namespace std;
 using namespace boost;
 using namespace boost::posix_time;
+#include <pcl/point_representation.h>
+#include <Eigen/Core>
+using namespace Eigen;
 
 ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	mongoDBHost("mongoDBHost", string("localhost")),
@@ -461,6 +464,35 @@ void ViewWriter::writeNode2MongoDB(const string &destination, const string &type
 	}
 }
 
+void ViewWriter::copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const
+{
+	Eigen::Vector3f outCoordinates = p.getArray3fMap();
+	out[0] = outCoordinates[0];	// 4 bytes
+	out[1] = outCoordinates[1];	// 4 bytes
+	out[2] = outCoordinates[2];	// 4 bytes
+	//CLOG(LERROR)<<"out[0]: "<<out[0]<<"\t out[1]: "<<out[1]<<"\t out[2]: "<<out[2];
+	memcpy(&out[3], &p.multiplicity, sizeof(int)); // 4 bytes
+	memcpy(&out[4], &p.pointId, sizeof(int));	// 4 bytes
+	memcpy(&out[5], &p.descriptor, 128*sizeof(float)); // 128 * 4 bytes = 512 bytes
+
+
+	CLOG(LERROR)<<(p.descriptor[27]);
+	CLOG(LERROR)<<(p.descriptor[28]);
+	CLOG(LERROR)<<*(p.descriptor+27)+1;
+	CLOG(LERROR)<<*(p.descriptor+27)+2;
+	CLOG(LERROR)<<*(p.descriptor+27)+3;
+	CLOG(LERROR)<<*(p.descriptor+27)+4;
+	CLOG(LERROR)<<*(p.descriptor+28)+1;
+	CLOG(LERROR)<<*(p.descriptor+28)+2;
+	CLOG(LERROR)<<*(p.descriptor+28)+3;
+	CLOG(LERROR)<<*(p.descriptor+28)+4;
+	CLOG(LERROR)<<(p.descriptor[29]);
+
+	CLOG(LERROR)<<(out[27+5]);
+	CLOG(LERROR)<<(out[28+5]);
+	CLOG(LERROR)<<(out[29+5]);
+}
+
 void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, string& tempFileName, int size)
 {
 	CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection";
@@ -487,28 +519,51 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 	else if(fileType=="pcd")	// save cloud
 	{
 		std::stringstream compressedData;
-		compressedData.str("");
-		bool showStatistics = true;
-		pcl::io::compression_Profiles_e compressionProfile = pcl::io::HIGH_RES_OFFLINE_COMPRESSION_WITHOUT_COLOR;
+		//compressedData.str("");
+		//bool showStatistics = true;
+		//pcl::io::compression_Profiles_e compressionProfile = pcl::io::HIGH_RES_OFFLINE_COMPRESSION_WITHOUT_COLOR;
 		if(cloudType!="xyzsift")
 		{
-			/*
+
 			if(cloudType=="xyzrgb")
-			{
+			{// point = 4*float
+				/*
+			}
+				copyToFloatArray (const PointXYZ &p, float * out) const
+				{
+				 out[0] = p.x;
+				 out[1] = p.y;
+				 out[2] = p.z;
+				 out[3] = p.rgb;
+				 */
+				/*
 				CLOG(LERROR)<<"WriteXYZRGB!";
 				pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>* PointCloudEncoder =
 						new pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB> (compressionProfile, showStatistics);
 				PointCloudEncoder->encodePointCloud (cloudXYZRGB, compressedData);
 				delete(PointCloudEncoder);
+				*/
 			}
 			else if(cloudType=="xyz")
 			{
+				//point = 3*float
+				/*
+				copyToFloatArray (const PointXYZ &p, float * out) const
+				{
+		         out[0] = p.x;
+		         out[1] = p.y;
+		         out[2] = p.z;
+				 */
+				float *myArray = new float[ 3* cloudXYZ->size() ];
+				//pcl::DefaultPointRepresentation< pcl::PointXYZ>::copyToFloatArray (*cloudXYZ, myArray);
+
+				/*
 				pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudEncoder =
 						new pcl::io::OctreePointCloudCompression<pcl::PointXYZ> (compressionProfile, showStatistics);
 				PointCloudEncoder->encodePointCloud (cloudXYZ, compressedData);
 				delete(PointCloudEncoder);
+				*/
 			}
-			*/
 
 /*
 			try{
@@ -538,7 +593,7 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 				//string str(table);
 				//CLOG(LERROR)<<str;
 			//	stringstream ss(str);
-			//	CLOG(LERROR)<<ss.str();
+			//	CLOG(LERROR)<<ss.str();std::vector<PointXYZSIFT>
 				//pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudDecoderXYZ;
 				////PointCloudDecoderXYZ=new pcl::io::OctreePointCloudCompression<pcl::PointXYZ>();
 				//pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ (new pcl::PointCloud<pcl::PointXYZ>);
@@ -560,8 +615,29 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 		//TODO dodac SHOT'Y
 		else if(cloudType=="xyzsift")
 		{
+
+			int cloudSize = cloudXYZSIFT->size();
+			int sizeInMemory = 133; // 128+5
+			int fieldsNr = sizeInMemory*cloudSize;
+			int totalSize = fieldsNr*sizeof(float);
+			float buff[fieldsNr];
+
+			// copy all points to memory
+			for(int iter=0; iter<cloudSize; iter++)
+			{
+				const PointXYZSIFT p = cloudXYZSIFT->points[iter];
+				copyXYZSiftPointToFloatArray (p, &buff[sizeInMemory*iter]);
+		    }
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			c->insert(dbCollectionPath, b);
+
+/*
 			pcl::PCLPointCloud2 msg;
 			size_t cloudSize=0;
+			//cloudXYZSIFT->points;
+			//cloudXYZSIFT->size();
 
 			//convert pcl cloud to PCLPointCloud2 blob
 			pcl::toPCLPointCloud2(*cloudXYZSIFT, msg);
@@ -614,6 +690,7 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 
 			// save cloud into file, its temporary, only test purposes
 			pcl::io::savePCDFile(newCloud, *cloudXYZSIFT2, binary);
+			*/
 		}
 		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, PCD file end";
 	}

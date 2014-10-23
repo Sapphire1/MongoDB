@@ -85,7 +85,7 @@ public:
 	Base::DataStreamIn<pcl::PointCloud<PointXYZSIFT>::Ptr> in_cloud_xyzsift;
 
 	/// Cloud containing points with Cartesian coordinates, RGB Color and SIFT descriptor (XYZ+ RGB + 128).
-		Base::DataStreamIn<pcl::PointCloud<PointXYZRGBSIFT>::Ptr> in_cloud_xyzrgbsift;
+	Base::DataStreamIn<pcl::PointCloud<PointXYZRGBSIFT>::Ptr> in_cloud_xyzrgbsift;
 
 	Base::DataStreamOut<std::vector<AbstractObject*> > out_models;
 

@@ -349,29 +349,71 @@ void ViewReader::readFile(OID& childOID)
 				}
 				else if(cloudType=="xyzsift")
 				{
-					/// NIE DZIALA!!!! TODO
-					// read object
+
 					const BSONObj *fieldsToReturn = 0;
 					int queryOptions = 0;
-
-					// get bson object
-					pcl::PCLPointCloud2* msg2;
-					pcl::PCLPointCloud2 temp;
+					BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << childOID), fieldsToReturn, queryOptions);
 
 					// read data to buffer
-				//	msg2 = (pcl::PCLPointCloud2*) obj[tempFileName].binData(size);
-				//	memcpy(&temp,msg2,size);
-				//	pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT2 (new pcl::PointCloud<PointXYZSIFT>);
-				//	CLOG(LERROR)<<"temp->header"<<temp->header;
+					int totalSize;
+					float* buffer = (float*)obj[tempFileName].binData(totalSize);
+					int bufferSize = totalSize/sizeof(float);
+					CLOG(LERROR)<<"bufferSize: "<<bufferSize;
+					float newBuffer[bufferSize];
+					memcpy(newBuffer, buffer, totalSize);
+					// row size in float is equal 128+5 =133  floats
+					int rowSize = 133;
+					pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT (new pcl::PointCloud<PointXYZSIFT>);
+					PointXYZSIFT pt;
+					/*
+					 * void ViewWriter::copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const
+					{
+					Eigen::Vector3f outCoordinates = p.getArray3fMap();
+					out[0] = outCoordinates[0];	// 4 bytes
+					out[1] = outCoordinates[1];	// 4 bytes
+					out[2] = outCoordinates[2];	// 4 bytes
+					//CLOG(LERROR)<<"out[0]: "<<out[0]<<"\t out[1]: "<<out[1]<<"\t out[2]: "<<out[2];
+					memcpy(&out[3], &p.multiplicity, sizeof(int)); // 4 bytes
+					memcpy(&out[4], &p.pointId, sizeof(int));	// 4 bytes
+					memcpy(&out[5], &p.descriptor, 128*sizeof(float)); // 128 * 4 bytes = 512 bytes
+					 */
+					//cloudXYZSIFT->resize(bufferSize/rowSize);
+					for(int i=0; i<totalSize/(rowSize*sizeof(float)); i++) // now it should be 10 iterations
+					{
+						Eigen::Vector3f pointCoordinates;
+						pointCoordinates[0]=newBuffer[i*rowSize];
+						pointCoordinates[1]=newBuffer[i*rowSize+1];
+						pointCoordinates[2]=newBuffer[i*rowSize+2];
+						memcpy(&pt.multiplicity, &newBuffer[3+i*rowSize], sizeof(int)); // 4 bytes
+						memcpy(&pt.pointId, &newBuffer[4+i*rowSize], sizeof(int));	// 4 bytes
+						memcpy(&pt.descriptor, &newBuffer[5+i*rowSize], 128*sizeof(float)); // 128 * 4 bytes = 512 bytes
 
-					// convert PointCloud2 to cloud
-				//	fromPCLPointCloud2 (*msg2, *cloudXYZSIFT2);
-//
-			//		CLOG(LNOTICE)<< "Cloud size2: " <<  cloudXYZSIFT2->size();
+						CLOG(LERROR)<<(pt.descriptor[27]);
+						CLOG(LERROR)<<(pt.descriptor[28]);
+						CLOG(LERROR)<<(pt.descriptor[29]);
 
-					// save cloud into file, its temporary, only for test purposes
-			////		string newCloud = "newCloud.pcd";
-			//		pcl::io::savePCDFile(newCloud, *cloudXYZSIFT2, true);
+						CLOG(LERROR)<<*(pt.descriptor+27)+1;
+						CLOG(LERROR)<<*(pt.descriptor+27)+2;
+						CLOG(LERROR)<<*(pt.descriptor+27)+3;
+						CLOG(LERROR)<<*(pt.descriptor+27)+4;
+						CLOG(LERROR)<<*(pt.descriptor+28)+1;
+						CLOG(LERROR)<<*(pt.descriptor+28)+2;
+						CLOG(LERROR)<<*(pt.descriptor+28)+3;
+						CLOG(LERROR)<<*(pt.descriptor+28)+4;
+
+						CLOG(LERROR)<<(newBuffer[27+5+i*rowSize]);
+						CLOG(LERROR)<<(newBuffer[28+5+i*rowSize]);
+						CLOG(LERROR)<<(newBuffer[29+5+i*rowSize]);
+
+						pt.getVector3fMap() = pointCoordinates;
+						CLOG(LERROR)<<"iteration: "<<i;
+						CLOG(LERROR)<<"pointCoordinates[0]: "<<pointCoordinates[0]<<"\tpointCoordinates[1]: "<<pointCoordinates[1]<<"\tpointCoordinates[2]: "<<pointCoordinates[2];
+						for(int i=0; i<128;i++)
+							CLOG(LERROR)<<pt.descriptor[i]<<"\t"<<i;
+						cloudXYZSIFT->push_back(pt);
+					}
+					// save to file, only in test purposes
+					pcl::io::savePCDFile("newCloudSIFT.pcd", *cloudXYZSIFT, false);
 				}
 				CLOG(LERROR)<<"ViewWriter::insertFileIntoCollection: END";
 			}catch(Exception &ex){CLOG(LERROR)<<ex.what();}

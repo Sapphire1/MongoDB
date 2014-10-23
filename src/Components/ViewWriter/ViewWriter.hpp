@@ -140,6 +140,7 @@ private:
         void insertFileIntoGrid(OID&, const string&, string&);
         void insertFileIntoCollection(OID& oid, const string& fileType, string& tempFileName, int);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
+        void copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const;
 };
 }//: namespace ViewWriter
 }//: namespace Processors
