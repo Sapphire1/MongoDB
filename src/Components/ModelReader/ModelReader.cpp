@@ -69,6 +69,8 @@ bool ModelReader::onInit()
 
 	string hostname = mongoDBHost;
 	connectToMongoDB(hostname);
+	if(collectionName=="containers")
+		MongoBase::dbCollectionPath=dbCollectionPath="images.containers";
 	return true;
 }
 
@@ -106,6 +108,7 @@ void ModelReader::readAllFilesTriggered()
 	std::vector<AbstractObject*> models;
 	for(std::vector<OID>::iterator it = allChildsVector.begin(); it != allChildsVector.end(); ++it)
 	{
+		//przerobic zeby czytalo tez bezposrednio z dokumentow...
 		readFile(*it, models);
 	}
 	CLOG(LTRACE)<<"Send models to sink";

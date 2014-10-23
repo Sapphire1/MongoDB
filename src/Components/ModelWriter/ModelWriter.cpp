@@ -6,6 +6,11 @@
 
 
 #include "ModelWriter.hpp"
+
+#define siftPointSize 133
+#define xyzPointSize 3
+#define xyzrgbPointSize 4
+
 namespace Processors {
 namespace ModelWriter  {
 using namespace cv;
@@ -19,8 +24,6 @@ ModelWriter::ModelWriter(const string & name) : Base::Component(name),
 		objectName("objectName", string("GreenCup")),
 		description("description", string("My green coffe cup")),
 		collectionName("collectionName", string("containers")),
-		extension("extension", string("pcd")),
-		//extension("extension", string("png")),
 		modelNameProp("modelName", string("lab012")),
 		fileName("fileName", string("tempFile")),
 		nodeTypeProp("nodeTypeProp", string("SomXYZRgb")),
@@ -35,7 +38,6 @@ ModelWriter::ModelWriter(const string & name) : Base::Component(name),
 	registerProperty(mean_viewpoint_features_number);
 	registerProperty(description);
 	registerProperty(collectionName);
-	registerProperty(extension);
 	registerProperty(modelNameProp);
 	registerProperty(sceneNamesProp);
 	registerProperty(fileName);
@@ -43,6 +45,7 @@ ModelWriter::ModelWriter(const string & name) : Base::Component(name),
 	registerProperty(remoteFileName);
 	registerProperty(binary);
 	registerProperty(suffix);
+	sizeOfCloud=0.0;
 
 	//base = new MongoBase::MongoBase();
     CLOG(LTRACE) << "Hello ModelWriter";
@@ -52,110 +55,97 @@ ModelWriter::~ModelWriter()
 {
        CLOG(LTRACE) << "Good bye ModelWriter";
 }
-void ModelWriter::write2DB()
-{
-	CLOG(LERROR)<<"New image!";
-
-   CLOG(LNOTICE) << "ModelWriter::write2DB";
-   CLOG(LNOTICE)<<"File on input";
-   string sceneNames = sceneNamesProp;
-   boost::split(MongoBase::splitedSceneNames, sceneNames, is_any_of(","));
-
-   if(modelNameProp!="")
-	   insert2MongoDB(nodeTypeProp,modelNameProp, "Model");
-   else
-	   CLOG(LERROR)<<"Add model name and try again";
-
-}
 
 void ModelWriter::prepareInterface() {
 	CLOG(LTRACE) << "ModelWriter::prepareInterface";
-	h_write2DB.setup(this, &ModelWriter::write2DB);
-	registerHandler("write2DB", &h_write2DB);
-	registerHandler("Write_xyz", boost::bind(&ModelWriter::Write_xyz, this));
-	registerHandler("Write_xyzrgb", boost::bind(&ModelWriter::Write_xyzrgb, this));
-	registerHandler("Write_xyzsift", boost::bind(&ModelWriter::Write_xyzsift, this));
+	registerHandler("Write_xyz", boost::bind(&ModelWriter::Write_cloud<pcl::PointXYZ>, this));
+	registerHandler("Write_xyzrgb", boost::bind(&ModelWriter::Write_cloud<pcl::PointXYZRGB>, this));
+	registerHandler("Write_xyzsift", boost::bind(&ModelWriter::Write_cloud<PointXYZSIFT>, this));
+	registerHandler("Write_xyzrgbsift", boost::bind(&ModelWriter::Write_cloud<PointXYZRGBSIFT>, this));
 
-	registerStream("in_img", &in_img);
+
 	registerStream("in_cloud_xyz", &in_cloud_xyz);
 	registerStream("in_cloud_xyzrgb", &in_cloud_xyzrgb);
 	registerStream("in_cloud_xyzsift", &in_cloud_xyzsift);
+	registerStream("in_cloud_xyzrgbsift", &in_cloud_xyzrgbsift);
 
-	//addDependency("write2DB", &in_img);
 	addDependency("Write_xyzrgb", &in_cloud_xyzrgb);
 	addDependency("Write_xyz", &in_cloud_xyz);
 	addDependency("Write_xyzsift", &in_cloud_xyzsift);
+	addDependency("Write_xyzrgbsift", &in_cloud_xyzsift);
 
 }
-void ModelWriter::Write_xyzsift()
+
+void ModelWriter::writePCD2DB()
 {
-	CLOG(LTRACE) << "ModelWriter::Write_xyzsift";
-	try{
-		cloudType="xyzsift";
-		CLOG(LTRACE)<<"Set cloudType: "<<cloudType;
-		pcl::PointCloud<PointXYZSIFT>::Ptr cloud = in_cloud_xyzsift.read();
-
-		std::string fn = fileName;
-		if(suffix){
-			CLOG(LTRACE)<<"suffix: "<<suffix;
-			size_t f = fn.find(".pcd");
-			if(f != std::string::npos)
-			{
-				fn.erase(f);
-			}
-			fn = std::string(fn) + std::string("_xyzsift.pcd");
-		}
-		CLOG(LTRACE)<<"Test";
-		CLOG(LINFO) <<"FileName:"<<fn;
-		CLOG(LINFO) << "Saving " << cloud->points.size() << " XYZ points to "<< fileName << "\n";
-		pcl::io::savePCDFile (fn, *cloud, binary);
-
-		write2DB();
-	}catch(Exception & ex){ex.what();}
+	CLOG(LNOTICE) << "ViewWriter::writePCD2DB";
+	string sceneNames = sceneNamesProp;
+	boost::split(MongoBase::splitedSceneNames, sceneNames, is_any_of(","));
+	CLOG(LERROR)<<"cloudType: "<<cloudType;
+	string fileType = "pcd";
+	if(modelNameProp!="")
+		insert2MongoDB(nodeTypeProp, modelNameProp, "Model", fileType);
+	else
+		CLOG(LERROR)<<"Add model name and try again";
 }
 
-void ModelWriter::Write_xyz()
+template <class PointT>
+void ModelWriter::Write_cloud()
 {
-	cloudType="xyz";
-	CLOG(LTRACE)<<"Set cloudType: "<<cloudType;
-	CLOG(LTRACE) << "ModelWriter::Write_xyz";
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = in_cloud_xyz.read();
-	std::string fn = fileName;
-	if(suffix){
-		CLOG(LTRACE)<<"suffix: "<<suffix;
-		size_t f = fn.find(".pcd");
-		if(f != std::string::npos)
-		{
-			fn.erase(f);
-		}
-		fn = std::string(fn) + std::string("_xyz.pcd");
+	CLOG(LTRACE) << "ViewWriter::Write_cloud()";
+	std::vector< pcl::PCLPointField> fields;
+	pcl::getFields<PointT>(fields);
+
+	if(typeid(PointT) == typeid(pcl::PointXYZ))
+	{
+		cloudType="xyz";
+		cloudXYZ = in_cloud_xyz.read();
+		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
+			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZ->size();
+		if(sizeOfCloud>1)
+			sizeOfCloud/=(1000*1000);
+		else
+			sizeOfCloud=-1;
 	}
-	pcl::io::savePCDFile (fn, *cloud, binary);
-	CLOG(LINFO) <<"FileName:"<<fn;
-	//CLOG(LINFO) << "Saved " << cloud->points.size() << " XYZ points to "<< fileName << "\n";
-	write2DB();
-}
+	else if(typeid(PointT) == typeid(pcl::PointXYZRGB))
+	{
+		cloudType="xyzrgb";
+		cloudXYZRGB = in_cloud_xyzrgb.read();
+		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
+			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZRGB->size();
+		if(sizeOfCloud>1)
+			sizeOfCloud/=(1000*1000);
+		else
+			sizeOfCloud=-1;
+	}
+	else if(typeid(PointT) == typeid(PointXYZSIFT))
+	{
+		cloudType="xyzsift";
+		cloudXYZSIFT = in_cloud_xyzsift.read();
 
-void ModelWriter::Write_xyzrgb()
-{
-	cloudType="xyzrgb";
-	CLOG(LINFO) << "ModelWriter::Write_xyzrgb";
-	CLOG(LINFO)<<"Set cloudType: "<<cloudType;
-	CLOG(LINFO)<<"suffix: "<<suffix;
-		pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud = in_cloud_xyzrgb.read();
-	    std::string fn = fileName;
-	    if(suffix){
-	        size_t f = fn.find(".pcd");
-	        if(f != std::string::npos)
-	        {
-	            fn.erase(f);
-	        }
-	        fn = std::string(fn) + std::string("_xyzrgb.pcd");
-	    }
-		CLOG(LINFO) <<"FileName:"<<fn;
-	    pcl::io::savePCDFile (fn, *cloud, binary);
-		//CLOG(LINFO) << "Saved " << cloud->points.size() << " XYZRGB points to "<< fileName << "\n";
-	    write2DB();
+		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
+			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZSIFT->size();
+		if(sizeOfCloud>1)
+			sizeOfCloud/=(1000*1000);
+		else
+			sizeOfCloud=-1;
+	}
+	else if(typeid(PointT) == typeid(PointXYZSIFT))
+	{
+		cloudType="xyzrgbsift";
+		cloudXYZRGBSIFT = in_cloud_xyzrgbsift.read();
+		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
+			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZRGBSIFT->size();
+		if(sizeOfCloud>1)
+			sizeOfCloud/=(1000*1000);
+		else
+			sizeOfCloud=-1;
+	}
+	CLOG(LINFO)<<"CloudType: "<<cloudType;
+	CLOG(LINFO)<<"PointCloudSize = "<< sizeOfCloud;
+	if(sizeOfCloud>15)
+		CLOG(LERROR)<<"File should be written to GRIDFS!";
+	writePCD2DB();
 }
 
 bool ModelWriter::onInit()
@@ -166,6 +156,8 @@ bool ModelWriter::onInit()
     	  cloudType="";
     	  string hostname = mongoDBHost;
     	  connectToMongoDB(hostname);
+    	  if(collectionName=="containers")
+    	  			MongoBase::dbCollectionPath=dbCollectionPath="images.containers";
 		  initModelNames();
       }
 	 catch(DBException &e)
@@ -233,23 +225,23 @@ void ModelWriter::initObject()
 	}
 }
 
-void ModelWriter::insertFileToGrid(OID& oid)
+void ModelWriter::insertFileToGrid(OID& oid, const string& fileType, string& tempFileName)
 {
 	try{
 		BSONObj object;
 		BSONElement bsonElement;
 		string mime="";
-		setMime(extension, mime);
+		setMime(fileType, mime);
 		std::stringstream time;
 		string tempFileName;
-		if (extension=="png" || extension=="jpg")
+		if (fileType=="png" || fileType=="jpg")
 		{
 			CLOG(LINFO)<<"Image!";
 			cv::Mat tempImg = in_img.read();
-			tempFileName = string(fileName)+"."+string(extension);
+			tempFileName = string(fileName)+"."+string(fileType);
 			cv::imwrite(tempFileName, tempImg);
 		}
-		else if(extension=="pcd")	// save to file pcd
+		else if(fileType=="pcd")	// save to file pcd
 		{
 			CLOG(LINFO)<<"Cloud!";
 			if(cloudType=="xyzrgb")
@@ -276,9 +268,9 @@ void ModelWriter::insertFileToGrid(OID& oid)
 		GridFS fs(*c, collectionName);
 		string fileNameInMongo;
 		if(cloudType!="")
-			fileNameInMongo = (string)remoteFileName+"_"+ cloudType + time.str()+"."+string(extension);
+			fileNameInMongo = (string)remoteFileName+"_"+ cloudType + time.str()+"."+string(fileType);
 		else
-			fileNameInMongo = (string)remoteFileName + time.str()+"."+string(extension);
+			fileNameInMongo = (string)remoteFileName + time.str()+"."+string(fileType);
 
 		object = fs.storeFile(tempFileName, fileNameInMongo, mime);
 		BSONObj b;
@@ -300,15 +292,30 @@ void ModelWriter::insertFileToGrid(OID& oid)
 	}
 }
 
-void ModelWriter::writeNode2MongoDB(const string &destination, const string &type,string modelOrViewName)
+void ModelWriter::writeNode2MongoDB(const string &destination, const string &type,string modelOrViewName, const string& fileType)
 {
 	CLOG(LTRACE) <<"writeNode2MongoDB";
 	OID oid;
 	CLOG(LTRACE) <<"Filename: " << fileName << " destination: "<< destination<<" dbCollectionPath: "<<dbCollectionPath;
     try{
-		insertFileToGrid(oid);
-		c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
-		CLOG(LTRACE) <<"Files saved successfully";
+    	string tempFileName="";
+    	float sizeOfFile = getFileSize(fileType, tempFileName);
+    	if(sizeOfFile<15)
+    	{
+    		//	insertFileIntoGrid(oid, fileType, tempFileName);
+			//c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
+			//CLOG(LTRACE) <<"Files saved successfully";
+    	}
+//    	else
+    	if(sizeOfFile>0.0)
+		{
+			CLOG(LERROR)<<"sizeOfFile: "<<sizeOfFile;
+			insertFileIntoCollection(oid, fileType, tempFileName, sizeOfFile);
+			CLOG(LERROR)<<"UPDATE: "<<oid.str();
+			c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
+		}
+
+    	//TODO dodac zapis do dokumentu
     }
 	catch(DBException &e)
 	{
@@ -317,14 +324,193 @@ void ModelWriter::writeNode2MongoDB(const string &destination, const string &typ
 	}
 }
 
-void ModelWriter::insert2MongoDB(const string &destination, const string&  modelOrViewName, const string&  type)
+void ModelWriter::copyXYZPointToFloatArray (const pcl::PointXYZ &p, float * out) const
 {
+	out[0] = p.x;	// 4 bytes
+	out[1] = p.y;	// 4 bytes
+	out[2] = p.z;	// 4 bytes
+}
+
+void ModelWriter::copyXYZRGBPointToFloatArray (const pcl::PointXYZRGB &p, float * out) const
+{
+	out[0] = p.x;	// 4 bytes
+	out[1] = p.y;	// 4 bytes
+	out[2] = p.z;	// 4 bytes
+	out[3] = p.rgb;	// 4 bytes
+}
+
+void ModelWriter::copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const
+{
+	Eigen::Vector3f outCoordinates = p.getArray3fMap();
+	out[0] = outCoordinates[0];	// 4 bytes
+	out[1] = outCoordinates[1];	// 4 bytes
+	out[2] = outCoordinates[2];	// 4 bytes
+	//CLOG(LERROR)<<"out[0]: "<<out[0]<<"\t out[1]: "<<out[1]<<"\t out[2]: "<<out[2];
+	memcpy(&out[3], &p.multiplicity, sizeof(int)); // 4 bytes
+	memcpy(&out[4], &p.pointId, sizeof(int));	// 4 bytes
+	memcpy(&out[5], &p.descriptor, 128*sizeof(float)); // 128 * 4 bytes = 512 bytes
+}
+
+void ModelWriter::insertFileIntoCollection(OID& oid, const string& fileType, string& tempFileName, int size)
+{
+	CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection";
+	//TODO add fileName and size to document
+	BSONObjBuilder builder;
+	BSONObj b;
+	BSONElement bsonElement;
+	// todo dodac obsluge cv mat xyz std::vector<float> buf;
+
+	//TODO sprawdzic nazwe tempFileName dla obrazow
+	if (fileType=="png" || fileType=="jpg")	// save image
+	{
+		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, Image file";
+		std::vector<uchar> buf;
+		std::vector<int> params(2);
+		params[0] = CV_IMWRITE_JPEG_QUALITY;
+		params[1] = 95;
+		cv::imencode(".jpg", tempImg, buf, params);
+		b=BSONObjBuilder().genOID().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "collection").append("extension", fileType).obj();
+		b.getObjectID(bsonElement);
+		oid=bsonElement.__oid();
+		c->insert(dbCollectionPath, b);
+	}
+	else if(fileType=="pcd")	// save cloud
+	{
+		if(cloudType=="xyzrgb")
+		{
+			int cloudSize = cloudXYZRGB->size();
+			int fieldsNr = xyzrgbPointSize*cloudSize;
+			int totalSize = fieldsNr*sizeof(float);
+			float buff[fieldsNr];
+
+			// copy all points to memory
+			for(int iter=0; iter<cloudSize; iter++)
+			{
+				const pcl::PointXYZRGB p = cloudXYZRGB->points[iter];
+				copyXYZRGBPointToFloatArray (p, &buff[xyzrgbPointSize*iter]);
+			}
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			c->insert(dbCollectionPath, b);
+		}
+		else if(cloudType=="xyz")
+		{
+			int cloudSize = cloudXYZ->size();
+
+			int fieldsNr = xyzPointSize*cloudSize;
+			int totalSize = fieldsNr*sizeof(float);
+			float buff[fieldsNr];
+
+			// copy all points to memory
+			for(int iter=0; iter<cloudSize; iter++)
+			{
+				const pcl::PointXYZ p = cloudXYZ->points[iter];
+				copyXYZPointToFloatArray (p, &buff[xyzPointSize*iter]);
+			}
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			c->insert(dbCollectionPath, b);
+		}
+		//TODO dodac SHOT'Y
+		else if(cloudType=="xyzsift")
+		{
+			int cloudSize = cloudXYZSIFT->size();
+			int fieldsNr = siftPointSize*cloudSize;
+			int totalSize = fieldsNr*sizeof(float);
+			float buff[fieldsNr];
+
+			// copy all points to memory
+			for(int iter=0; iter<cloudSize; iter++)
+			{
+				const PointXYZSIFT p = cloudXYZSIFT->points[iter];
+				copyXYZSiftPointToFloatArray (p, &buff[siftPointSize*iter]);
+		    }
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			c->insert(dbCollectionPath, b);
+		}
+		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, PCD file end";
+	}
+	else if(fileType=="txt")
+	{
+		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, txt file";
+		string input;
+
+		// read string from input
+		input =cipFileIn.read()+" ";
+		CLOG(LERROR)<<"Input:"<< input;
+
+		// convert to char*
+		char const *cipCharTable = input.c_str();
+		int size = strlen(cipCharTable);
+		CLOG(LERROR)<<string(cipCharTable);
+		CLOG(LERROR)<<"Size: "<<size;
+		// create bson object
+		b = BSONObjBuilder().genOID().appendBinData(tempFileName, size, BinDataGeneral,  cipCharTable).append("fileName", tempFileName).append("size", size).append("place", "collection").append("extension", fileType).obj();
+
+		// insert object into collection
+		c->insert(dbCollectionPath, b);
+
+		b.getObjectID(bsonElement);
+		oid=bsonElement.__oid();
+	}
+	cloudType="";
+}
+
+float ModelWriter::getFileSize(const string& fileType, string& tempFileName)
+{
+	float size = 0.0;
+	if (fileType=="png" || fileType=="jpg")
+	{
+		CLOG(LINFO)<<"Image!";
+		tempImg = in_img.read();
+		size = (float)tempImg.elemSize1()*(float)tempImg.total();
+		size = size/(1024*1024);
+		CLOG(LINFO)<<"Size of image file: " << size<<" MB";
+	}
+	else if(fileType=="pcd")	// save to file pcd
+	{
+		CLOG(LINFO)<<"Cloud!";
+
+		if(cloudType=="xyzrgb")
+			tempFileName=std::string(fileName) + std::string("_xyzrgb.pcd");
+		else if(cloudType=="xyz")
+			tempFileName=std::string(fileName) + std::string("_xyz.pcd");
+		else if(cloudType=="xyzsift")
+			tempFileName=std::string(fileName) + std::string("_xyzsift.pcd");
+
+		size=sizeOfCloud;
+		CLOG(LINFO) << "cloudType: "<< cloudType << endl;
+		CLOG(LINFO)<<"Size of PCD cloud: " << size<<" MB";
+
+	}
+	else if(fileType=="txt")	// save to file pcd
+	{
+		CLOG(LINFO) << "CIP file";
+		size=1.0;
+		tempFileName=std::string(fileName) + std::string(".txt");
+	}
+	else
+	{
+		CLOG(LERROR)<<"I don't know such extension file :(";
+		exit(1);
+	}
+	return size;
+}
+
+void ModelWriter::insert2MongoDB(const string &destination, const string&  modelOrViewName, const string&  type, const string& fileType)
+{
+	CLOG(LERROR)<<"ModelWriter::insert2MongoDB";
 	auto_ptr<DBClientCursor> cursorCollection;
 	string source;
 	int items=0;
 	try{
 		if(destination=="Object")
 		{
+			CLOG(LERROR)<<"Object";
 			unsigned long long nr = c->count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"));
 			if(nr==0)
 			{
@@ -339,12 +525,13 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 		}
 		if(isViewLastLeaf(destination) || isModelLastLeaf(destination))
 		{
+			CLOG(LERROR)<<"Last Leaf";
 			unsigned long long nr = c->count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"));
 			if(nr==0)
 			{
 				CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
 				initObject();
-				insert2MongoDB(destination, modelOrViewName, type);
+				insert2MongoDB(destination, modelOrViewName, type, fileType);
 				return;
 			}
 			else
@@ -367,10 +554,11 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 				}
 			}
 			CLOG(LINFO)<<"Write to model";
-			writeNode2MongoDB(destination, type, modelOrViewName);
+			writeNode2MongoDB(destination, type, modelOrViewName, fileType);
 		}
 		else
 		{
+			CLOG(LERROR)<<"if(destination=Model || destination==View)";
 			if(destination=="Model" || destination=="View")
 			{
 				if(nodeTypeProp=="Model" || nodeTypeProp=="View")
@@ -390,6 +578,7 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 					}
 				}
 			}
+			CLOG(LERROR)<<"findDocumentInCollection";
 			findDocumentInCollection(*c, dbCollectionPath, objectName, destination, cursorCollection, modelOrViewName, type, items);
 			if(items>0)
 			{
@@ -414,10 +603,10 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 										{
 											string newName;
 											setModelOrViewName(childNodeName, childObj, newName);
-											insert2MongoDB(childNodeName, newName, type);
+											insert2MongoDB(childNodeName, newName, type, fileType);
 										}
 										else
-											insert2MongoDB(childNodeName, modelOrViewName, type);
+											insert2MongoDB(childNodeName, modelOrViewName, type, fileType);
 									}
 								}
 							}

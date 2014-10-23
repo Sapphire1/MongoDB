@@ -89,43 +89,47 @@ protected:
          */
 
         /// Event handler.
-        Base::EventHandler <ModelWriter> h_write2DB;
 
 
 
 private:
-       Base::Property<string> mongoDBHost;
-	   Base::Property<string> objectName;
-	   Base::Property<string> description;
-	   Base::Property<string> collectionName;
-	   Base::Property<string> modelNameProp;
-	   Base::Property<string> sceneNamesProp;
-	   Base::Property<string> extension;
-	   Base::Property<string> fileName;
-	   Base::Property<string> remoteFileName;
-	   std::vector<std::string> splitedSceneNames;
-	   Base::Property<string> nodeTypeProp;
-       Base::Property<int> mean_viewpoint_features_number;
-	   Base::Property<bool> binary;
-	   Base::Property<bool> suffix;
-	   string cloudType;
+	Base::Property<string> mongoDBHost;
+	Base::Property<string> objectName;
+	Base::Property<string> description;
+	Base::Property<string> collectionName;
+	Base::Property<string> modelNameProp;
+	Base::Property<string> sceneNamesProp;
+	Base::Property<string> fileName;
+	Base::Property<string> remoteFileName;
+	std::vector<std::string> splitedSceneNames;
+	Base::Property<string> nodeTypeProp;
+	Base::Property<int> mean_viewpoint_features_number;
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ;
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB;
+	pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT;
+	pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT;
+	Base::Property<bool> binary;
+	Base::Property<bool> suffix;
+	string cloudType;
+	cv::Mat tempImg;
+	float sizeOfCloud;
 
+	template <class PointT>
+	void Write_cloud();
 
-	   void Write_xyz();
-	   void Write_xyzrgb();
-	   void Write_xyzsift();
-       void run();
-	   void initObject();
-	   void writeNode2MongoDB(const string &destination, const string &option, string );
-	   void insert2MongoDB(const string &destination,  const string&,  const string& );
-	   void write2DB();
-	   void insertToModelOrView(const string &,const string &);
-	   //void initView(const string &, bool);
-	   //void initModel(const string &, bool);
-	   void insertFileToGrid(OID&);
-	  // void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
-	   //void addScenes(BSONObj&);
-	   void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
+	void initObject();
+	void writePCD2DB();
+	void writeNode2MongoDB(const string &destination, const string &option, string, const string& fileType );
+    void insert2MongoDB(const string &destination,  const string&,  const string&,  const string& fileType );
+	void insertToModelOrView(const string &,const string &);
+	float getFileSize(const string& fileType, string& tempFileName);
+	void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
+	void insertFileIntoCollection(OID& oid, const string& fileType, string& tempFileName, int size);
+    void copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const;
+    void copyXYZPointToFloatArray (const pcl::PointXYZ &p, float * out) const;
+    void copyXYZRGBPointToFloatArray (const pcl::PointXYZRGB &p, float * out) const;
+    void insertFileToGrid(OID& oid, const string& fileType, string& tempFileName);
+
 };
 }//: namespace ModelWriter
 }//: namespace Processors
