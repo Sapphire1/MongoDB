@@ -282,7 +282,7 @@ void ViewWriter::createModelOrView(const std::vector<string>::iterator it, const
 	c->insert(dbCollectionPath, model);
 	model.getObjectID(bsonElement);
 	OID oid=bsonElement.__oid();
-	bsonBuilder.append(BSONObjBuilder().append("childOID", oid.str()).obj());
+	bsonBuilder.append(BSONObjBuilder().append("childOID", oid.toString()).obj());
 	if(type=="Model")
 		initModel(*it, true, nodeTypeProp, objectName, description);
 	else if(type=="View")
@@ -296,11 +296,13 @@ void ViewWriter::initObject()
 	bool objectInTheScene = false;
 	try
 	{
+		CLOG(LTRACE) <<"create object";
 		BSONObj object = BSONObjBuilder().genOID().append("Type", "Object").append("ObjectName", objectName).append("description", description).obj();
+		CLOG(LTRACE) <<"insertToDB";
 		c->insert(dbCollectionPath, object);
 		c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
 		addScenes(object, objectName);
-
+		CLOG(LTRACE) <<"initObject::end";
 	}
 	  catch(DBException &e)
 	  {
@@ -457,8 +459,8 @@ void ViewWriter::writeNode2MongoDB(const string &destination, const string &type
 			{
 				CLOG(LERROR)<<"sizeOfFile: "<<sizeOfFile;
 				insertFileIntoCollection(oid, fileType, tempFileName, sizeOfFile);
-				CLOG(LERROR)<<"UPDATE: "<<oid.str();
-				c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
+				CLOG(LERROR)<<"UPDATE: "<<oid.toString();
+				c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
 			}
 		CLOG(LTRACE) <<"File saved successfully";
     }
@@ -617,7 +619,7 @@ void ViewWriter::insert2MongoDB(const string &destination, const string&  modelO
 	try{
 		if(destination=="Object")
 		{
-			unsigned long long nr = c->count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"));
+			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<"Object"),0,0,0);
 			if(nr==0)
 			{
 				CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
@@ -632,7 +634,7 @@ void ViewWriter::insert2MongoDB(const string &destination, const string&  modelO
 		if(isViewLastLeaf(destination) || isModelLastLeaf(destination))
 		{
 			CLOG(LTRACE)<<"if(base->isViewLastLeaf(destination)  Check if object exists";
-			unsigned long long nr = c->count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"));
+			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<"Object"),0,0,0);
 			if(nr==0)
 			{
 				CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
@@ -643,7 +645,7 @@ void ViewWriter::insert2MongoDB(const string &destination, const string&  modelO
 			else
 			{
 				CLOG(LTRACE)<<"Object now exist";
-				int items = c->count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName));
+				int items = c->count(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName)));
 				CLOG(LTRACE)<<"Items: "<<items;
 				if(items==0)
 				{
@@ -651,7 +653,7 @@ void ViewWriter::insert2MongoDB(const string &destination, const string&  modelO
 					CLOG(LTRACE)<<"Type: "<<type;
 					initView(modelOrViewName, true, nodeTypeProp, objectName, description);
 				}
-				cursorCollection = c->query(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName));
+				cursorCollection = c->query(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName)));
 				BSONObj obj;
 				if(cursorCollection->more())
 					obj = cursorCollection->next();
@@ -675,7 +677,7 @@ void ViewWriter::insert2MongoDB(const string &destination, const string&  modelO
 			{
 				if(nodeTypeProp=="Model" || nodeTypeProp=="View")
 				{
-					unsigned long long nr = c->count(dbCollectionPath, (QUERY("Type"<<type<<"ObjectName"<<objectName<<type+"Name"<<modelOrViewName)));
+					unsigned long long nr = c->count(dbCollectionPath, BSON("Type"<<type<<"ObjectName"<<objectName<<type+"Name"<<modelOrViewName),0,0,0);
 					if(nr>0)
 					{
 						CLOG(LERROR)<<type+" "<< modelOrViewName<<" exists in db for object "<<objectName;
@@ -702,7 +704,7 @@ void ViewWriter::insert2MongoDB(const string &destination, const string&  modelO
 						{
 							for (unsigned int i = 0; i<childsVector.size(); i++)
 							{
-								auto_ptr<DBClientCursor> childCursor =c->query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+								auto_ptr<DBClientCursor> childCursor =c->query(dbCollectionPath, Query(BSON("_id"<<childsVector[i])));
 								if( childCursor->more())
 								{
 									BSONObj childObj = childCursor->next();

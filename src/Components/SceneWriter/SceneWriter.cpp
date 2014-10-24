@@ -104,19 +104,19 @@ void SceneWriter::addScenes(BSONObj& object)
 
 	object.getObjectID(objectOI);
 	objectOID=objectOI.__oid();
-	CLOG(LINFO)<<"objectOID.str(): "<<objectOID.str();
+	CLOG(LINFO)<<"objectOID.str(): "<<objectOID.toString();
 
 try{
 	for(std::vector<string>::iterator itSceneName = splitedSceneNames.begin(); itSceneName != splitedSceneNames.end(); ++itSceneName)
 	{
 		CLOG(LTRACE)<<"Scene: "<<*itSceneName;
 		// if scene exist
-		items = c->count(dbCollectionPath, (QUERY("SceneName"<<*itSceneName)));
+		items = c->count(dbCollectionPath, Query(BSON("SceneName"<<*itSceneName)));
 
 		// jesli scena istnieje
 		if(items>0)
 		{
-			auto_ptr<DBClientCursor> cursorCollection =c->query(dbCollectionPath, (QUERY("SceneName"<<*itSceneName)));
+			auto_ptr<DBClientCursor> cursorCollection =c->query(dbCollectionPath, Query(BSON("SceneName"<<*itSceneName)));
 			BSONObj scene = cursorCollection->next();
 			scene.getObjectID(sceneOI);
 			sceneOID=sceneOI.__oid();
@@ -130,9 +130,9 @@ try{
 				for (unsigned int i = 0; i<childsVector.size(); i++)
 				{
 					CLOG(LINFO)<<"Sprawdzam obiekt";
-					CLOG(LINFO)<<"childsVector[i].str(): "<<childsVector[i].str();
-					CLOG(LINFO)<<"objectOID.str(): "<<objectOID.str();
-					if(childsVector[i].str()==objectOID.str())
+					CLOG(LINFO)<<"childsVector[i].toString(): "<<childsVector[i].toString();
+					CLOG(LINFO)<<"objectOID.toString(): "<<objectOID.toString();
+					if(childsVector[i].toString()==objectOID.toString())
 					{
 						objectInTheScene = true;
 						CLOG(LERROR)<< "Object exists in the scene!";
@@ -142,12 +142,12 @@ try{
 			}
 			if(!objectInTheScene)
 			{
-				CLOG(LINFO)<<"objectOID.str(): "<<objectOID.str();
+				CLOG(LINFO)<<"objectOID.toString(): "<<objectOID.toString();
 				CLOG(LINFO)<<"Adding object to the scene and scene to the object";
-				c->update(dbCollectionPath, QUERY("SceneName"<<*itSceneName), BSON("$addToSet"<<BSON("objectsOIDs"<<BSON("objectOID"<<objectOID.str()))), false, true);
+				c->update(dbCollectionPath, Query(BSON("SceneName"<<*itSceneName)), BSON("$addToSet"<<BSON("objectsOIDs"<<BSON("objectOID"<<objectOID.toString()))), false, true);
 				// jak nie ma obiektu w scenie to w obiekcie nie ma sceny
-				CLOG(LINFO)<<"sceneOID.str(): "<<sceneOID.str();
-				c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<sceneOID.str()))), false, true);
+				CLOG(LINFO)<<"sceneOID.str(): "<<sceneOID.toString();
+				c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<"Object")), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<sceneOID.toString()))), false, true);
 			}
 		}//if
 		else
@@ -159,13 +159,13 @@ try{
 			CLOG(LINFO)<<"Adding object to the scene";
 			if(object.isEmpty())
 				CLOG(LINFO)<<"Object is empty";
-			CLOG(LINFO)<<"OID: "<< objectOID.str();
-			c->update(dbCollectionPath, QUERY("SceneName"<<*itSceneName), BSON("$addToSet"<<BSON("objectsOIDs"<<BSON("objectOID"<<objectOID.str()))), false, true);
+			CLOG(LINFO)<<"OID: "<< objectOID.toString();
+			c->update(dbCollectionPath, Query(BSON("SceneName"<<*itSceneName)), BSON("$addToSet"<<BSON("objectsOIDs"<<BSON("objectOID"<<objectOID.toString()))), false, true);
 
 			CLOG(LINFO)<<"Add scene to object!";
 			scene.getObjectID(sceneOI);
 			sceneOID=sceneOI.__oid();
-			c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<sceneOID.str()))), false, true);
+			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<"Object")), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<sceneOID.toString()))), false, true);
 		}
 	}
 }catch(DBException & ex)
@@ -184,16 +184,16 @@ void SceneWriter::initObject()
 	BSONElement oi;
 	try
 	{
-		int items = c->count(dbCollectionPath, (QUERY("Type"<<"Object"<<"ObjectName"<<objectName)));
+		int items = c->count(dbCollectionPath, BSON("Type"<<"Object"<<"ObjectName"<<objectName),0,0,0);
 		if(items>0)
 		{
 			CLOG(LTRACE)<<"Object exist";
-			auto_ptr<DBClientCursor> cursorCollection =c->query(dbCollectionPath, (QUERY("Type"<<"Object"<<"ObjectName"<<objectName)));
+			auto_ptr<DBClientCursor> cursorCollection =c->query(dbCollectionPath, Query(BSON("Type"<<"Object"<<"ObjectName"<<objectName)));
 			object=cursorCollection->next();
 			OID objectOID;
 			object.getObjectID(oi);
 			objectOID=oi.__oid();
-			CLOG(LINFO)<<"objectOID.str(): "<<objectOID.str();
+			CLOG(LINFO)<<"objectOID.str(): "<<objectOID.toString();
 		}
 		else
 		{

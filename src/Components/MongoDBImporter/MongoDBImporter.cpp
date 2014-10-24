@@ -113,7 +113,7 @@ void MongoDBImporter::readFile(const string& modelOrViewName, const string& node
 	CLOG(LTRACE)<<"MongoDBImporter::readFile";
 	GridFS fs(*c,collectionName);
 	CLOG(LTRACE)<<"_id"<<childOID;
-	GridFile file = fs.findFile(QUERY("_id" << childOID));
+	GridFile file = fs.findFile(Query(BSON("_id" << childOID)));
 	if (!file.exists())
 	{
 		CLOG(LERROR) << "File not found in grid";
@@ -146,7 +146,7 @@ void MongoDBImporter::readFromMongoDB(const string& nodeType, const string& mode
 					CLOG(LTRACE)<<"There are childs "<<childsVector.size();
 					for (unsigned int i = 0; i<childsVector.size(); i++)
 					{
-						childCursor =c->query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+						childCursor =c->query(dbCollectionPath, BSON("_id"<<childsVector[i]),0,0,0);
 						if(childCursor->more())
 						{
 							BSONObj childObj = childCursor->next();

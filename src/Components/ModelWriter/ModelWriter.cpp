@@ -200,7 +200,7 @@ void ModelWriter::createModelOrView(const std::vector<string>::iterator it, cons
 	c->insert(dbCollectionPath, model);
 	model.getObjectID(bsonElement);
 	OID oid=bsonElement.__oid();
-	bsonBuilder.append(BSONObjBuilder().append("childOID", oid.str()).obj());
+	bsonBuilder.append(BSONObjBuilder().append("childOID", oid.toString()).obj());
 	if(type=="Model")
 		initModel(*it, true, nodeTypeProp, objectName, description);
 	else if(type=="View")
@@ -311,8 +311,8 @@ void ModelWriter::writeNode2MongoDB(const string &destination, const string &typ
 		{
 			CLOG(LERROR)<<"sizeOfFile: "<<sizeOfFile;
 			insertFileIntoCollection(oid, fileType, tempFileName, sizeOfFile);
-			CLOG(LERROR)<<"UPDATE: "<<oid.str();
-			c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
+			CLOG(LERROR)<<"UPDATE: "<<oid.toString();
+			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
 		}
 
     	//TODO dodac zapis do dokumentu
@@ -511,7 +511,7 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 		if(destination=="Object")
 		{
 			CLOG(LERROR)<<"Object";
-			unsigned long long nr = c->count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"));
+			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<"Object"),0,0,0);
 			if(nr==0)
 			{
 				CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
@@ -526,7 +526,7 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 		if(isViewLastLeaf(destination) || isModelLastLeaf(destination))
 		{
 			CLOG(LERROR)<<"Last Leaf";
-			unsigned long long nr = c->count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"));
+			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<"Object"),0,0,0);
 			if(nr==0)
 			{
 				CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
@@ -537,14 +537,14 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 			else
 			{
 				CLOG(LTRACE)<<"Object now exist";
-				int items = c->count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName));
+				int items = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName),1,1,1);
 				if(items==0)
 				{
 					CLOG(LTRACE)<<"No such model/view";
 					CLOG(LTRACE)<<"Type: "<<type;
 					initModel(modelOrViewName, true, nodeTypeProp, objectName, description);
 				}
-				cursorCollection = c->query(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName));
+				cursorCollection = c->query(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName)));
 				BSONObj obj = cursorCollection->next();
 				vector<OID> childsVector;
 				// check if node has some files
@@ -563,7 +563,7 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 			{
 				if(nodeTypeProp=="Model" || nodeTypeProp=="View")
 				{
-					unsigned long long nr = c->count(dbCollectionPath, (QUERY("Type"<<type<<"ObjectName"<<objectName<<type+"Name"<<modelOrViewName)));
+					unsigned long long nr = c->count(dbCollectionPath, BSON("Type"<<type<<"ObjectName"<<objectName<<type+"Name"<<modelOrViewName),0,0,0);
 					if(nr>0)
 					{
 						CLOG(LERROR)<<type+" "<< modelOrViewName<<" exists in db for object "<<objectName;
@@ -591,7 +591,7 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 						{
 							for (unsigned int i = 0; i<childsVector.size(); i++)
 							{
-								auto_ptr<DBClientCursor> childCursor =c->query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+								auto_ptr<DBClientCursor> childCursor =c->query(dbCollectionPath, (Query(BSON("_id"<<childsVector[i]))));
 								if( childCursor->more())
 								{
 									BSONObj childObj = childCursor->next();

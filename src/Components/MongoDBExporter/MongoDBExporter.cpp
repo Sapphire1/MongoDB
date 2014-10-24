@@ -127,7 +127,7 @@ void MongoDBExporter::createModelOrView(const std::vector<string>::iterator it, 
 	c->insert(dbCollectionPath, model);
 	model.getObjectID(bsonElement);
 	OID oid=bsonElement.__oid();
-	bsonBuilder.append(BSONObjBuilder().append("childOID", oid.str()).obj());
+	//bsonBuilder.append(BSONObjBuilder().append("childOID", oid.str()).obj());
 	if(type=="Model")
 		initModel(*it, true, nodeTypeProp, objectName, description);
 	else if(type=="View")
@@ -143,7 +143,7 @@ void MongoDBExporter::initObject()
 	{
 		BSONObj object = BSONObjBuilder().genOID().append("Type", "Object").append("ObjectName", objectName).append("description", description).obj();
 		c->insert(dbCollectionPath, object);
-		c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
+	//	c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
 		addScenes(object, objectName);
 
 		vector<string> models = getAllFolders((string)folderName+"/Model/");
@@ -163,7 +163,7 @@ void MongoDBExporter::initObject()
 		}
 
 		BSONArray destArr = bsonBuilder.arr();
-		c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"), BSON("$set"<<BSON("childOIDs"<<destArr)), false, true);
+		c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<"Object")), BSON("$set"<<BSON("childOIDs"<<destArr)), false, true);
 	  }
 	  catch(DBException &e)
 	  {
@@ -184,11 +184,11 @@ void MongoDBExporter::insertFileToGrid( const std::vector<string>::iterator itEx
 	GridFS fs(*c, collectionName);
 	o = fs.storeFile(*it, newFileName, mime);
 	BSONObj b = BSONObjBuilder().appendElements(o).append("ObjectName", objectName).obj();
-	c->createIndex(dbCollectionPath, BSON("filename"<<1));
+	//c->createIndex(dbCollectionPath, BSON("filename"<<1));
 	c->insert(dbCollectionPath, b);
 	b.getObjectID(bsonElement);
 	oid=bsonElement.__oid();
-	bsonBuilder.append(BSONObjBuilder().append("childOID", oid.str()).obj());
+	//bsonBuilder.append(BSONObjBuilder().append("childOID", oid.str()).obj());
 }
 
 void MongoDBExporter::writeNode2MongoDB(const string &source, const string &destination, const string &type,string modelOrViewName)
@@ -213,7 +213,8 @@ void MongoDBExporter::writeNode2MongoDB(const string &source, const string &dest
     	}
 		BSONArray destArr = bsonBuilder.arr();
 		//if(type=="View" || type=="Model")
-		c->update(dbCollectionPath, QUERY("Type"<<destination<<"ObjectName"<<objectName<<type+"Name"<<modelOrViewName), BSON("$set"<<BSON("childOIDs"<<destArr)), false, true);
+		c->update(dbCollectionPath, Query(BSON("Type"<<destination<<"ObjectName"<<objectName<<type+"Name"<<modelOrViewName)),
+				BSON("$set"<<BSON("childOIDs"<<destArr)), false, true);
 		CLOG(LTRACE) <<"Files saved successfully";
     }
 	catch(DBException &e)
@@ -227,11 +228,14 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 {
 	auto_ptr<DBClientCursor> cursorCollection;
 	string source;
+	int options=0;
+	int limit=0;
+	int skip=0;
 	int items=0;
 	try{
 		if(destination=="Object")
 		{
-			unsigned long long nr = c->count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"));
+			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<"Object"), options, limit, skip);
 			if(nr==0)
 			{
 				CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
@@ -245,7 +249,7 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 		}
 		if(isViewLastLeaf(destination) || isModelLastLeaf(destination))
 		{
-			unsigned long long nr = c->count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<"Object"));
+			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<"Object"));
 			if(nr==0)
 			{
 				CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
@@ -253,7 +257,7 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 			}
 			else
 			{
-				int items = c->count(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName));
+				int items = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName), options, limit, skip);
 				if(items==0)
 				{
 					CLOG(LTRACE)<<"No such model/view";
@@ -263,7 +267,7 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 					else if(type=="Model")
 						initModel(modelOrViewName, true, nodeTypeProp, objectName, description);
 				}
-				cursorCollection = c->query(dbCollectionPath, QUERY("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName));
+				cursorCollection = c->query(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName)));
 				BSONObj obj = cursorCollection->next();
 				vector<OID> childsVector;
 				// check if node has some files
@@ -282,7 +286,7 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 			{
 				if(nodeTypeProp=="Model" || nodeTypeProp=="View")
 				{
-					unsigned long long nr = c->count(dbCollectionPath, (QUERY("Type"<<type<<"ObjectName"<<objectName<<type+"Name"<<modelOrViewName)));
+					unsigned long long nr = c->count(dbCollectionPath, BSON("Type"<<type<<"ObjectName"<<objectName<<type+"Name"<<modelOrViewName), options, limit, skip);
 					if(nr>0)
 					{
 						CLOG(LERROR)<<type+" "<< modelOrViewName<<" exists in db for object "<<objectName;
@@ -309,7 +313,7 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 						{
 							for (unsigned int i = 0; i<childsVector.size(); i++)
 							{
-								auto_ptr<DBClientCursor> childCursor =c->query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+								auto_ptr<DBClientCursor> childCursor =c->query(dbCollectionPath, Query(BSON("_id"<<childsVector[i])));
 								if( childCursor->more())
 								{
 									BSONObj childObj = childCursor->next();

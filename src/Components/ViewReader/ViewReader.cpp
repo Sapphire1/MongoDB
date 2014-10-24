@@ -106,7 +106,7 @@ void ViewReader::cloudEncoding(OID& oid, string& tempFileName, string & cloudTyp
 		const BSONObj *fieldsToReturn = 0;
 		CLOG(LERROR)<<"dbCollectionPath: "<<dbCollectionPath<<"\n\n";
 		// get bson object from collection
-		BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << oid), fieldsToReturn, queryOptions);
+		BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << oid)), fieldsToReturn, queryOptions);
 		CLOG(LERROR)<<"2\n";
 		// read data to buffer
 		CLOG(LERROR)<<"3"<<"\n\n";
@@ -278,7 +278,7 @@ void ViewReader::readFile(OID& childOID)
 	const BSONObj *fieldsToReturn = 0;
 
 	// get bson object from collection
-	BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << childOID), fieldsToReturn, queryOptions);
+	BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
 
 	CLOG(LERROR)<<"obj: "<<obj<<", childOID: "<<childOID;
 	string place = obj.getField("place").str();
@@ -295,7 +295,7 @@ void ViewReader::readFile(OID& childOID)
 		if(extension=="jpg" || extension=="png")
 		{
 			CLOG(LERROR)<<"Read image\n";
-			BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << childOID), fieldsToReturn, queryOptions);
+			BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
 
 			int len;
 			uchar *data = (uchar*)obj[tempFileName].binData(len);
@@ -341,7 +341,7 @@ void ViewReader::readFile(OID& childOID)
 				int queryOptions = 0;
 				if(cloudType=="xyz")
 				{
-					BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << childOID), fieldsToReturn, queryOptions);
+					BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
 					// read data to buffer
 					int totalSize;
 					float* buffer = (float*)obj[tempFileName].binData(totalSize);
@@ -364,7 +364,7 @@ void ViewReader::readFile(OID& childOID)
 				}
 				else if(cloudType=="xyzrgb")
 				{
-					BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << childOID), fieldsToReturn, queryOptions);
+					BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
 					// read data to buffer
 					int totalSize;
 					float* buffer = (float*)obj[tempFileName].binData(totalSize);
@@ -388,7 +388,7 @@ void ViewReader::readFile(OID& childOID)
 				}
 				else if(cloudType=="xyzsift")
 				{
-					BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << childOID), fieldsToReturn, queryOptions);
+					BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
 					// read data to buffer
 					int totalSize;
 					float* buffer = (float*)obj[tempFileName].binData(totalSize);
@@ -425,7 +425,7 @@ void ViewReader::readFile(OID& childOID)
 			const BSONObj *fieldsToReturn = 0;
 			int queryOptions = 0;
 			// get bson object
-			BSONObj obj = c->findOne(dbCollectionPath, QUERY("_id" << childOID), fieldsToReturn, queryOptions);
+			BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
 			const char *buffer;
 
 			// get data to buffer
@@ -448,7 +448,7 @@ void ViewReader::readFile(OID& childOID)
 		// if saved in grid
 		GridFS fs(*c,collectionName);
 		CLOG(LTRACE)<<"_id"<<childOID;
-		GridFile file = fs.findFile(QUERY("_id" << childOID));
+		GridFile file = fs.findFile(Query(BSON("_id" << childOID)));
 
 		if (!file.exists())
 		{
@@ -492,7 +492,7 @@ void ViewReader::readFromMongoDB(const string& nodeType, const string& modelOrVi
 						CLOG(LTRACE)<<"There are childs "<<childsVector.size();
 						for (unsigned int i = 0; i<childsVector.size(); i++)
 						{
-							childCursor =c->query(dbCollectionPath, (QUERY("_id"<<childsVector[i])));
+							childCursor =c->query(dbCollectionPath, Query(BSON("_id"<<childsVector[i])));
 							if(childCursor->more())
 							{
 								BSONObj childObj = childCursor->next();
