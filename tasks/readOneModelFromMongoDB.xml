@@ -28,16 +28,16 @@
 				<Component name="InputCloud" type="PCL:CloudViewer" priority="2" bump="0">
 				</Component>
 			</Executor>
-		</Subtask->
+		</Subtask>
 	</Subtasks>
 	<!-- pipes connecting datastreams -->
 	<DataStreams>
 		<!--Source name="ModelReader.out_img">
 			<sink>CvWindow.in_img</sink>
 		</Source-->
-		<Source name="ModelReader.out_cloud_xyz">
+		<!--Source name="ModelReader.out_cloud_xyz">
 			<sink>InputCloud.in_cloud_xyz</sink>
-		</Source>
+		</Source-->
 		<Source name="ModelReader.out_cloud_xyzrgb">
 			<sink>InputCloud.in_cloud_xyzrgb</sink>
 		</Source>

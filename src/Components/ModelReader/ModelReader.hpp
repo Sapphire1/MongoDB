@@ -116,7 +116,8 @@ private:
         void readFromMongoDB(const string&, const string&, const string&);
         void readfromDB();
         void loadModels(string&, string&, std::vector<AbstractObject*>&);
-        void ReadPCDCloud(const string&, const string&);
+        void ReadPCDCloudFromFile(const string&, const string&);
+
         void readFile(const OID& childOID, std::vector<AbstractObject*>& models);
         void run();
         void writeToSink(string& mime, string& tempFilename, string& fileName);

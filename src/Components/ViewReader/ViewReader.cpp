@@ -286,7 +286,6 @@ void ViewReader::readFile(OID& childOID)
 	string tempFileName = obj.getField("fileName").str();
 	CLOG(LERROR)<<"place: "<<place<<" size: "<<size<<", fileName: "<<tempFileName;
 
-	//TODO 		read from collection
 
 	if(place=="collection")
 	{
