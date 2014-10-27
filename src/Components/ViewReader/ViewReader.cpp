@@ -362,7 +362,50 @@ void ViewReader::readFile(OID& childOID)
 					pcl::io::savePCDFile("newCloudXYZ.pcd", *cloudXYZ, false);
 				}
 				else if(cloudType=="xyzrgb")
-				{
+				{/*
+					BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
+					int offset;
+					char* data = (char*)obj[tempFileName].binData(offset);
+					CLOG(LERROR)<< "data[0]: "<< data[0];
+					CLOG(LERROR)<< "data[1]: "<< data[1];
+					CLOG(LERROR)<< "data[2]: "<< data[2];
+					CLOG(LERROR)<< "data[3]: "<< data[3];
+					CLOG(LERROR)<< "data[4]: "<< data[4];
+					CLOG(LERROR)<< "data[5]: "<< data[5];
+					CLOG(LERROR)<< "data[6]: "<< data[6];
+					CLOG(LERROR)<< "data[7]: "<< data[7];
+					CLOG(LERROR)<< "data[8]: "<< data[8];
+					CLOG(LERROR)<< "data[9]: "<< data[9];
+					CLOG(LERROR)<< "data[10]: "<< data[10];
+					CLOG(LERROR)<< "data[11]: "<< data[11];
+					CLOG(LERROR)<< "Size of compressed data: "<< offset;
+
+					stringstream compressedData2;
+					std::vector<char> vector;
+					for(int i=0; i<offset; i++)
+					{
+						vector.push_back(data[i]);
+						CLOG(LERROR)<<vector[i];
+					}
+					std::copy(vector.begin(), vector.end(), std::ostream_iterator<char>(compressedData2));
+				//	std::cout << my_ss.str() << std::endl;
+
+					compressedData2.seekp(0, ios::end);
+					stringstream::pos_type offset2 = compressedData2.tellp();
+					CLOG(LERROR)<< "offset2: " << offset2;
+					CLOG(LERROR)<< "compressedData2: " <<compressedData2.str();
+					// decompress point cloud
+					pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>* PointCloudDecoder;
+					pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB (new pcl::PointCloud<pcl::PointXYZRGB>);
+			//		CLOG(LERROR)<<"decoding";
+					PointCloudDecoder->decodePointCloud(compressedData2, cloudXYZRGB);
+				//	CLOG(LERROR)<<"getheader";
+					CLOG(LERROR)<<cloudXYZRGB->header;
+					// save to file, only in test purposes
+			//		pcl::io::savePCDFile("newCloudXYZRGB.pcd", *cloudXYZRGB, false);
+					*/
+
+
 					BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
 					// read data to buffer
 					int totalSize;
@@ -384,6 +427,7 @@ void ViewReader::readFile(OID& childOID)
 					}
 					// save to file, only in test purposes
 					pcl::io::savePCDFile("newCloudXYZRGB.pcd", *cloudXYZRGB, false);
+
 				}
 				else if(cloudType=="xyzsift")
 				{

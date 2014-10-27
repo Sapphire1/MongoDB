@@ -28,7 +28,7 @@
 				<param name="mode.loop">0</param>
 				<param name="mode.auto_trigger">0</param>
 			</Component-->
-			<Component name="Writer" type="MongoDB:ViewWriter" priority="4">
+			<Component name="Writer" type="MongoDB:ModelWriter" priority="4">
 				  <param name="suffix">1</param>
 			</Component>
 			</Executor>
@@ -40,7 +40,7 @@
 				<!--Component name="InputCloud" type="PCL:CloudViewer" priority="2" bump="0">
 				</Component-->
 			</Executor>
-		</Subtask->
+		</Subtask>
 	</Subtasks>
 	<!-- pipes connecting datastreams -->
 	<DataStreams>

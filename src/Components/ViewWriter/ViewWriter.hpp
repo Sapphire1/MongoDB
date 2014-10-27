@@ -143,6 +143,7 @@ private:
         void copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const;
         void copyXYZPointToFloatArray (const pcl::PointXYZ &p, float * out) const;
         void copyXYZRGBPointToFloatArray (const pcl::PointXYZRGB &p, float * out) const;
+        char* serializeTable( int &length, 	std::stringstream& compressedData);
 };
 }//: namespace ViewWriter
 }//: namespace Processors

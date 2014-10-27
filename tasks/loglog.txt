@@ -1,0 +1,1320 @@
+[33mWARNING: [00mConfiguration file config.xml not found.
+[36m[1mNOTICE: [00mQuick fixes:
+[36m[1mNOTICE: [00m   specify config file name with -C switch
+[36m[1mNOTICE: [00m   create default configuration using -D switch
+[36mINFO: [00mTask: writeModel2MongoDB.xml from command line
+
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m58[00m]: ComponentManager: Hello private 
+
+Kopiowanie TASKA!
+[36mINFO: [00mENV[DISCODE_DCL_DIR]='/home/lzmuda/DCL'
+[36mINFO: [00mRegistered commands:
+[36mINFO: [00m	getLogLvl
+[36mINFO: [00m	getMetaInfo
+[36mINFO: [00m	getProperty
+[36mINFO: [00m	getPropertyConstraints
+[36mINFO: [00m	getPropertyToolTip
+[36mINFO: [00m	getPropertyType
+[36mINFO: [00m	kill
+[36mINFO: [00m	listComponents
+[36mINFO: [00m	listExecutors
+[36mINFO: [00m	listHandlers
+[36mINFO: [00m	listProperties
+[36mINFO: [00m	listSubtasks
+[36mINFO: [00m	setBump
+[36mINFO: [00m	setProperty
+[36mINFO: [00m	start
+[36mINFO: [00m	startSubtask
+[36mINFO: [00m	stop
+[36mINFO: [00m	stopSubtask
+[36mINFO: [00m	subtaskState
+[36mINFO: [00m	taskState
+[36mINFO: [00m	triggerHandler
+[36mINFO: [00mLoading components from PCL
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libRANSACBoardPlane.so containing RANSACBoardPlane component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libSHOT.so containing SHOT component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libRANSACSphere.so containing RANSACSphere component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libRANSACAbovePlane.so containing RANSACAbovePlane component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libDepthConverter.so containing DepthConverter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libCloudViewer.so containing CloudViewer component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libXYZCloudViewer.so containing XYZCloudViewer component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libCubicMaskExtractor.so containing CubicMaskExtractor component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libStatisticalOutlierRemoval.so containing StatisticalOutlierRemoval component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libSphereGenerator.so containing SphereGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libPassThrough.so containing PassThrough component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libPCDReader.so containing PCDReader component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libPlaneGenerator.so containing PlaneGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libClusterExtraction.so containing ClusterExtraction component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libPCDWriter.so containing PCDWriter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libPCLCloudFilter.so containing PCLCloudFilter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libVoxelGrid.so containing VoxelGrid component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libRANSACPlaneRemover.so containing RANSACPlaneRemover component was properly loaded.
+[36mINFO: [00mLoading components from SIFTObjectModel
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libSIFTObjectMatcher.so containing SIFTObjectMatcher component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libSIFTAdder.so containing SIFTAdder component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libSOMJSONWriter.so containing SOMJSONWriter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libDownsampling.so containing Downsampling component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libSOMJSONReader.so containing SOMJSONReader component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libCloudCutter.so containing CloudCutter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libPC2Octree.so containing PC2Octree component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libFeatureCloudConverter.so containing FeatureCloudConverter component was properly loaded.
+[36mINFO: [00mLoading components from DCL_CameraNUI
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/DCL_CameraNUI/dist/lib/libDepthConverter.so containing DepthConverter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/DCL_CameraNUI/dist/lib/libRGBDViewer.so containing RGBDViewer component was properly loaded.
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/DCL_CameraNUI/dist/lib/libfreenect.so: undefined symbol: returnName
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/DCL_CameraNUI/dist/lib/libfreenect_sync.so: undefined symbol: returnName
+[36mINFO: [00mLoading components from PCLCoreTypes
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[33mWARNING: [00mComponentManager: There are no components in /home/lzmuda/DCL/PCLCoreTypes
+[36mINFO: [00mLoading components from Tutorials
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[33mWARNING: [00mComponentManager: There are no components in /home/lzmuda/DCL/Tutorials
+[36mINFO: [00mLoading components from CvStereoTemp
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libStereoEstimator.so containing StereoEstimator component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libTransformParameterGenerator.so containing TransformParameterGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libDepthTransform.so containing DepthTransform component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvStereoTemp/dist/lib/libMask.so: undefined symbol: _ZN3pcl7PCLBaseINS_8PointXYZEE13setInputCloudERKN5boost10shared_ptrIKNS_10PointCloudIS1_EEEE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libTest.so containing Test component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libDepthProcessor.so containing DepthProcessor component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libStereoDepthConverter.so containing StereoDepthConverter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libCenterMassGenerator.so containing CenterMassGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvStereoTemp/dist/lib/libCubicMaskEkstractor.so: undefined symbol: _ZN3pcl7PCLBaseINS_11PointXYZRGBEE13setInputCloudERKN5boost10shared_ptrIKNS_10PointCloudIS1_EEEE
+[36mINFO: [00mLoading components from MongoBaseTemp
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[33mWARNING: [00mComponentManager: There are no components in /home/lzmuda/DCL/MongoBaseTemp
+[36mINFO: [00mLoading components from CameraPGR
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mLoading components from MongoDB
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/MongoDB/dist/lib/libCIPReader.so containing CIPReader component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/MongoDB/dist/lib/libMongoDBImporter.so: undefined symbol: _ZN3pcl2io27OctreePointCloudCompressionINS_11PointXYZRGBENS_6octree27OctreeContainerPointIndicesENS3_20OctreeContainerEmptyENS3_14Octree2BufBaseIS4_S5_EEE21serializeTreeCallbackERS4_RKNS3_9OctreeKeyE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/MongoDB/dist/lib/libModelReader.so containing ModelReader component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/MongoDB/dist/lib/libViewWriter.so containing ViewWriter component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/MongoDB/dist/lib/libSceneReader.so: undefined symbol: _ZN3pcl2io27OctreePointCloudCompressionINS_11PointXYZRGBENS_6octree27OctreeContainerPointIndicesENS3_20OctreeContainerEmptyENS3_14Octree2BufBaseIS4_S5_EEE21serializeTreeCallbackERS4_RKNS3_9OctreeKeyE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/MongoDB/dist/lib/libCIPGenerator.so containing CIPGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/MongoDB/dist/lib/libModelWriter.so: undefined symbol: _ZN10Processors11ModelWriter11ModelWriter8write2DBEv
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/MongoDB/dist/lib/libSceneWriter.so: undefined symbol: _ZN3pcl2io27OctreePointCloudCompressionINS_11PointXYZRGBENS_6octree27OctreeContainerPointIndicesENS3_20OctreeContainerEmptyENS3_14Octree2BufBaseIS4_S5_EEE21serializeTreeCallbackERS4_RKNS3_9OctreeKeyE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/MongoDB/dist/lib/libViewReader.so containing ViewReader component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/MongoDB/dist/lib/libMongoDBExporter.so: undefined symbol: _ZN3pcl2io27OctreePointCloudCompressionINS_11PointXYZRGBENS_6octree27OctreeContainerPointIndicesENS3_20OctreeContainerEmptyENS3_14Octree2BufBaseIS4_S5_EEE21serializeTreeCallbackERS4_RKNS3_9OctreeKeyE
+[36mINFO: [00mLoading components from CvCoreTypes
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvCoreTypes/dist/lib/libCameraInfoProvider.so containing CameraInfoProvider component was properly loaded.
+[36mINFO: [00mLoading components from BarCode
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libRGBLUT.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCalib.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libImageWriter.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvContour.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.49.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libSequence.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvVideoWriter.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libsrcCameraOpenCV.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvFlann.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libsrcMovie.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvFilter2D.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libprocCvColorConv.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvCanny.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/BarCode/dist/lib/libCvUndistort.so containing CvUndistort component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libHSVLUT.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvHarris.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libprocCvWindow.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/BarCode/dist/lib/libTypesCircles.so: undefined symbol: returnName
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libprocCvSplit.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvMoments.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libprocCvMorphology.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libSkeletonization.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libprocCvThreshold.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libSum.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvSolvePnP.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvBayesClassifier.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libprocCvGaussianBlur.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mLoading components from Json2MongoDBWriter
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/Json2MongoDBWriter/dist/lib/libSequence.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/Json2MongoDBWriter/dist/lib/libprocCvWindow.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: libboost_thread.so.1.49.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mLoading components from StaryImageAcquisition
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[33mWARNING: [00mComponentManager: There are no components in /home/lzmuda/DCL/StaryImageAcquisition
+[36mINFO: [00mLoading components from TestDB
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libRGBLUT.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCalib.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libImageWriter.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvContour.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.49.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libSequence.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvVideoWriter.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libsrcCameraOpenCV.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvFlann.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libsrcMovie.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvFilter2D.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libprocCvColorConv.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvCanny.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/TestDB/dist/lib/libCvUndistort.so containing CvUndistort component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libHSVLUT.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvHarris.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libprocCvWindow.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/TestDB/dist/lib/libTypesCircles.so: undefined symbol: returnName
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libprocCvSplit.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvMoments.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libprocCvMorphology.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: libboost_thread.so.1.49.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libSkeletonization.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libprocCvThreshold.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libSum.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvSolvePnP.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvBayesClassifier.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libprocCvGaussianBlur.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mLoading components from CvStereo
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libStereoEstimator.so containing StereoEstimator component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libDepthConventer.so containing DepthConventer component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libTransformParameterGenerator.so containing TransformParameterGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libDepthTransform.so containing DepthTransform component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libDepthRainbow.so containing DepthRainbow component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libTest.so containing Test component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libDepthProcessor.so containing DepthProcessor component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libCenterMassGenerator.so containing CenterMassGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libStereoSequence.so containing StereoSequence component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libStereoWriter.so containing StereoWriter component was properly loaded.
+[36mINFO: [00mLoading components from DCL_ecovi
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[33mWARNING: [00mComponentManager: There are no components in /home/lzmuda/DCL/DCL_ecovi
+[36mINFO: [00mLoading components from CvBasic
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libRGBLUT.so containing RGBLUT component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCalib.so containing Calib component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvAdaptiveThreshold.so containing CvAdaptiveThreshold component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvBasic/dist/lib/libCvFreak.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvBasic/dist/lib/libCvBRISK.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libImageWriter.so containing ImageWriter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvFindChessboardCorners.so containing CvFindChessboardCorners component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvContour.so containing CvContour component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvBasic/dist/lib/libCvBruteForce.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libSequence.so containing Sequence component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvVideoWriter.so containing CvVideoWriter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libsrcCameraOpenCV.so containing CameraOpenCV component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvFlann.so containing CvFlann component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libsrcMovie.so containing Movie component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvFilter2D.so containing CvFilter2D component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libprocCvColorConv.so containing CvColorConv component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvCanny.so containing CvCanny component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvUndistort.so containing CvUndistort component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libHSVLUT.so containing HSVLUT component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvHarris.so containing CvHarris component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvHoughCircles.so containing CvHoughCircles component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libprocCvWindow.so containing CvWindow component was properly loaded.
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/CvBasic/dist/lib/libTypesCircles.so: undefined symbol: returnName
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libprocCvSplit.so containing CvSplit component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvBasic/dist/lib/libCvMSER.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvBasic/dist/lib/libCvORB.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvMoments.so containing CvMoments component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libprocCvMorphology.so containing CvMorphology component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvHoughLines.so containing CvHoughLines component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libTrigger.so containing Trigger component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvBasic/dist/lib/libCvBRIEF.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libSkeletonization.so containing Skeletonization component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libprocCvThreshold.so containing CvThreshold component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libSum.so containing Sum component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvSolvePnP.so containing CvSolvePnP component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvBayesClassifier.so containing CvBayesClassifier component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libViewSequence.so containing ViewSequence component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libprocCvGaussianBlur.so containing CvGaussianBlur component was properly loaded.
+[36mINFO: [00mLoading components from Backend2
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/Backend2/dist/lib/libSequence.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/Backend2/dist/lib/libprocDB.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/Backend2/dist/lib/libprocCvWindow.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/Backend2/dist/lib/libTypesCircles.so: undefined symbol: returnName
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/Backend2/dist/lib/libprocBackend2.so: undefined symbol: _ZTVN5mongo18DBClientConnectionE
+[36mINFO: [00mLoading components from PCL_mlaszko
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL_mlaszko/dist/lib/libSIFTAdder.so containing SIFTAdder component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mLoading components from ImageAcquisition
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/ImageAcquisition/dist/lib/libMaskGenerator.so containing MaskGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/ImageAcquisition/dist/lib/libTypesCircles.so: undefined symbol: returnName
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/ImageAcquisition/dist/lib/libObjectRotation.so containing ObjectRotation component was properly loaded.
+[36mINFO: [00mLoading components from DCL_CvBasic
+[36mINFO: [00mLoading component list from cache file...
+[36mINFO: [00mRGBLUT from libRGBLUT.so
+[36mINFO: [00mCalib from libCalib.so
+[36mINFO: [00mCvAdaptiveThreshold from libCvAdaptiveThreshold.so
+[36mINFO: [00mCvFreak from libCvFreak.so
+[36mINFO: [00mCvBRISK from libCvBRISK.so
+[36mINFO: [00mImageWriter from libImageWriter.so
+[36mINFO: [00mCvFindChessboardCorners from libCvFindChessboardCorners.so
+[36mINFO: [00mCvFAST from libCvFAST.so
+[36mINFO: [00mCvContour from libCvContour.so
+[36mINFO: [00mCvBruteForce from libCvBruteForce.so
+[36mINFO: [00mSequence from libSequence.so
+[36mINFO: [00mCvVideoWriter from libCvVideoWriter.so
+[36mINFO: [00mCameraOpenCV from libsrcCameraOpenCV.so
+[36mINFO: [00mCvFlann from libCvFlann.so
+[36mINFO: [00mMovie from libsrcMovie.so
+[36mINFO: [00mCvFilter2D from libCvFilter2D.so
+[36mINFO: [00mCvColorConv from libprocCvColorConv.so
+[36mINFO: [00mCvCanny from libCvCanny.so
+[36mINFO: [00mCvUndistort from libCvUndistort.so
+[36mINFO: [00mHSVLUT from libHSVLUT.so
+[36mINFO: [00mCvHarris from libCvHarris.so
+[36mINFO: [00mCvWindow from libprocCvWindow.so
+[36mINFO: [00mCvFindCirclesGrid from libCvFindCirclesGrid.so
+[36mINFO: [00mCvSplit from libprocCvSplit.so
+[36mINFO: [00mCvMSER from libCvMSER.so
+[36mINFO: [00mCvORB from libCvORB.so
+[36mINFO: [00mCvMoments from libCvMoments.so
+[36mINFO: [00mCvMorphology from libprocCvMorphology.so
+[36mINFO: [00mCvHoughLines from libCvHoughLines.so
+[36mINFO: [00mTrigger from libTrigger.so
+[36mINFO: [00mCvBRIEF from libCvBRIEF.so
+[36mINFO: [00mSkeletonization from libSkeletonization.so
+[36mINFO: [00mCvThreshold from libprocCvThreshold.so
+[36mINFO: [00mSum from libSum.so
+[36mINFO: [00mCvBayesClassifier from libCvBayesClassifier.so
+[36mINFO: [00mCvGaussianBlur from libprocCvGaussianBlur.so
+[36m[1mNOTICE: [00mFound 123 components in 13 DCLs.
+Kopiowanie TASKA!
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m155[00m]: Loading subtasks
+[33mWARNING: [00mSubtask Processing absent. Creating new one...
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m179[00m]: Created subtask Processing
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m194[00m]: Creating execution threads
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/ExecutorManager.hpp [[32m50[00m]: Processing executor created.
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m231[00m]: Loading required components
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m268[00m]: 		Source [PCDReader from PCL]
+[32mTRACE[00m in /home/lzmuda/DCL/PCL/src/Components/PCDReader/PCDReader.cpp [[32m25[00m]: Hi PCDReader
+
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m190[00m]: Source [PCDReader:PCL] component created
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m291[00m]: Loading properties
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m315[00m]: Property: filename=/home/lzmuda/PCL_Plane/table_scene_mug_stereo_texturedMod.pcd
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m315[00m]: Property: nodeTypeProp=SomXYZSift
+[33mWARNING: [00mComponent Source has no property named nodeTypeProp, but it is defined in task file.
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m268[00m]: 		NextImageTrigger [Trigger from DCL_CvBasic]
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/DCL_CvBasic/dist/lib/libTrigger.so containing Trigger component was properly loaded.
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m190[00m]: NextImageTrigger [Trigger:DCL_CvBasic] component created
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m291[00m]: Loading properties
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m268[00m]: 		Writer [ModelWriter from MongoDB]
+[31mERROR: [00mComponent type ModelWriter not found in MongoDB
+[36m[1mNOTICE: [00mWhen creating component: Writer [MongoDB:ModelWriter]
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m66[00m]: ComponentManager: Goodbye public
+
+[31m[1mFATAL: [00mcreateComponent
+
+Backtrace (*nix):
+discode(_ZN6Common16DisCODeExceptionC1ERKSs+0x7e) [0x4cb5cc]
+discode(_ZN4Core16ComponentManager15createComponentERKSsS2_S2_+0x653) [0x4e9f3b]
+discode(_ZN4Core12Configurator14loadComponentsEPKN5boost13property_tree11basic_ptreeISsSsSt4lessISsEEERNS_8ExecutorE+0x93b) [0x4e5ff3]
+discode(_ZN4Core12Configurator13loadExecutorsEPKN5boost13property_tree11basic_ptreeISsSsSt4lessISsEEERNS_7SubtaskE+0x575) [0x4e545b]
+discode(_ZN4Core12Configurator12loadSubtasksEPKN5boost13property_tree11basic_ptreeISsSsSt4lessISsEEERNS_4TaskE+0x6c8) [0x4e4c30]
+discode(_ZN4Core12Configurator8loadTaskESsRKSt6vectorISt4pairISsSsESaIS3_EE+0x904) [0x4e3abe]
+discode(main+0x12a1) [0x51bad4]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf5) [0x7ff8bc03aec5]
+discode() [0x4c5d29]
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+[33mWARNING: [00mConfiguration file config.xml not found.
+[36m[1mNOTICE: [00mQuick fixes:
+[36m[1mNOTICE: [00m   specify config file name with -C switch
+[36m[1mNOTICE: [00m   create default configuration using -D switch
+[36mINFO: [00mTask: writeModel2MongoDB.xml from command line
+
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m58[00m]: ComponentManager: Hello private 
+
+Kopiowanie TASKA!
+[36mINFO: [00mENV[DISCODE_DCL_DIR]='/home/lzmuda/DCL'
+[36mINFO: [00mRegistered commands:
+[36mINFO: [00m	getLogLvl
+[36mINFO: [00m	getMetaInfo
+[36mINFO: [00m	getProperty
+[36mINFO: [00m	getPropertyConstraints
+[36mINFO: [00m	getPropertyToolTip
+[36mINFO: [00m	getPropertyType
+[36mINFO: [00m	kill
+[36mINFO: [00m	listComponents
+[36mINFO: [00m	listExecutors
+[36mINFO: [00m	listHandlers
+[36mINFO: [00m	listProperties
+[36mINFO: [00m	listSubtasks
+[36mINFO: [00m	setBump
+[36mINFO: [00m	setProperty
+[36mINFO: [00m	start
+[36mINFO: [00m	startSubtask
+[36mINFO: [00m	stop
+[36mINFO: [00m	stopSubtask
+[36mINFO: [00m	subtaskState
+[36mINFO: [00m	taskState
+[36mINFO: [00m	triggerHandler
+[36mINFO: [00mLoading components from PCL
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libRANSACBoardPlane.so containing RANSACBoardPlane component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libSHOT.so containing SHOT component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libRANSACSphere.so containing RANSACSphere component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libRANSACAbovePlane.so containing RANSACAbovePlane component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libDepthConverter.so containing DepthConverter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libCloudViewer.so containing CloudViewer component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libXYZCloudViewer.so containing XYZCloudViewer component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libCubicMaskExtractor.so containing CubicMaskExtractor component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libStatisticalOutlierRemoval.so containing StatisticalOutlierRemoval component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libSphereGenerator.so containing SphereGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libPassThrough.so containing PassThrough component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libPCDReader.so containing PCDReader component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libPlaneGenerator.so containing PlaneGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libClusterExtraction.so containing ClusterExtraction component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libPCDWriter.so containing PCDWriter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libPCLCloudFilter.so containing PCLCloudFilter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libVoxelGrid.so containing VoxelGrid component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL/dist/lib/libRANSACPlaneRemover.so containing RANSACPlaneRemover component was properly loaded.
+[36mINFO: [00mLoading components from SIFTObjectModel
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libSIFTObjectMatcher.so containing SIFTObjectMatcher component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libSIFTAdder.so containing SIFTAdder component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libSOMJSONWriter.so containing SOMJSONWriter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libDownsampling.so containing Downsampling component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libSOMJSONReader.so containing SOMJSONReader component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libCloudCutter.so containing CloudCutter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libPC2Octree.so containing PC2Octree component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/SIFTObjectModel/dist/lib/libFeatureCloudConverter.so containing FeatureCloudConverter component was properly loaded.
+[36mINFO: [00mLoading components from DCL_CameraNUI
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/DCL_CameraNUI/dist/lib/libDepthConverter.so containing DepthConverter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/DCL_CameraNUI/dist/lib/libRGBDViewer.so containing RGBDViewer component was properly loaded.
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/DCL_CameraNUI/dist/lib/libfreenect.so: undefined symbol: returnName
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/DCL_CameraNUI/dist/lib/libfreenect_sync.so: undefined symbol: returnName
+[36mINFO: [00mLoading components from PCLCoreTypes
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[33mWARNING: [00mComponentManager: There are no components in /home/lzmuda/DCL/PCLCoreTypes
+[36mINFO: [00mLoading components from Tutorials
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[33mWARNING: [00mComponentManager: There are no components in /home/lzmuda/DCL/Tutorials
+[36mINFO: [00mLoading components from CvStereoTemp
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libStereoEstimator.so containing StereoEstimator component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libTransformParameterGenerator.so containing TransformParameterGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libDepthTransform.so containing DepthTransform component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvStereoTemp/dist/lib/libMask.so: undefined symbol: _ZN3pcl7PCLBaseINS_8PointXYZEE13setInputCloudERKN5boost10shared_ptrIKNS_10PointCloudIS1_EEEE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libTest.so containing Test component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libDepthProcessor.so containing DepthProcessor component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libStereoDepthConverter.so containing StereoDepthConverter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereoTemp/dist/lib/libCenterMassGenerator.so containing CenterMassGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvStereoTemp/dist/lib/libCubicMaskEkstractor.so: undefined symbol: _ZN3pcl7PCLBaseINS_11PointXYZRGBEE13setInputCloudERKN5boost10shared_ptrIKNS_10PointCloudIS1_EEEE
+[36mINFO: [00mLoading components from MongoBaseTemp
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[33mWARNING: [00mComponentManager: There are no components in /home/lzmuda/DCL/MongoBaseTemp
+[36mINFO: [00mLoading components from CameraPGR
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mLoading components from MongoDB
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/MongoDB/dist/lib/libCIPReader.so containing CIPReader component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/MongoDB/dist/lib/libMongoDBImporter.so: undefined symbol: _ZN3pcl2io27OctreePointCloudCompressionINS_11PointXYZRGBENS_6octree27OctreeContainerPointIndicesENS3_20OctreeContainerEmptyENS3_14Octree2BufBaseIS4_S5_EEE21serializeTreeCallbackERS4_RKNS3_9OctreeKeyE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/MongoDB/dist/lib/libModelReader.so containing ModelReader component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/MongoDB/dist/lib/libViewWriter.so containing ViewWriter component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/MongoDB/dist/lib/libSceneReader.so: undefined symbol: _ZN3pcl2io27OctreePointCloudCompressionINS_11PointXYZRGBENS_6octree27OctreeContainerPointIndicesENS3_20OctreeContainerEmptyENS3_14Octree2BufBaseIS4_S5_EEE21serializeTreeCallbackERS4_RKNS3_9OctreeKeyE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/MongoDB/dist/lib/libCIPGenerator.so containing CIPGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/MongoDB/dist/lib/libModelWriter.so: undefined symbol: _ZN10Processors11ModelWriter11ModelWriter8write2DBEv
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/MongoDB/dist/lib/libSceneWriter.so: undefined symbol: _ZN3pcl2io27OctreePointCloudCompressionINS_11PointXYZRGBENS_6octree27OctreeContainerPointIndicesENS3_20OctreeContainerEmptyENS3_14Octree2BufBaseIS4_S5_EEE21serializeTreeCallbackERS4_RKNS3_9OctreeKeyE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/MongoDB/dist/lib/libViewReader.so containing ViewReader component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/MongoDB/dist/lib/libMongoDBExporter.so: undefined symbol: _ZN3pcl2io27OctreePointCloudCompressionINS_11PointXYZRGBENS_6octree27OctreeContainerPointIndicesENS3_20OctreeContainerEmptyENS3_14Octree2BufBaseIS4_S5_EEE21serializeTreeCallbackERS4_RKNS3_9OctreeKeyE
+[36mINFO: [00mLoading components from CvCoreTypes
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvCoreTypes/dist/lib/libCameraInfoProvider.so containing CameraInfoProvider component was properly loaded.
+[36mINFO: [00mLoading components from BarCode
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libRGBLUT.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCalib.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libImageWriter.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvContour.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.49.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libSequence.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvVideoWriter.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libsrcCameraOpenCV.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvFlann.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libsrcMovie.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvFilter2D.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libprocCvColorConv.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvCanny.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/BarCode/dist/lib/libCvUndistort.so containing CvUndistort component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libHSVLUT.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvHarris.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libprocCvWindow.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/BarCode/dist/lib/libTypesCircles.so: undefined symbol: returnName
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libprocCvSplit.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvMoments.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libprocCvMorphology.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libSkeletonization.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libprocCvThreshold.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libSum.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvSolvePnP.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libCvBayesClassifier.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/BarCode/dist/lib/libprocCvGaussianBlur.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mLoading components from Json2MongoDBWriter
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/Json2MongoDBWriter/dist/lib/libSequence.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/Json2MongoDBWriter/dist/lib/libprocCvWindow.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: libboost_thread.so.1.49.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mLoading components from StaryImageAcquisition
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[33mWARNING: [00mComponentManager: There are no components in /home/lzmuda/DCL/StaryImageAcquisition
+[36mINFO: [00mLoading components from TestDB
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libRGBLUT.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCalib.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libImageWriter.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvContour.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.49.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libSequence.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvVideoWriter.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libsrcCameraOpenCV.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvFlann.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libsrcMovie.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvFilter2D.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libprocCvColorConv.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvCanny.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/TestDB/dist/lib/libCvUndistort.so containing CvUndistort component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libHSVLUT.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvHarris.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libprocCvWindow.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/TestDB/dist/lib/libTypesCircles.so: undefined symbol: returnName
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libprocCvSplit.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvMoments.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libprocCvMorphology.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: libboost_thread.so.1.49.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libSkeletonization.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libprocCvThreshold.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libSum.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvSolvePnP.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libCvBayesClassifier.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/TestDB/dist/lib/libprocCvGaussianBlur.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mLoading components from CvStereo
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libStereoEstimator.so containing StereoEstimator component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libDepthConventer.so containing DepthConventer component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libTransformParameterGenerator.so containing TransformParameterGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libDepthTransform.so containing DepthTransform component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libDepthRainbow.so containing DepthRainbow component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libTest.so containing Test component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libDepthProcessor.so containing DepthProcessor component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libCenterMassGenerator.so containing CenterMassGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libStereoSequence.so containing StereoSequence component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvStereo/dist/lib/libStereoWriter.so containing StereoWriter component was properly loaded.
+[36mINFO: [00mLoading components from DCL_ecovi
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[33mWARNING: [00mComponentManager: There are no components in /home/lzmuda/DCL/DCL_ecovi
+[36mINFO: [00mLoading components from CvBasic
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libRGBLUT.so containing RGBLUT component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCalib.so containing Calib component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvAdaptiveThreshold.so containing CvAdaptiveThreshold component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvBasic/dist/lib/libCvFreak.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvBasic/dist/lib/libCvBRISK.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libImageWriter.so containing ImageWriter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvFindChessboardCorners.so containing CvFindChessboardCorners component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvContour.so containing CvContour component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvBasic/dist/lib/libCvBruteForce.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libSequence.so containing Sequence component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvVideoWriter.so containing CvVideoWriter component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libsrcCameraOpenCV.so containing CameraOpenCV component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvFlann.so containing CvFlann component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libsrcMovie.so containing Movie component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvFilter2D.so containing CvFilter2D component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libprocCvColorConv.so containing CvColorConv component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvCanny.so containing CvCanny component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvUndistort.so containing CvUndistort component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libHSVLUT.so containing HSVLUT component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvHarris.so containing CvHarris component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvHoughCircles.so containing CvHoughCircles component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libprocCvWindow.so containing CvWindow component was properly loaded.
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/CvBasic/dist/lib/libTypesCircles.so: undefined symbol: returnName
+[36mINFO: [00mComponentFactory: Library open error: libopencv_nonfree.so.2.4: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libprocCvSplit.so containing CvSplit component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvBasic/dist/lib/libCvMSER.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvBasic/dist/lib/libCvORB.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvMoments.so containing CvMoments component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libprocCvMorphology.so containing CvMorphology component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvHoughLines.so containing CvHoughLines component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libTrigger.so containing Trigger component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/CvBasic/dist/lib/libCvBRIEF.so: undefined symbol: _ZN5boost6detail13once_epoch_cvE
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libSkeletonization.so containing Skeletonization component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libprocCvThreshold.so containing CvThreshold component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libSum.so containing Sum component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvSolvePnP.so containing CvSolvePnP component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libCvBayesClassifier.so containing CvBayesClassifier component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libViewSequence.so containing ViewSequence component was properly loaded.
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/CvBasic/dist/lib/libprocCvGaussianBlur.so containing CvGaussianBlur component was properly loaded.
+[36mINFO: [00mLoading components from Backend2
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/Backend2/dist/lib/libSequence.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/Backend2/dist/lib/libprocDB.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/Backend2/dist/lib/libprocCvWindow.so: undefined symbol: _ZN5boost6detail16once_epoch_mutexE
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/Backend2/dist/lib/libTypesCircles.so: undefined symbol: returnName
+[36mINFO: [00mComponentFactory: Library open error: /home/lzmuda/DCL/Backend2/dist/lib/libprocBackend2.so: undefined symbol: _ZTVN5mongo18DBClientConnectionE
+[36mINFO: [00mLoading components from PCL_mlaszko
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/PCL_mlaszko/dist/lib/libSIFTAdder.so containing SIFTAdder component was properly loaded.
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mComponentFactory: Library open error: libboost_system.so.1.54.0: cannot open shared object file: No such file or directory
+[36mINFO: [00mLoading components from ImageAcquisition
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m220[00m]: LIB_EXT = so
+
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/ImageAcquisition/dist/lib/libMaskGenerator.so containing MaskGenerator component was properly loaded.
+[36mINFO: [00mComponentFactory: Can't find returnName() in library: /home/lzmuda/DCL/ImageAcquisition/dist/lib/libTypesCircles.so: undefined symbol: returnName
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/ImageAcquisition/dist/lib/libObjectRotation.so containing ObjectRotation component was properly loaded.
+[36mINFO: [00mLoading components from DCL_CvBasic
+[36mINFO: [00mLoading component list from cache file...
+[36mINFO: [00mRGBLUT from libRGBLUT.so
+[36mINFO: [00mCalib from libCalib.so
+[36mINFO: [00mCvAdaptiveThreshold from libCvAdaptiveThreshold.so
+[36mINFO: [00mCvFreak from libCvFreak.so
+[36mINFO: [00mCvBRISK from libCvBRISK.so
+[36mINFO: [00mImageWriter from libImageWriter.so
+[36mINFO: [00mCvFindChessboardCorners from libCvFindChessboardCorners.so
+[36mINFO: [00mCvFAST from libCvFAST.so
+[36mINFO: [00mCvContour from libCvContour.so
+[36mINFO: [00mCvBruteForce from libCvBruteForce.so
+[36mINFO: [00mSequence from libSequence.so
+[36mINFO: [00mCvVideoWriter from libCvVideoWriter.so
+[36mINFO: [00mCameraOpenCV from libsrcCameraOpenCV.so
+[36mINFO: [00mCvFlann from libCvFlann.so
+[36mINFO: [00mMovie from libsrcMovie.so
+[36mINFO: [00mCvFilter2D from libCvFilter2D.so
+[36mINFO: [00mCvColorConv from libprocCvColorConv.so
+[36mINFO: [00mCvCanny from libCvCanny.so
+[36mINFO: [00mCvUndistort from libCvUndistort.so
+[36mINFO: [00mHSVLUT from libHSVLUT.so
+[36mINFO: [00mCvHarris from libCvHarris.so
+[36mINFO: [00mCvWindow from libprocCvWindow.so
+[36mINFO: [00mCvFindCirclesGrid from libCvFindCirclesGrid.so
+[36mINFO: [00mCvSplit from libprocCvSplit.so
+[36mINFO: [00mCvMSER from libCvMSER.so
+[36mINFO: [00mCvORB from libCvORB.so
+[36mINFO: [00mCvMoments from libCvMoments.so
+[36mINFO: [00mCvMorphology from libprocCvMorphology.so
+[36mINFO: [00mCvHoughLines from libCvHoughLines.so
+[36mINFO: [00mTrigger from libTrigger.so
+[36mINFO: [00mCvBRIEF from libCvBRIEF.so
+[36mINFO: [00mSkeletonization from libSkeletonization.so
+[36mINFO: [00mCvThreshold from libprocCvThreshold.so
+[36mINFO: [00mSum from libSum.so
+[36mINFO: [00mCvBayesClassifier from libCvBayesClassifier.so
+[36mINFO: [00mCvGaussianBlur from libprocCvGaussianBlur.so
+[36m[1mNOTICE: [00mFound 123 components in 13 DCLs.
+Kopiowanie TASKA!
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m155[00m]: Loading subtasks
+[33mWARNING: [00mSubtask Processing absent. Creating new one...
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m179[00m]: Created subtask Processing
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m194[00m]: Creating execution threads
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/ExecutorManager.hpp [[32m50[00m]: Processing executor created.
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m231[00m]: Loading required components
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m268[00m]: 		Source [PCDReader from PCL]
+[32mTRACE[00m in /home/lzmuda/DCL/PCL/src/Components/PCDReader/PCDReader.cpp [[32m25[00m]: Hi PCDReader
+
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m190[00m]: Source [PCDReader:PCL] component created
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m291[00m]: Loading properties
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m315[00m]: Property: filename=/home/lzmuda/PCL_Plane/table_scene_mug_stereo_texturedMod.pcd
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m315[00m]: Property: nodeTypeProp=SomXYZSift
+[33mWARNING: [00mComponent Source has no property named nodeTypeProp, but it is defined in task file.
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m268[00m]: 		NextImageTrigger [Trigger from DCL_CvBasic]
+[36mINFO: [00mComponentFactory: Dynamic library /home/lzmuda/DCL/DCL_CvBasic/dist/lib/libTrigger.so containing Trigger component was properly loaded.
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m190[00m]: NextImageTrigger [Trigger:DCL_CvBasic] component created
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m291[00m]: Loading properties
+[32m[1mDEBUG[00m in /home/lzmuda/DisCODe/src/Core/Configurator.cpp [[32m268[00m]: 		Writer [ModelWriter from MongoDB]
+[31mERROR: [00mComponent type ModelWriter not found in MongoDB
+[36m[1mNOTICE: [00mWhen creating component: Writer [MongoDB:ModelWriter]
+[32mTRACE[00m in /home/lzmuda/DisCODe/src/Core/ComponentManager.hpp [[32m66[00m]: ComponentManager: Goodbye public
+
+[31m[1mFATAL: [00mcreateComponent
+
+Backtrace (*nix):
+discode(_ZN6Common16DisCODeExceptionC1ERKSs+0x7e) [0x4cb5cc]
+discode(_ZN4Core16ComponentManager15createComponentERKSsS2_S2_+0x653) [0x4e9f3b]
+discode(_ZN4Core12Configurator14loadComponentsEPKN5boost13property_tree11basic_ptreeISsSsSt4lessISsEEERNS_8ExecutorE+0x93b) [0x4e5ff3]
+discode(_ZN4Core12Configurator13loadExecutorsEPKN5boost13property_tree11basic_ptreeISsSsSt4lessISsEEERNS_7SubtaskE+0x575) [0x4e545b]
+discode(_ZN4Core12Configurator12loadSubtasksEPKN5boost13property_tree11basic_ptreeISsSsSt4lessISsEEERNS_4TaskE+0x6c8) [0x4e4c30]
+discode(_ZN4Core12Configurator8loadTaskESsRKSt6vectorISt4pairISsSsESaIS3_EE+0x904) [0x4e3abe]
+discode(main+0x12a1) [0x51bad4]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf5) [0x7fe4bf9feec5]
+discode() [0x4c5d29]
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...
+An invalid file descriptor was given in one of the sets. (Perhaps a file descriptor that was already closed, or one on which an error has occurred.)
+Accept...

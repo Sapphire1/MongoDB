@@ -8,6 +8,16 @@
 #include "ViewWriter.hpp"
 #include <pcl/point_representation.h>
 #include <Eigen/Core>
+#include <boost/archive/tmpdir.hpp>
+
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/serialization.hpp>
+
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/utility.hpp>
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/assume_abstract.hpp>
 
 #define siftPointSize 133
 #define xyzPointSize 3
@@ -525,12 +535,47 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 	{
 		if(cloudType=="xyzrgb")
 		{
+			/*
+			bool showStatistics = true;
+			// for a full list of profiles see: /io/include/pcl/compression/compression_profiles.h
+			pcl::io::compression_Profiles_e compressionProfile = pcl::io::MED_RES_ONLINE_COMPRESSION_WITH_COLOR;
+			std::stringstream compressedData;
+			pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>* PointCloudEncoder;
+		    PointCloudEncoder = new pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB> (compressionProfile, showStatistics);
+			 // compress point cloud
+			PointCloudEncoder->encodePointCloud (cloudXYZRGB, compressedData);
+			compressedData.seekp(0, ios::end);
+			stringstream::pos_type offset = compressedData.tellp();
+			CLOG(LERROR)<< "Size of compressed data: "<< offset;
+			int intOffSet = (int)offset;
+			char* data = serializeTable(intOffSet, compressedData);
+
+			CLOG(LERROR)<< "data[0]: "<< data[0];
+			CLOG(LERROR)<< "data[1]: "<< data[1];
+			CLOG(LERROR)<< "data[2]: "<< data[2];
+			CLOG(LERROR)<< "data[3]: "<< data[3];
+			CLOG(LERROR)<< "data[4]: "<< data[4];
+			CLOG(LERROR)<< "data[5]: "<< data[5];
+			CLOG(LERROR)<< "data[6]: "<< data[6];
+			CLOG(LERROR)<< "data[7]: "<< data[7];
+			CLOG(LERROR)<< "data[8]: "<< data[8];
+			CLOG(LERROR)<< "data[9]: "<< data[9];
+			CLOG(LERROR)<< "data[10]: "<< data[10];
+			CLOG(LERROR)<< "data[11]: "<< data[11];
+
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, offset, mongo::BinDataGeneral, data).append("fileName", tempFileName).append("size", size).append("place", "collection").append("extension", fileType).obj();
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			c->insert(dbCollectionPath, b);
+			*/
+
 			int cloudSize = cloudXYZRGB->size();
 			int fieldsNr = xyzrgbPointSize*cloudSize;
 			int totalSize = fieldsNr*sizeof(float);
 			float buff[fieldsNr];
 
 			// copy all points to memory
+
 			for(int iter=0; iter<cloudSize; iter++)
 			{
 				const pcl::PointXYZRGB p = cloudXYZRGB->points[iter];
@@ -540,6 +585,8 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
+
+	//		delete (PointCloudEncoder);
 		}
 		else if(cloudType=="xyz")
 		{
@@ -607,7 +654,25 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 	cloudType="";
 }
 
+char* ViewWriter::serializeTable( int &length, 	std::stringstream& compressedData)
+{
+    std::istreambuf_iterator<char> itt(compressedData.rdbuf()), eos;
+    std::vector<char> serialVector;
+    serialVector.reserve(619999); // just a guess
+    while(itt != eos) {
+        char c = *itt++;
+        serialVector.push_back(c);
+    }
 
+    length = serialVector.size();
+
+    char *serial = new char[length];
+    for (int i=0;i<length;i++)
+    {
+        serial[i] = serialVector[i];
+    }
+    return serial;
+}
 
 void ViewWriter::insert2MongoDB(const string &destination, const string&  modelOrViewName, const string&  type,  const string&  fileType)
 {
