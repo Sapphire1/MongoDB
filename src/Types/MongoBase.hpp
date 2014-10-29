@@ -184,7 +184,9 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
 		c->insert(dbCollectionPath, document);
 		document.getObjectID(oi);
 		o=oi.__oid();
-
+		//docViewsNames.push_back("ToFRGBD");
+		//docViewsNames.push_back("ToFRX");
+		//docViewsNames.push_back("ToFRXM");
 		cout<< "Add to "<< *it<<" , this: "<<o.toString()<<" in "<<dbCollectionPath<<"\n";
 		if(*it=="Stereo" || *it=="Kinect" || *it=="ToF")
 			viewArrayBuilder.append(BSONObjBuilder().append("childOID", o.toString()).obj());
@@ -218,7 +220,7 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
     c->update(dbCollectionPath, Query(BSON("Type"<<"Stereo"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<stereoArr)), false, true);
     c->update(dbCollectionPath, Query(BSON("Type"<<"KinectPC"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<kinectPCArr)), false, true);
     c->update(dbCollectionPath, Query(BSON("Type"<<"StereoPC"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<stereoPC)), false, true);
-    c->update(dbCollectionPath, Query(BSON("Type"<<"ToFPCX"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<tofPCArr)), false, true);
+    c->update(dbCollectionPath, Query(BSON("Type"<<"ToFPC"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<tofPCArr)), false, true);
     cout<<"Init View 5 \n";
     c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
     c->createIndex(dbCollectionPath, BSON("ViewName"<<1));
@@ -459,8 +461,8 @@ void MongoBase::initViewNames()
 	docViewsNames.push_back("ToFPCXYZSIFT");
 	docViewsNames.push_back("ToFPCXYZSHOT");
 	docViewsNames.push_back("ToFRGBD");
-	docViewsNames.push_back("ToFSiRX");
-	docViewsNames.push_back("ToFSiRXM");
+	docViewsNames.push_back("ToFRX");
+	docViewsNames.push_back("ToFRXM");
 
 }
 
@@ -574,7 +576,7 @@ void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbColle
 }
 bool MongoBase::isViewLastLeaf(const string& nodeType)
 {
-	if(nodeType=="StereoPC" || nodeType=="StereoPCXYZRGB" || nodeType=="StereoPCXYZSIFT" || nodeType=="StereoPCXYZSHOT" || nodeType=="ToFPCXYZSIFT" || nodeType=="ToFPCXYZRGB" || nodeType=="ToFPCXYZRGB" || nodeType=="ToFPC" || nodeType=="ToFPCXYZSHOT" || nodeType=="KinectPCXYZSHOT"  || nodeType=="KinectPCXYZSIFT" || nodeType=="KinectPCXYZRGB" || nodeType=="KinectPC" || nodeType=="StereoLR" || nodeType=="KinectRGBD" || nodeType=="ToFRGBD" || nodeType=="StereoRX" || nodeType=="KinectRX" ||  nodeType=="ToFRX" || nodeType=="StereoRXM" || nodeType=="KinectRXM" || nodeType=="ToFRXM")
+	if(nodeType=="StereoPCXYZRGB" || nodeType=="StereoPCXYZSIFT" || nodeType=="StereoPCXYZSHOT" || nodeType=="ToFPCXYZSIFT" || nodeType=="ToFPCXYZRGB" || nodeType=="ToFPCXYZRGB"  || nodeType=="ToFPCXYZSHOT" || nodeType=="KinectPCXYZSHOT"  || nodeType=="KinectPCXYZSIFT" || nodeType=="KinectPCXYZRGB" || nodeType=="StereoLR" || nodeType=="KinectRGBD" || nodeType=="ToFRGBD" || nodeType=="StereoRX" || nodeType=="KinectRX" ||  nodeType=="ToFRX" || nodeType=="StereoRXM" || nodeType=="KinectRXM" || nodeType=="ToFRXM")
 		return true;
 	else
 		return false;

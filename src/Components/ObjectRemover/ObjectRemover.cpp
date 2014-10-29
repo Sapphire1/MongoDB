@@ -132,6 +132,26 @@ void ObjectRemover::removeFromMongoDB(string& nodeType,  string& modelOrViewName
 					CLOG(LFATAL)<<"Usuwamy: "<<docOID.toString();
 					c->remove(dbCollectionPath , Query(BSON("_id" << docOID)));
 					CLOG(LFATAL)<<"usunieto";
+
+					if(nodeType=="Object")
+					{
+						BSONElement oi;
+						objTemp.getObjectID(oi);
+						OID docOID = oi.__oid();
+						CLOG(LERROR)<<"remove from scenes";
+						vector<OID> scenesVector;
+						// get all scenes of object
+						int items =  getChildOIDS(obj, "sceneOIDs", "sceneOID", scenesVector);
+						for(std::vector<OID>::iterator it = scenesVector.begin(); it != scenesVector.end(); ++it)
+						{
+							BSONObj objFile = c->findOne(dbCollectionPath, Query(BSON("_id" << *it)), fieldsToReturn, queryOptions);
+							string sceneName = objFile.getField("SceneName").str();
+							// remove object from scene
+							CLOG(LERROR)<<"remove object from :"<<sceneName;
+
+							c->update(dbCollectionPath, Query(BSON("SceneName"<<sceneName)), BSON("$pull"<<BSON("objectsOIDs"<<BSON("objectOID"<<docOID.toString()))), false, true);
+						}
+					}
 				}//if
 				//if(nodeType=="SSOM")
 			//	{
