@@ -190,6 +190,7 @@ void ModelReader::loadModels(string& name_cloud, string& features_number, std::v
 	{
 		CLOG(LDEBUG) << "Create model";
 		SIFTObjectModel* model;
+		//TODO sprawdzic czy przypadkiem nie trzeba tworzyc modeli typu SSOM, to generuje tylko SOM
 		model = dynamic_cast<SIFTObjectModel*>(produce());
 		models.push_back(model);
 		name_cloud_xyzsift="";
@@ -216,8 +217,12 @@ void ModelReader::writeToSink(string& mime, string& tempFilename, string& fileNa
 		}
 		else if(fileName.find("txt")!=string::npos)
 		{
-			//TODO read text file
-			;
+			char *tempFileName = (char*)tempFilename.c_str();
+		    std::ifstream ifs(tempFileName); // open a file
+
+		    std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+		    //TODO przetestowac czy to dziala
+		    cipFileOut.write(str);
 		}
 		else
 			CLOG(LERROR)<<"Nie wiem co to za plik :/";
@@ -251,7 +256,7 @@ void ModelReader::readFile(const OID& childOID, std::vector<AbstractObject*>& mo
 		if(extension=="jpg" || extension=="png")
 		{
 			CLOG(LERROR)<<"Read image\n";
-			BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
+			//BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
 
 			int len;
 			uchar *data = (uchar*)obj[tempFileName].binData(len);
@@ -294,7 +299,7 @@ void ModelReader::readFile(const OID& childOID, std::vector<AbstractObject*>& mo
 			try
 			{
 				// TODO typ chmury odczytywac z pliku zapisanego w bazie a nie z nazwy pliku!!!
-				BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
+				//BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
 
 				const BSONObj *fieldsToReturn = 0;
 				int queryOptions = 0;
@@ -388,7 +393,7 @@ void ModelReader::readFile(const OID& childOID, std::vector<AbstractObject*>& mo
 			const BSONObj *fieldsToReturn = 0;
 			int queryOptions = 0;
 			// get bson object
-			BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
+			//BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
 			const char *buffer;
 
 			// get data to buffer
