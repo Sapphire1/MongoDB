@@ -736,64 +736,6 @@ void ViewWriter::insert2MongoDB(const string &destination, const string&  modelO
 			CLOG(LINFO)<<"Write to view";
 			writeNode2MongoDB(destination, type, modelOrViewName, fileType);
 		}
-		else
-		{
-			if(destination=="Model" || destination=="View")
-			{
-				if(nodeTypeProp=="Model" || nodeTypeProp=="View")
-				{
-					unsigned long long nr = c->count(dbCollectionPath, BSON("Type"<<type<<"ObjectName"<<objectName<<type+"Name"<<modelOrViewName),0,0,0);
-					if(nr>0)
-					{
-						CLOG(LERROR)<<type+" "<< modelOrViewName<<" exists in db for object "<<objectName;
-						return;
-					}
-					else
-					{
-						if(destination=="Model")
-							initModel(modelOrViewName, true, nodeTypeProp, objectName, description);
-						else if(destination=="View")
-							initView(modelOrViewName, true, nodeTypeProp, objectName, description);
-					}
-				}
-			}
-			findDocumentInCollection(*c, dbCollectionPath, objectName, destination, cursorCollection, modelOrViewName, type, items);
-			if(items>0)
-			{
-				while (cursorCollection->more())
-				{
-						BSONObj obj = cursorCollection->next();
-						CLOG(LTRACE)<< obj;
-						vector<OID> childsVector;
-						if(getChildOIDS(obj, "childOIDs", "childOID", childsVector)>0)
-						{
-							for (unsigned int i = 0; i<childsVector.size(); i++)
-							{
-								auto_ptr<DBClientCursor> childCursor =c->query(dbCollectionPath, Query(BSON("_id"<<childsVector[i])));
-								if( childCursor->more())
-								{
-									BSONObj childObj = childCursor->next();
-									string childNodeName = childObj.getField("Type").str();
-									CLOG(LINFO)<< "childNodeName: "<<childNodeName;
-									if(childNodeName!="EOO")
-									{
-										if(childNodeName=="View"||childNodeName=="Model")
-										{
-											string newName;
-											setModelOrViewName(childNodeName, childObj, newName);
-											insert2MongoDB(childNodeName, newName, type, fileType);
-										}
-										else
-											insert2MongoDB(childNodeName, modelOrViewName, type, fileType);
-									}
-								}
-							}
-						}
-				}//while
-			}
-			else
-				CLOG(LTRACE)<"Wrong name";
-		}//else
     }//try
 	catch(DBException &e)
 	{

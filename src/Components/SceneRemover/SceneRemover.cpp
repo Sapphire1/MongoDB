@@ -19,11 +19,6 @@ SceneRemover::SceneRemover(const std::string & name) : Base::Component(name),
 		mongoDBHost("mongoDBHost", string("localhost")),
 		sceneName("sceneName", string("scene3")),
 		collectionName("collectionName", string("containers"))
-		//nodeTypeProp("nodeType", string("")),//StereoLR, SomXYZRgb, Object
-		//viewOrModelName("viewOrModelName", string("")),//lab012,
-		//type("type", string("Object")),	//"View", "Model", ""
-//		modelType("modelType", string(""))//"SSOM","SOM", ""
-//		modelType("modelType", string("SSOM"))
 {
 		registerProperty(mongoDBHost);
 		registerProperty(sceneName);
