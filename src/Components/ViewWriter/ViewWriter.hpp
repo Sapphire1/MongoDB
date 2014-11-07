@@ -105,7 +105,7 @@ private:
         Base::Property<int> mean_viewpoint_features_number;
         Base::Property<string> remoteFileName;
         std::vector<std::string> splitedSceneNames;
-        Base::Property<string> nodeTypeProp;
+        Base::Property<string> nodeNameProp;
         Base::Property<bool> binary;
 		Base::Property<bool> suffix;
 		string cloudType;

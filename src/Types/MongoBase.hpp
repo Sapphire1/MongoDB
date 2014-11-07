@@ -104,9 +104,9 @@ public:
 	void setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName);
     void getFileFromGrid(const GridFile &, const string &);
     void addScenes(BSONObj& object, Base::Property<string>& objectName);
-    void initModel(const string & modelName, bool addToModelFlag, Base::Property<string>& nodeTypeProp, Base::Property<string>& objectName, Base::Property<string>& description);
-    void addToObject(const Base::Property<string>& nodeTypeProp,const string & name, Base::Property<string>& objectName, Base::Property<string>& description);
-    void initView(const string & viewName, bool addToObjectFlag, Base::Property<string>& nodeTypeProp, Base::Property<string>& objectName, Base::Property<string>& description);
+    void initModel(const string & modelName, bool addToModelFlag, Base::Property<string>& nodeNameProp, Base::Property<string>& objectName, Base::Property<string>& description);
+    void addToObject(const Base::Property<string>& nodeNameProp,const string & name, Base::Property<string>& objectName, Base::Property<string>& description);
+    void initView(const string & viewName, bool addToObjectFlag, Base::Property<string>& nodeNameProp, Base::Property<string>& objectName, Base::Property<string>& description);
     void cloudEncoding(OID& oid, string& tempFileName, string & cloudType);
 };
 
@@ -165,7 +165,7 @@ void MongoBase::cloudEncoding(OID& oid, string& tempFileName, string & cloudType
 		cout<<"ViewWriter::insertFileIntoCollection: END";
 	}catch(Exception &ex){cout<<ex.what();}
 }
-void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Property<string>& nodeTypeProp, Base::Property<string>& objectName, Base::Property<string>& description)
+void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Property<string>& nodeNameProp, Base::Property<string>& objectName, Base::Property<string>& description)
 {
 	BSONElement oi;
     OID o;
@@ -174,7 +174,7 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
     //add view to object
     if(addToObjectFlag)
     {
-    	addToObject(nodeTypeProp, viewName, objectName, description);
+    	addToObject(nodeNameProp, viewName, objectName, description);
     	cout<<"Init View 11\n";
     }
     cout<<"Init View2\n";
@@ -228,7 +228,7 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
     cout<<"Init View 6\n";
 }
 
-void MongoBase::addToObject(const Base::Property<string>& nodeTypeProp,const string & name, Base::Property<string>& objectName, Base::Property<string>& description)
+void MongoBase::addToObject(const Base::Property<string>& nodeNameProp,const string & name, Base::Property<string>& objectName, Base::Property<string>& description)
 {
 	cout<<"Create View";
 	int options=0;
@@ -237,13 +237,13 @@ void MongoBase::addToObject(const Base::Property<string>& nodeTypeProp,const str
 	BSONElement oi;
 	OID o;
 	string type;
-	string nodeType;
-	nodeType = nodeTypeProp;
-	if(nodeType=="View"||nodeType=="Model")
-		type=nodeType;
-	else if(isModelLastLeaf(nodeTypeProp))
+	string nodeName;
+	nodeName = nodeNameProp;
+	if(nodeName=="View"||nodeName=="Model")
+		type=nodeName;
+	else if(isModelLastLeaf(nodeNameProp))
 		type="Model";
-	else if(isViewLastLeaf(nodeTypeProp))
+	else if(isViewLastLeaf(nodeNameProp))
 		type="View";
 	//CLOG(LTRACE)<<"Type: " <<type;
 
@@ -339,7 +339,7 @@ void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
 }
 
 
-void MongoBase::initModel(const string & modelName, bool addToModelFlag,  Base::Property<string>& nodeTypeProp, Base::Property<string>& objectName, Base::Property<string>& description)
+void MongoBase::initModel(const string & modelName, bool addToModelFlag,  Base::Property<string>& nodeNameProp, Base::Property<string>& objectName, Base::Property<string>& description)
 {
 	//CLOG(LTRACE)<<"initModel";
 	BSONElement oi;
@@ -348,7 +348,7 @@ void MongoBase::initModel(const string & modelName, bool addToModelFlag,  Base::
 
 	if(addToModelFlag)
 	{
-		addToObject(nodeTypeProp, modelName, objectName, description);
+		addToObject(nodeNameProp, modelName, objectName, description);
 	}
 
 	for(std::vector<string>::iterator it = docModelsNames.begin(); it != docModelsNames.end(); ++it){
@@ -523,7 +523,7 @@ int MongoBase::getChildOIDS(BSONObj &obj, const string & fieldName, const string
 		return 0;
 }
 
-void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbCollectionPath, Base::Property<string>& objectName, const string &nodeType, auto_ptr<DBClientCursor> & cursorCollection, const string & modelOrViewName, const string & type, int& items)
+void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbCollectionPath, Base::Property<string>& objectName, const string &nodeName, auto_ptr<DBClientCursor> & cursorCollection, const string & modelOrViewName, const string & type, int& items)
 {
 	int options=0;
 	int limit=0;
@@ -536,34 +536,34 @@ void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbColle
 			  if(type=="View")
 			  {
 				  std::cout<<"\nView\n";
-				  items = c.count(dbCollectionPath, (BSON("Type"<<nodeType<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName)), options, limit, skip);
+				  items = c.count(dbCollectionPath, (BSON("Type"<<nodeName<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName)), options, limit, skip);
 				  if(items>0)
-					  cursorCollection =c.query(dbCollectionPath, (Query(BSON("Type"<<nodeType<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName))));
+					  cursorCollection =c.query(dbCollectionPath, (Query(BSON("Type"<<nodeName<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName))));
 			  }
 			  else if(type=="Model")
 			  {
 				  std::cout<<"\nModel\n";
-				  items = c.count(dbCollectionPath, BSON("Type"<<nodeType<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName), options, limit, skip);
+				  items = c.count(dbCollectionPath, BSON("Type"<<nodeName<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName), options, limit, skip);
 				  if (items>0)
-					  cursorCollection =c.query(dbCollectionPath, Query(BSON("Type"<<nodeType<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName)));
+					  cursorCollection =c.query(dbCollectionPath, Query(BSON("Type"<<nodeName<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName)));
 			  }
 			  else
 			  {
-				  items = c.count(dbCollectionPath, BSON("Type"<<nodeType<<"ObjectName"<<objectName<<type<<modelOrViewName), options, limit, skip);
+				  items = c.count(dbCollectionPath, BSON("Type"<<nodeName<<"ObjectName"<<objectName<<type<<modelOrViewName), options, limit, skip);
 
 				  if(items>0)
-					  cursorCollection =c.query(dbCollectionPath, (Query(BSON("Type"<<nodeType<<"ObjectName"<<objectName<<type<<modelOrViewName))));
+					  cursorCollection =c.query(dbCollectionPath, (Query(BSON("Type"<<nodeName<<"ObjectName"<<objectName<<type<<modelOrViewName))));
 			  }
 		  }
     	  else
     	  {
     		  std::cout<<"\nObject\n";
-			  std::cout<<"Type"<<nodeType<<"\tObjectName"<<objectName<<"\n";
+			  std::cout<<"Type"<<nodeName<<"\tObjectName"<<objectName<<"\n";
 
-    		  items = c.count(dbCollectionPath, BSON("Type"<<nodeType<<"ObjectName"<<objectName), options, limit, skip);
+    		  items = c.count(dbCollectionPath, BSON("Type"<<nodeName<<"ObjectName"<<objectName), options, limit, skip);
     		  cout<<"items: "<<items<<"\n";
     		  if(items>0)
-    			  cursorCollection =c.query(dbCollectionPath, (Query(BSON("Type"<<nodeType<<"ObjectName"<<objectName))));
+    			  cursorCollection =c.query(dbCollectionPath, (Query(BSON("Type"<<nodeName<<"ObjectName"<<objectName))));
     	  }
     	 }
       catch(DBException &e)
@@ -574,17 +574,17 @@ void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbColle
 
       return;
 }
-bool MongoBase::isViewLastLeaf(const string& nodeType)
+bool MongoBase::isViewLastLeaf(const string& nodeName)
 {
-	if(nodeType=="StereoPCXYZRGB" || nodeType=="StereoPCXYZSIFT" || nodeType=="StereoPCXYZSHOT" || nodeType=="ToFPCXYZSIFT" || nodeType=="ToFPCXYZRGB" || nodeType=="ToFPCXYZRGB"  || nodeType=="ToFPCXYZSHOT" || nodeType=="KinectPCXYZSHOT"  || nodeType=="KinectPCXYZSIFT" || nodeType=="KinectPCXYZRGB" || nodeType=="StereoLR" || nodeType=="KinectRGBD" || nodeType=="ToFRGBD" || nodeType=="StereoRX" || nodeType=="KinectRX" ||  nodeType=="ToFRX" || nodeType=="StereoRXM" || nodeType=="KinectRXM" || nodeType=="ToFRXM")
+	if(nodeName=="StereoPCXYZRGB" || nodeName=="StereoPCXYZSIFT" || nodeName=="StereoPCXYZSHOT" || nodeName=="ToFPCXYZSIFT" || nodeName=="ToFPCXYZRGB" || nodeName=="ToFPCXYZRGB"  || nodeName=="ToFPCXYZSHOT" || nodeName=="KinectPCXYZSHOT"  || nodeName=="KinectPCXYZSIFT" || nodeName=="KinectPCXYZRGB" || nodeName=="StereoLR" || nodeName=="KinectRGBD" || nodeName=="ToFRGBD" || nodeName=="StereoRX" || nodeName=="KinectRX" ||  nodeName=="ToFRX" || nodeName=="StereoRXM" || nodeName=="KinectRXM" || nodeName=="ToFRXM")
 		return true;
 	else
 		return false;
 }
 
-bool MongoBase::isModelLastLeaf(const string& nodeType)
+bool MongoBase::isModelLastLeaf(const string& nodeName)
 {
-	if(nodeType=="SomXYZRgb" || nodeType=="SomXYZSift" ||  nodeType=="SsomXYZRgb" || nodeType=="SsomXYZSift" || nodeType=="SsomXYZShot")
+	if(nodeName=="SomXYZRgb" || nodeName=="SomXYZSift" ||  nodeName=="SsomXYZRgb" || nodeName=="SsomXYZSift" || nodeName=="SsomXYZShot")
 		return true;
 	else
 		return false;

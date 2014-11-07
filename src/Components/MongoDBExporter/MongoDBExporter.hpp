@@ -89,7 +89,7 @@ private:
         Base::Property<string> description;
         Base::Property<string> collectionName;
         Base::Property<string> extensions;
-        Base::Property<string> nodeTypeProp;
+        Base::Property<string> nodeNameProp;
         Base::Property<string> folderName;
         Base::Property<string> viewNameProp;
         Base::Property<string> modelNameProp;
@@ -110,7 +110,7 @@ private:
         //void initView(const string &, bool);
         //void initModel(const string &, bool);
         void insertFileToGrid(const std::vector<string>::iterator, const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
-        //void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
+        //void addToObject(const Base::Property<string> & nodeNameProp, const string &);
         //void addScenes(BSONObj&);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
 };

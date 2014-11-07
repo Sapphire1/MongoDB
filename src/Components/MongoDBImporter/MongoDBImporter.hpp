@@ -89,7 +89,7 @@ private:
         Base::Property<string> mongoDBHost;
         Base::Property<string> objectName;
         Base::Property<string> collectionName;
-        Base::Property<string> nodeTypeProp;
+        Base::Property<string> nodeNameProp;
         Base::Property<string> folderName;
         Base::Property<string> viewOrModelName;
         Base::Property<string> type;
@@ -100,7 +100,7 @@ private:
         void readFromMongoDB(const string&, const string&, const string&);
         void readfromDB();
         void readFile(const string&, const string&, const string&, const OID&);
-        void getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeType, const string& type);
+        void getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeName, const string& type);
         void run();
 };
 }//: namespace MongoDBImporter

@@ -19,7 +19,7 @@ ObjectRemover::ObjectRemover(const std::string & name) : Base::Component(name),
 		mongoDBHost("mongoDBHost", string("localhost")),
 		objectName("objectName", string("GreenCup")),
 		collectionName("collectionName", string("containers")),
-		nodeTypeProp("nodeType", string("")),//StereoLR, SomXYZRgb, Object
+		nodeNameProp("nodeName", string("")),//StereoLR, SomXYZRgb, Object
 		viewOrModelName("viewOrModelName", string("")),//lab012,
 		type("type", string("Object")),	//"View", "Model", ""
 		modelType("modelType", string(""))//"SSOM","SOM", ""
@@ -28,7 +28,7 @@ ObjectRemover::ObjectRemover(const std::string & name) : Base::Component(name),
 		registerProperty(mongoDBHost);
 		registerProperty(objectName);
 		registerProperty(collectionName);
-		registerProperty(nodeTypeProp);
+		registerProperty(nodeNameProp);
 		registerProperty(viewOrModelName);
 		registerProperty(modelType);
 		registerProperty(type);
@@ -45,10 +45,10 @@ ObjectRemover::~ObjectRemover()
 void ObjectRemover::readfromDB()
 {
 	CLOG(LNOTICE) << "ObjectRemover::readfromDB";
-	string nodeType = (string)nodeTypeProp;
+	string nodeName = (string)nodeNameProp;
 	string viewmodelName = (string)viewOrModelName;
 	string typeString = (string)type;
-	removeFromMongoDB(nodeType, viewmodelName, typeString);
+	removeFromMongoDB(nodeName, viewmodelName, typeString);
 }
 void ObjectRemover::prepareInterface() {
 	CLOG(LTRACE) << "ObjectRemover::prepareInterface";
@@ -96,14 +96,14 @@ bool ObjectRemover::onStart()
         return true;
 }
 
-void ObjectRemover::removeFromMongoDB(string& nodeType,  string& modelOrViewName, string& type)
+void ObjectRemover::removeFromMongoDB(string& nodeName,  string& modelOrViewName, string& type)
 {
 	CLOG(LTRACE)<<"ObjectRemover::readFromMongoDB";
 	string name;
 	std::vector<AbstractObject*> models;
 	try{
 		int items=0;
-		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
+		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeName, cursorCollection, modelOrViewName, type, items);
 		if(items>0)
 		{
 			CLOG(LINFO)<<"Founded some data";
@@ -119,10 +119,10 @@ void ObjectRemover::removeFromMongoDB(string& nodeType,  string& modelOrViewName
 				const BSONObj *fieldsToReturn = 0;
 
 				//TODO add remove from objects from scenes
-				if(!obj.isEmpty() && nodeTypeProp=="Object")
+				if(!obj.isEmpty() && nodeNameProp=="Object")
 				{
 
-					CLOG(LFATAL)<<"Type: "<<nodeType;
+					CLOG(LFATAL)<<"Type: "<<nodeName;
 					CLOG(LFATAL)<<"Object: "<<objTemp;
 					//remove document
 					BSONElement oi;
@@ -133,7 +133,7 @@ void ObjectRemover::removeFromMongoDB(string& nodeType,  string& modelOrViewName
 					c->remove(dbCollectionPath , Query(BSON("_id" << docOID)));
 					CLOG(LFATAL)<<"usunieto";
 
-					if(nodeType=="Object")
+					if(nodeName=="Object")
 					{
 						BSONElement oi;
 						objTemp.getObjectID(oi);
@@ -153,15 +153,15 @@ void ObjectRemover::removeFromMongoDB(string& nodeType,  string& modelOrViewName
 						}
 					}
 				}//if
-				//if(nodeType=="SSOM")
+				//if(nodeName=="SSOM")
 			//	{
-					CLOG(LFATAL)<<"Type: "<<nodeType;
+					CLOG(LFATAL)<<"Type: "<<nodeName;
 					CLOG(LFATAL)<<"Object:"<<obj;
 		//		}
 
 				if(items>0)
 				{
-					if(isViewLastLeaf(nodeType) || isModelLastLeaf(nodeType))
+					if(isViewLastLeaf(nodeName) || isModelLastLeaf(nodeName))
 					{
 						// remove all files from grid or collection included in childVector<OID&> and remove them from actual document
 
@@ -169,7 +169,7 @@ void ObjectRemover::removeFromMongoDB(string& nodeType,  string& modelOrViewName
 						{
 							// remove ids from table
 							CLOG(LERROR)<<"Remove oids : "<<it->toString() << " from table";
-							c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<nodeType)), BSON("$pull"<<BSON("childOIDs"<<BSON("childOID"<<it->toString()))), false, true);
+							c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<nodeName)), BSON("$pull"<<BSON("childOIDs"<<BSON("childOID"<<it->toString()))), false, true);
 
 							BSONObj objFile = c->findOne(dbCollectionPath, Query(BSON("_id" << *it)), fieldsToReturn, queryOptions);
 							string place = objFile.getField("place").str();
@@ -228,10 +228,10 @@ void ObjectRemover::removeFromMongoDB(string& nodeType,  string& modelOrViewName
 									}
 									else if(childNodeName=="SOM" || childNodeName=="SSOM")
 									{
-										CLOG(LINFO)<<"nodeTypeProp: "<<nodeTypeProp;
-										if(modelType==childNodeName || nodeTypeProp=="Object")
+										CLOG(LINFO)<<"nodeNameProp: "<<nodeNameProp;
+										if(modelType==childNodeName || nodeNameProp=="Object")
 										{
-											CLOG(LINFO)<<"modelType==childNodeName || nodeTypeProp==Object";
+											CLOG(LINFO)<<"modelType==childNodeName || nodeNameProp==Object";
 											removeFromMongoDB(childNodeName, modelOrViewName, type);
 										}
 									}
@@ -247,13 +247,13 @@ void ObjectRemover::removeFromMongoDB(string& nodeType,  string& modelOrViewName
 		else
 		{
 			CLOG(LTRACE)<<"10";
-			if(nodeTypeProp==nodeType)
+			if(nodeNameProp==nodeName)
 				CLOG(LERROR)<<"Wrong name";
 			CLOG(LTRACE)<<"No results";
 		}
 		/*
 		// stworz model i wyslij do sinka, jesli przegladanie drzewa jest zakonczone
-		if(nodeTypeProp==nodeType)
+		if(nodeNameProp==nodeName)
 		{
 			readAllFilesTriggered();
 		}

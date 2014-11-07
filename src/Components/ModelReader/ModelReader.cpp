@@ -19,19 +19,23 @@ ModelReader::ModelReader(const std::string & name) : Base::Component(name),
 		mongoDBHost("mongoDBHost", string("localhost")),
 		objectName("objectName", string("GreenCup")),
 		collectionName("collectionName", string("containers")),
-		nodeTypeProp("nodeType", string("Object")),
+		nodeNameProp("nodeName", string("Object")),
 		viewOrModelName("viewOrModelName", string("lab012")),
-		type("type", string("")),
+		//type("type", string("")),
 		modelType("modelType", string("SOM"))
 //		modelType("modelType", string("SSOM"))
 {
 		registerProperty(mongoDBHost);
 		registerProperty(objectName);
 		registerProperty(collectionName);
-		registerProperty(nodeTypeProp);
+		registerProperty(nodeNameProp);
 		registerProperty(viewOrModelName);
 		registerProperty(modelType);
         CLOG(LTRACE) << "Hello ModelReader";
+        if(nodeNameProp=="Object")
+        	type="";
+        else
+        	type="Model";
 
         //base = new MongoBase::MongoBase();
 }
@@ -44,7 +48,7 @@ ModelReader::~ModelReader()
 void ModelReader::readfromDB()
 {
 	CLOG(LNOTICE) << "ModelReader::readfromDB";
-	readFromMongoDB(nodeTypeProp, viewOrModelName, type);
+	readFromMongoDB(nodeNameProp, viewOrModelName, type);
 }
 void ModelReader::prepareInterface() {
 	CLOG(LTRACE) << "ModelReader::prepareInterface";
@@ -170,7 +174,7 @@ void ModelReader::ReadPCDCloudFromFile(const string& filename, const string& tem
 void ModelReader::loadModels(string& name_cloud, string& features_number, std::vector<AbstractObject*>& models) {
 	CLOG(LTRACE) << "SOMJSONReader::loadModels()";
 
-	model_name = nodeTypeProp;
+	model_name = nodeNameProp;
 	if(name_cloud.find("xyzrgb")!=string::npos)
 		name_cloud_xyzrgb = name_cloud;
 	else if(name_cloud.find("xyzsift")!=string::npos)
@@ -440,14 +444,14 @@ void ModelReader::readFile(const OID& childOID, std::vector<AbstractObject*>& mo
 	}
 }
 
-void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrViewName, const string& type)
+void ModelReader::readFromMongoDB(const string& nodeName, const string& modelOrViewName, const string& type)
 {
 	CLOG(LTRACE)<<"ModelReader::readFromMongoDB";
 	string name;
 	std::vector<AbstractObject*> models;
 	try{
 		int items=0;
-		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
+		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeName, cursorCollection, modelOrViewName, type, items);
 		if(items>0)
 		{
 			CLOG(LINFO)<<"Founded some data";
@@ -460,7 +464,7 @@ void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrV
 				// if node has a child
 				if(items>0)
 				{
-					if(isViewLastLeaf(nodeType) || isModelLastLeaf(nodeType))
+					if(isViewLastLeaf(nodeName) || isModelLastLeaf(nodeName))
 						addToAllChilds(childsVector);
 					else
 					{
@@ -506,13 +510,13 @@ void ModelReader::readFromMongoDB(const string& nodeType, const string& modelOrV
 		else
 		{
 			CLOG(LTRACE)<<"10";
-			if(nodeTypeProp==nodeType)
+			if(nodeNameProp==nodeName)
 				CLOG(LERROR)<<"Wrong name";
 			CLOG(LTRACE)<<"No results";
 		}
 		/*
 		// stworz model i wyslij do sinka, jesli przegladanie drzewa jest zakonczone
-		if(nodeTypeProp==nodeType)
+		if(nodeNameProp==nodeName)
 		{
 			readAllFilesTriggered();
 		}

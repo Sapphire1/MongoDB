@@ -89,7 +89,7 @@ private:
         Base::Property<string> objectName;
         Base::Property<string> description;
         Base::Property<string> collectionName;
-        Base::Property<string> nodeTypeProp;
+        Base::Property<string> nodeNameProp;
         Base::Property<string> sceneNamesProp;
         //string sceneName;
         std::vector<std::string> splitedSceneNames;
@@ -105,7 +105,7 @@ private:
         void initView(const string &, bool);
         void initModel(const string &, bool);
         void insertFileToGrid(const std::vector<string>::iterator, const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
-        void addToObject(const Base::Property<string> & nodeTypeProp, const string &);
+        void addToObject(const Base::Property<string> & nodeNameProp, const string &);
         void addScenes(BSONObj&);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
 };

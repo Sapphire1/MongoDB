@@ -21,17 +21,19 @@ ViewReader::ViewReader(const std::string & name) : Base::Component(name),
 		mongoDBHost("mongoDBHost", string("localhost")),
 		objectName("objectName", string("GreenCup")),
 		collectionName("collectionName", string("containers")),
-		nodeTypeProp("nodeType", string("StereoLR")),
-		viewOrModelName("viewName", string("lab012")),
-		type("type", string("View"))
+		nodeNameProp("nodeName", string("StereoLR")),
+		viewOrModelName("viewName", string("lab012"))
 {
 		registerProperty(mongoDBHost);
 		registerProperty(objectName);
 		registerProperty(collectionName);
-		registerProperty(nodeTypeProp);
+		registerProperty(nodeNameProp);
 		registerProperty(viewOrModelName);
-		registerProperty(type);
 		this->position=0;
+		if(nodeNameProp=="Object")
+			type="";
+		else
+			type="View";
         CLOG(LTRACE) << "Hello ViewReader";
 }
 
@@ -43,7 +45,7 @@ ViewReader::~ViewReader()
 void ViewReader::readfromDB()
 {
 	CLOG(LNOTICE) << "ViewReader::readfromDB";
-	readFromMongoDB(nodeTypeProp, viewOrModelName, type);
+	readFromMongoDB(nodeNameProp, viewOrModelName, type);
 }
 void ViewReader::prepareInterface() {
         CLOG(LTRACE) << "ViewReader::prepareInterface";
@@ -510,13 +512,13 @@ void ViewReader::readFile(OID& childOID)
 	}
 }
 
-void ViewReader::readFromMongoDB(const string& nodeType, const string& modelOrViewName, const string& type)
+void ViewReader::readFromMongoDB(const string& nodeName, const string& modelOrViewName, const string& type)
 {
 	CLOG(LTRACE)<<"ViewReader::readFromMongoDB";
 	string name;
 	try{
 		int items=0;
-		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
+		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeName, cursorCollection, modelOrViewName, type, items);
 		if(items>0)
 		{
 			CLOG(LINFO)<<"Founded some data";
@@ -528,7 +530,7 @@ void ViewReader::readFromMongoDB(const string& nodeType, const string& modelOrVi
 				int items =  getChildOIDS(obj, "childOIDs", "childOID", childsVector);
 				if(items>0)
 				{
-					if(isViewLastLeaf(nodeType) || isModelLastLeaf(nodeType))
+					if(isViewLastLeaf(nodeName) || isModelLastLeaf(nodeName))
 						addToAllChilds(childsVector);
 					else
 					{
@@ -560,7 +562,7 @@ void ViewReader::readFromMongoDB(const string& nodeType, const string& modelOrVi
 		else
 		{
 			CLOG(LTRACE)<<"10";
-			if(nodeTypeProp==nodeType)
+			if(nodeNameProp==nodeName)
 				CLOG(LERROR)<<"Wrong name";
 			CLOG(LTRACE)<<"No results";
 		}

@@ -97,7 +97,7 @@ private:
         Base::Property<string> mongoDBHost;
         Base::Property<string> objectName;
         Base::Property<string> collectionName;
-        Base::Property<string> nodeTypeProp;
+        Base::Property<string> nodeNameProp;
         Base::Property<string> viewOrModelName;
         Base::Property<string> modelType;
         Base::Property<string> type;

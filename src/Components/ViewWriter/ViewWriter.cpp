@@ -39,7 +39,7 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	collectionName("collectionName", string("containers")),
 	viewNameProp("viewName", string("lab012")),
 	fileName("fileName", string("tempFile")),
-	nodeTypeProp("nodeTypeProp", string("StereoLR")),
+	nodeNameProp("nodeNameProp", string("StereoLR")),
 	remoteFileName("remoteFileName", string("sweetFoto")),
 	mean_viewpoint_features_number("mean_viewpoint_features_number", int(12)),
 	sceneNamesProp("sceneNamesProp", string("scene1,scene2,scene3")),
@@ -54,7 +54,7 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	registerProperty(viewNameProp);
 	registerProperty(sceneNamesProp);
 	registerProperty(fileName);
-	registerProperty(nodeTypeProp);
+	registerProperty(nodeNameProp);
 	registerProperty(remoteFileName);
 	registerProperty(binary);
 	registerProperty(suffix);
@@ -100,7 +100,7 @@ void ViewWriter::writeTXT2DB()
 	boost::split(MongoBase::splitedSceneNames, sceneNames, is_any_of(","));
 	string fileType = "txt";
 	if(viewNameProp!="")
-		insert2MongoDB(nodeTypeProp,viewNameProp, "View", fileType);
+		insert2MongoDB(nodeNameProp,viewNameProp, "View", fileType);
 	else
 		CLOG(LERROR)<<"Add view name and try again";
 }
@@ -112,7 +112,7 @@ void ViewWriter::writeImage2DB()
 	boost::split(MongoBase::splitedSceneNames, sceneNames, is_any_of(","));
 	string fileType = "png";
 	if(viewNameProp!="")
-		insert2MongoDB(nodeTypeProp,viewNameProp, "View", fileType);
+		insert2MongoDB(nodeNameProp,viewNameProp, "View", fileType);
 	else
 		CLOG(LERROR)<<"Add view name and try again";
 }
@@ -125,7 +125,7 @@ void ViewWriter::writePCD2DB()
 	CLOG(LERROR)<<"cloudType: "<<cloudType;
 	string fileType = "pcd";
 	if(viewNameProp!="")
-		insert2MongoDB(nodeTypeProp,viewNameProp, "View", fileType);
+		insert2MongoDB(nodeNameProp,viewNameProp, "View", fileType);
 	else
 		CLOG(LERROR)<<"Add view name and try again";
 }
@@ -294,9 +294,9 @@ void ViewWriter::createModelOrView(const std::vector<string>::iterator it, const
 	OID oid=bsonElement.__oid();
 	bsonBuilder.append(BSONObjBuilder().append("childOID", oid.toString()).obj());
 	if(type=="Model")
-		initModel(*it, true, nodeTypeProp, objectName, description);
+		initModel(*it, true, nodeNameProp, objectName, description);
 	else if(type=="View")
-		initView(*it, true, nodeTypeProp, objectName, description);
+		initView(*it, true, nodeNameProp, objectName, description);
 }
 
 void ViewWriter::initObject()
@@ -455,15 +455,14 @@ void ViewWriter::writeNode2MongoDB(const string &destination, const string &type
     try{
     	string tempFileName="";
     	float sizeOfFile = getFileSize(fileType, tempFileName);
-    	//TODO odwrocic ta relacje
-    	if(sizeOfFile<15)
+    	if(sizeOfFile>15)
     	{
-    	//	CLOG(LERROR)<<"ViewWriter::writeNode2MongoDB, cloudType: "<<cloudType;
-		//	insertFileIntoGrid(oid, fileType, tempFileName);
-		//	c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
+    		CLOG(LERROR)<<"ViewWriter::writeNode2MongoDB, cloudType: "<<cloudType;
+			insertFileIntoGrid(oid, fileType, tempFileName);
+			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
     	}
-    	//TODO dodac tego else'a!!!
-		//else
+		else
+		{
 			CLOG(LERROR)<<"ViewWriter::writeNode2MongoDB, cloudType: "<<cloudType;
 			if(sizeOfFile>0.0)
 			{
@@ -472,6 +471,7 @@ void ViewWriter::writeNode2MongoDB(const string &destination, const string &type
 				CLOG(LERROR)<<"UPDATE: "<<oid.toString();
 				c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
 			}
+		}
 		CLOG(LTRACE) <<"File saved successfully";
     }
 	catch(DBException &e)
@@ -716,7 +716,7 @@ void ViewWriter::insert2MongoDB(const string &destination, const string&  modelO
 				{
 					CLOG(LTRACE)<<"No such model/view";
 					CLOG(LTRACE)<<"Type: "<<type;
-					initView(modelOrViewName, true, nodeTypeProp, objectName, description);
+					initView(modelOrViewName, true, nodeNameProp, objectName, description);
 				}
 				cursorCollection = c->query(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName)));
 				BSONObj obj;

@@ -26,7 +26,7 @@ ModelWriter::ModelWriter(const string & name) : Base::Component(name),
 		collectionName("collectionName", string("containers")),
 		modelNameProp("modelName", string("lab012")),
 		fileName("fileName", string("tempFile")),
-		nodeTypeProp("nodeTypeProp", string("SomXYZRgb")),
+		nodeNameProp("nodeNameProp", string("SomXYZRgb")),
 		remoteFileName("remoteFileName", string("sweetCloud")),
 		sceneNamesProp("sceneNamesProp", string("scene1,scene2,scene3")),
 		mean_viewpoint_features_number("mean_viewpoint_features_number", int(12)),
@@ -41,7 +41,7 @@ ModelWriter::ModelWriter(const string & name) : Base::Component(name),
 	registerProperty(modelNameProp);
 	registerProperty(sceneNamesProp);
 	registerProperty(fileName);
-	registerProperty(nodeTypeProp);
+	registerProperty(nodeNameProp);
 	registerProperty(remoteFileName);
 	registerProperty(binary);
 	registerProperty(suffix);
@@ -84,7 +84,7 @@ void ModelWriter::writePCD2DB()
 	CLOG(LERROR)<<"cloudType: "<<cloudType;
 	string fileType = "pcd";
 	if(modelNameProp!="")
-		insert2MongoDB(nodeTypeProp, modelNameProp, "Model", fileType);
+		insert2MongoDB(nodeNameProp, modelNameProp, "Model", fileType);
 	else
 		CLOG(LERROR)<<"Add model name and try again";
 }
@@ -202,9 +202,9 @@ void ModelWriter::createModelOrView(const std::vector<string>::iterator it, cons
 	OID oid=bsonElement.__oid();
 	bsonBuilder.append(BSONObjBuilder().append("childOID", oid.toString()).obj());
 	if(type=="Model")
-		initModel(*it, true, nodeTypeProp, objectName, description);
+		initModel(*it, true, nodeNameProp, objectName, description);
 	else if(type=="View")
-		initModel(*it, true, nodeTypeProp, objectName, description);
+		initModel(*it, true, nodeNameProp, objectName, description);
 }
 
 void ModelWriter::initObject()
@@ -225,7 +225,7 @@ void ModelWriter::initObject()
 	}
 }
 
-void ModelWriter::insertFileToGrid(OID& oid, const string& fileType, string& tempFileName)
+void ModelWriter::insertFileIntoGrid(OID& oid, const string& fileType, string& tempFileName)
 {
 	try{
 		BSONObj object;
@@ -300,22 +300,19 @@ void ModelWriter::writeNode2MongoDB(const string &destination, const string &typ
     try{
     	string tempFileName="";
     	float sizeOfFile = getFileSize(fileType, tempFileName);
-    	if(sizeOfFile<15)
+    	if(sizeOfFile>15)
     	{
-    		//	insertFileIntoGrid(oid, fileType, tempFileName);
-			//c->update(dbCollectionPath, QUERY("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.str()))), false, true);
-			//CLOG(LTRACE) <<"Files saved successfully";
+    		insertFileIntoGrid(oid, fileType, tempFileName);
+			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
+			CLOG(LTRACE) <<"Files saved successfully";
     	}
-//    	else
-    	if(sizeOfFile>0.0)
+    	else if(sizeOfFile>0.0 && sizeOfFile<=15.0)
 		{
 			CLOG(LERROR)<<"sizeOfFile: "<<sizeOfFile;
 			insertFileIntoCollection(oid, fileType, tempFileName, sizeOfFile);
 			CLOG(LERROR)<<"UPDATE: "<<oid.toString();
 			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
 		}
-
-    	//TODO dodac zapis do dokumentu
     }
 	catch(DBException &e)
 	{
@@ -542,7 +539,7 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 				{
 					CLOG(LTRACE)<<"No such model/view";
 					CLOG(LTRACE)<<"Type: "<<type;
-					initModel(modelOrViewName, true, nodeTypeProp, objectName, description);
+					initModel(modelOrViewName, true, nodeNameProp, objectName, description);
 				}
 				cursorCollection = c->query(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName)));
 				BSONObj obj = cursorCollection->next();

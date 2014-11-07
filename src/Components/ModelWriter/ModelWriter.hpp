@@ -102,7 +102,7 @@ private:
 	Base::Property<string> fileName;
 	Base::Property<string> remoteFileName;
 	std::vector<std::string> splitedSceneNames;
-	Base::Property<string> nodeTypeProp;
+	Base::Property<string> nodeNameProp;
 	Base::Property<int> mean_viewpoint_features_number;
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ;
 	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB;
@@ -128,7 +128,7 @@ private:
     void copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const;
     void copyXYZPointToFloatArray (const pcl::PointXYZ &p, float * out) const;
     void copyXYZRGBPointToFloatArray (const pcl::PointXYZRGB &p, float * out) const;
-    void insertFileToGrid(OID& oid, const string& fileType, string& tempFileName);
+    void insertFileIntoGrid(OID& oid, const string& fileType, string& tempFileName);
 
 };
 }//: namespace ModelWriter

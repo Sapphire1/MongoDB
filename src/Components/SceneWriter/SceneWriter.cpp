@@ -19,14 +19,14 @@ SceneWriter::SceneWriter(const string & name) : Base::Component(name),
 		objectName("objectName", string("GreenCup")),
 		description("description", string("My green coffe cup")),
 		collectionName("collectionName", string("containers")),
-		nodeTypeProp("nodeType", string("Object")),
+		nodeNameProp("nodeName", string("Object")),
 		sceneNamesProp("sceneNamesProp", string("scene1,scene2,scene3"))
 {
         registerProperty(mongoDBHost);
         registerProperty(objectName);
         registerProperty(description);
         registerProperty(collectionName);
-        registerProperty(nodeTypeProp);
+        registerProperty(nodeNameProp);
         registerProperty(sceneNamesProp);
         CLOG(LTRACE) << "Hello SceneWriter";
 }

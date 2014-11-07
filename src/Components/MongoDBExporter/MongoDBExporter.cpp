@@ -19,7 +19,7 @@ MongoDBExporter::MongoDBExporter(const string & name) : Base::Component(name),
 		description("description", string("My green coffe cup")),
 		collectionName("collectionName", string("containers")),
 		extensions("extensions", string("*.png,*.jpg,*.txt")),
-		nodeTypeProp("nodeType", string("Object")),
+		nodeNameProp("nodeName", string("Object")),
 		folderName("folderName", string("/home/lzmuda/mongo_driver_tutorial/")),
 		viewNameProp("viewName", string("")),
 		sceneNamesProp("sceneNamesProp", string("scene1,scene2,scene3")),
@@ -31,7 +31,7 @@ MongoDBExporter::MongoDBExporter(const string & name) : Base::Component(name),
         registerProperty(description);
         registerProperty(collectionName);
         registerProperty(extensions);
-        registerProperty(nodeTypeProp);
+        registerProperty(nodeNameProp);
         registerProperty(folderName);
         registerProperty(viewNameProp);
         registerProperty(modelNameProp);
@@ -55,11 +55,11 @@ void MongoDBExporter::write2DB()
         string sceneNames = sceneNamesProp;
         boost::split(MongoBase::splitedSceneNames, sceneNames, is_any_of(","));
         if(modelNameProp!="")
-        	insert2MongoDB(nodeTypeProp,modelNameProp, "Model");
+        	insert2MongoDB(nodeNameProp,modelNameProp, "Model");
         else if(viewNameProp!="")
-            insert2MongoDB(nodeTypeProp,viewNameProp, "View");
+            insert2MongoDB(nodeNameProp,viewNameProp, "View");
         else
-        	insert2MongoDB(nodeTypeProp,"", "");
+        	insert2MongoDB(nodeNameProp,"", "");
 }
 
 void MongoDBExporter::prepareInterface() {
@@ -129,9 +129,9 @@ void MongoDBExporter::createModelOrView(const std::vector<string>::iterator it, 
 	OID oid=bsonElement.__oid();
 	//bsonBuilder.append(BSONObjBuilder().append("childOID", oid.str()).obj());
 	if(type=="Model")
-		initModel(*it, true, nodeTypeProp, objectName, description);
+		initModel(*it, true, nodeNameProp, objectName, description);
 	else if(type=="View")
-		initView(*it, true, nodeTypeProp, objectName, description);
+		initView(*it, true, nodeNameProp, objectName, description);
 }
 
 void MongoDBExporter::initObject()
@@ -263,9 +263,9 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 					CLOG(LTRACE)<<"No such model/view";
 					CLOG(LTRACE)<<"Type: "<<type;
 					if(type=="View")
-						initView(modelOrViewName, true, nodeTypeProp, objectName, description);
+						initView(modelOrViewName, true, nodeNameProp, objectName, description);
 					else if(type=="Model")
-						initModel(modelOrViewName, true, nodeTypeProp, objectName, description);
+						initModel(modelOrViewName, true, nodeNameProp, objectName, description);
 				}
 				cursorCollection = c->query(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName)));
 				BSONObj obj = cursorCollection->next();
@@ -284,7 +284,7 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 		{
 			if(destination=="Model" || destination=="View")
 			{
-				if(nodeTypeProp=="Model" || nodeTypeProp=="View")
+				if(nodeNameProp=="Model" || nodeNameProp=="View")
 				{
 					unsigned long long nr = c->count(dbCollectionPath, BSON("Type"<<type<<"ObjectName"<<objectName<<type+"Name"<<modelOrViewName), options, limit, skip);
 					if(nr>0)
@@ -295,9 +295,9 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 					else
 					{
 						if(destination=="Model")
-							initModel(modelOrViewName, true, nodeTypeProp, objectName, description);
+							initModel(modelOrViewName, true, nodeNameProp, objectName, description);
 						else if(destination=="View")
-							initView(modelOrViewName, true, nodeTypeProp, objectName, description);
+							initView(modelOrViewName, true, nodeNameProp, objectName, description);
 					}
 				}
 			}

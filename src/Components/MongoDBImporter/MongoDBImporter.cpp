@@ -17,7 +17,7 @@ MongoDBImporter::MongoDBImporter(const std::string & name) : Base::Component(nam
 		mongoDBHost("mongoDBHost", string("localhost")),
 		objectName("objectName", string("GreenCup")),
 		collectionName("collectionName", string("containers")),
-		nodeTypeProp("nodeType", string("Object")),
+		nodeNameProp("nodeName", string("Object")),
 		viewOrModelName("viewOrModelName", string("")),
 		type("type", string("")),
 		folderName("folderName", string("/home/lzmuda/mongo_driver_tutorial/test/"))
@@ -25,7 +25,7 @@ MongoDBImporter::MongoDBImporter(const std::string & name) : Base::Component(nam
 		registerProperty(mongoDBHost);
 		registerProperty(objectName);
 		registerProperty(collectionName);
-		registerProperty(nodeTypeProp);
+		registerProperty(nodeNameProp);
 		registerProperty(viewOrModelName);
 		registerProperty(folderName);
 		registerProperty(type);
@@ -40,7 +40,7 @@ MongoDBImporter::~MongoDBImporter()
 void MongoDBImporter::readfromDB()
 {
 	CLOG(LNOTICE) << "MongoDBImporter::readfromDB";
-	readFromMongoDB(nodeTypeProp, viewOrModelName, type);
+	readFromMongoDB(nodeNameProp, viewOrModelName, type);
 }
 void MongoDBImporter::prepareInterface() {
         CLOG(LTRACE) << "MongoDBImporter::prepareInterface";
@@ -85,14 +85,14 @@ bool MongoDBImporter::onStart()
         return true;
 }
 
-void MongoDBImporter::getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeType, const string& type)
+void MongoDBImporter::getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeName, const string& type)
 {
 	CLOG(LTRACE)<<"MongoDBImporter::getFileFromGrid";
 	string filename;
 	filename = file.getFileField("filename").str();
 	// type in "View","Model"
-	CLOG(LINFO)<<(string)folderName+type+"/"+modelOrViewName+"/"+nodeType+"/"+filename;
-	string name = (string)folderName+type+"/"+modelOrViewName+"/"+nodeType+"/"+filename;
+	CLOG(LINFO)<<(string)folderName+type+"/"+modelOrViewName+"/"+nodeName+"/"+filename;
+	string name = (string)folderName+type+"/"+modelOrViewName+"/"+nodeName+"/"+filename;
 	stringstream ss;
 	string str = ss.str();
 	char *fileName = (char*)name.c_str();
@@ -108,7 +108,7 @@ void MongoDBImporter::getFileFromGrid(const GridFile& file, const string& modelO
 	}
 }
 
-void MongoDBImporter::readFile(const string& modelOrViewName, const string& nodeType, const string& type, const OID& childOID)
+void MongoDBImporter::readFile(const string& modelOrViewName, const string& nodeName, const string& type, const OID& childOID)
 {
 	CLOG(LTRACE)<<"MongoDBImporter::readFile";
 	GridFS fs(*c,collectionName);
@@ -120,17 +120,17 @@ void MongoDBImporter::readFile(const string& modelOrViewName, const string& node
 	}
 	else
 	{
-		getFileFromGrid(file, modelOrViewName, nodeType, type);
+		getFileFromGrid(file, modelOrViewName, nodeName, type);
 	}
 }
 
-void MongoDBImporter::readFromMongoDB(const string& nodeType, const string& modelOrViewName, const string& type)
+void MongoDBImporter::readFromMongoDB(const string& nodeName, const string& modelOrViewName, const string& type)
 {
 	CLOG(LTRACE)<<"MongoDBImporter::readFromMongoDB";
 	string name;
 	try{
 		int items=0;
-		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeType, cursorCollection, modelOrViewName, type, items);
+		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeName, cursorCollection, modelOrViewName, type, items);
 
 		if(items>0)
 		{
@@ -153,10 +153,10 @@ void MongoDBImporter::readFromMongoDB(const string& nodeType, const string& mode
 							string childNodeName= childObj.getField("Type").str();
 							if(childNodeName!="EOO")
 							{
-								if(isViewLastLeaf(nodeType) || isModelLastLeaf(nodeType))
+								if(isViewLastLeaf(nodeName) || isModelLastLeaf(nodeName))
 								{
 									CLOG(LTRACE)<<"LastLeaf"<<" childNodeName "<<childNodeName;
-									readFile(modelOrViewName, nodeType, type, childsVector[i]);
+									readFile(modelOrViewName, nodeName, type, childsVector[i]);
 								}
 								else if(childNodeName=="View" || childNodeName=="Model")
 								{
@@ -175,7 +175,7 @@ void MongoDBImporter::readFromMongoDB(const string& nodeType, const string& mode
 		else
 		{
 			CLOG(LTRACE)<<"10";
-			if(nodeTypeProp==nodeType)
+			if(nodeNameProp==nodeName)
 				CLOG(LERROR)<<"Wrong name";
 			CLOG(LTRACE)<<"No results";
 		}
