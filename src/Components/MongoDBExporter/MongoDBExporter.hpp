@@ -84,11 +84,11 @@ protected:
         /// Event handler.
         Base::EventHandler <MongoDBExporter> h_write2DB;
 private:
+
         Base::Property<string> mongoDBHost;
         Base::Property<string> objectName;
         Base::Property<string> description;
         Base::Property<string> collectionName;
-        Base::Property<string> extensions;
         Base::Property<string> nodeNameProp;
         Base::Property<string> folderName;
         Base::Property<string> viewNameProp;
@@ -99,20 +99,34 @@ private:
         std::vector<std::string> splitedSceneNames;
 
 
+    	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ;
+    	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB;
+    	pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT;
+    	pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT;
+    	string cloudType;
+		cv::Mat tempImg;
+		std::string str;
+		//float sizeOfCloud;
 
-        string dbCollectionPath;
-        void run();
+
+        //string dbCollectionPath;
+        //void run();
+        void copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const;
+        void copyXYZPointToFloatArray (const pcl::PointXYZ &p, float * out) const;
+        void copyXYZRGBPointToFloatArray (const pcl::PointXYZRGB &p, float * out) const;
         void initObject();
+        float get_file_size(std::string& filename); // path to file
         void writeNode2MongoDB(const string &source, const string &destination, const string &option, string );
         void insert2MongoDB(const string &destination,  const string&,  const string& );
         void write2DB();
         void insertToModelOrView(const string &,const string &);
-        //void initView(const string &, bool);
-        //void initModel(const string &, bool);
-        void insertFileToGrid(const std::vector<string>::iterator, const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
-        //void addToObject(const Base::Property<string> & nodeNameProp, const string &);
-        //void addScenes(BSONObj&);
+
+        void insertFileToGrid(string&, const std::vector<string>::iterator, string &, OID&);
+        void addToObject(const Base::Property<string> & nodeNameProp, const string &);
+        void writeToMemory(string& mime, string& fileName);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
+        void insertFileIntoCollection(OID& oid, const string& fileType, string& tempFileName, int size);
+        void ReadPCDCloudFromFile(const string& filename);
 };
 }//: namespace MongoDBExporter
 }//: namespace Processors

@@ -175,12 +175,10 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
     if(addToObjectFlag)
     {
     	addToObject(nodeNameProp, viewName, objectName, description);
-    	cout<<"Init View 11\n";
     }
-    cout<<"Init View2\n";
     // add childs to arraysBuilder
     for(std::vector<string>::iterator it = docViewsNames.begin(); it != docViewsNames.end(); ++it){
-		BSONObj document = BSONObjBuilder().genOID().append("Type", *it).append("ObjectName", objectName).append("ViewName", viewName).append("description", description).obj();
+		BSONObj document = BSONObjBuilder().genOID().append("NodeName", *it).append("ObjectName", objectName).append("ViewName", viewName).append("description", description).obj();
 		c->insert(dbCollectionPath, document);
 		document.getObjectID(oi);
 		o=oi.__oid();
@@ -203,7 +201,6 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
 		else if(*it== "ToFPCXYZRGB" || *it=="ToFPCXYZSIFT" || *it=="ToFPCXYZSHOT") //ToFPC
 			tofPCArrayBuilder.append(BSONObjBuilder().append("childOID", o.toString()).obj());
     }
-    cout<<"Init View3\n";
     // create arrays
 	BSONArray viewArr = viewArrayBuilder.arr();
     BSONArray stereoArr = stereoArrayBuilder.arr();
@@ -212,20 +209,17 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
     BSONArray kinectPCArr = kinectPCArrayBuilder.arr();
     BSONArray stereoPC = stereoPCArrayBuilder.arr();
     BSONArray tofPCArr = tofPCArrayBuilder.arr();
-    cout<<"Init View4\n";
     // update documents
-    c->update(dbCollectionPath, Query(BSON("Type"<<"View"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<viewArr)), false, true);
-    c->update(dbCollectionPath, Query(BSON("Type"<<"ToF"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<tofArr)), false, true);
-    c->update(dbCollectionPath, Query(BSON("Type"<<"Kinect"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<kinectArr)), false, true);
-    c->update(dbCollectionPath, Query(BSON("Type"<<"Stereo"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<stereoArr)), false, true);
-    c->update(dbCollectionPath, Query(BSON("Type"<<"KinectPC"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<kinectPCArr)), false, true);
-    c->update(dbCollectionPath, Query(BSON("Type"<<"StereoPC"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<stereoPC)), false, true);
-    c->update(dbCollectionPath, Query(BSON("Type"<<"ToFPC"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<tofPCArr)), false, true);
-    cout<<"Init View 5 \n";
+    c->update(dbCollectionPath, Query(BSON("NodeName"<<"View"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<viewArr)), false, true);
+    c->update(dbCollectionPath, Query(BSON("NodeName"<<"ToF"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<tofArr)), false, true);
+    c->update(dbCollectionPath, Query(BSON("NodeName"<<"Kinect"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<kinectArr)), false, true);
+    c->update(dbCollectionPath, Query(BSON("NodeName"<<"Stereo"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<stereoArr)), false, true);
+    c->update(dbCollectionPath, Query(BSON("NodeName"<<"KinectPC"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<kinectPCArr)), false, true);
+    c->update(dbCollectionPath, Query(BSON("NodeName"<<"StereoPC"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<stereoPC)), false, true);
+    c->update(dbCollectionPath, Query(BSON("NodeName"<<"ToFPC"<<"ObjectName"<<objectName<<"ViewName"<<viewName)), BSON("$set"<<BSON("childOIDs"<<tofPCArr)), false, true);
     c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
     c->createIndex(dbCollectionPath, BSON("ViewName"<<1));
-    c->createIndex(dbCollectionPath, BSON("Type"<<1));
-    cout<<"Init View 6\n";
+    c->createIndex(dbCollectionPath, BSON("NodeName"<<1));
 }
 
 void MongoBase::addToObject(const Base::Property<string>& nodeNameProp,const string & name, Base::Property<string>& objectName, Base::Property<string>& description)
@@ -247,23 +241,24 @@ void MongoBase::addToObject(const Base::Property<string>& nodeNameProp,const str
 		type="View";
 	//CLOG(LTRACE)<<"Type: " <<type;
 
-	unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<"Object"), options, limit, skip);
+	unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"NodeName"<<"Object"), options, limit, skip);
 	// add object
 	if(nr==0)
 	{
 		cout<<"Create Object";
 		//CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
-		BSONObj object = BSONObjBuilder().genOID().append("Type", "Object").append("ObjectName", objectName).append("description", description).obj();
+		BSONObj object = BSONObjBuilder().genOID().append("NodeName", "Object").append("ObjectName", objectName).append("description", description).obj();
 		c->insert(dbCollectionPath, object);
 		addScenes(object, objectName);
 	}
 	// add model/view
 	cout<<"Create Model/View";
-	BSONObj modelorView = BSONObjBuilder().genOID().append("Type", type).append("ObjectName", objectName).append(type+"Name", name).append("description", description).obj();
+	BSONObj modelorView = BSONObjBuilder().genOID().append("NodeName", type).append("ObjectName", objectName).append(type+"Name", name).append("description", description).obj();
 	c->insert(dbCollectionPath, modelorView);
 	modelorView.getObjectID(oi);
 	o=oi.__oid();
-	c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<"Object")), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<o.toString()))), false, true);
+	cout << "\n"<<o.toString() << "\n";
+	c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"NodeName"<<"Object")), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<o.toString()))), false, true);
 }
 
 void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
@@ -288,7 +283,7 @@ void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
 			scene.getObjectID(oi);
 			o=oi.__oid();
 
-			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<"Object")), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<o.toString()))), false, true);
+			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"NodeName"<<"Object")), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<o.toString()))), false, true);
 		//	CLOG(LTRACE)<<scene;
 
 			vector<OID> childsVector;
@@ -333,7 +328,7 @@ void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
 			//CLOG(LINFO)<<"Add scene to object!";
 			scene.getObjectID(oi);
 			o=oi.__oid();
-			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<"Object")), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<o.toString()))), false, true);
+			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"NodeName"<<"Object")), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<o.toString()))), false, true);
 		}
 	}
 }
@@ -341,7 +336,7 @@ void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
 
 void MongoBase::initModel(const string & modelName, bool addToModelFlag,  Base::Property<string>& nodeNameProp, Base::Property<string>& objectName, Base::Property<string>& description)
 {
-	//CLOG(LTRACE)<<"initModel";
+	cout<<"initModel";
 	BSONElement oi;
 	OID o;
 	BSONArrayBuilder objectArrayBuilder, modelArrayBuilder, somArrayBuilder, ssomArrayBuilder;
@@ -352,11 +347,13 @@ void MongoBase::initModel(const string & modelName, bool addToModelFlag,  Base::
 	}
 
 	for(std::vector<string>::iterator it = docModelsNames.begin(); it != docModelsNames.end(); ++it){
-		BSONObj document = BSONObjBuilder().genOID().append("Type", *it).append("ObjectName", objectName).append("ModelName", modelName).append("description", description).obj();
+		cout<<"*it: "<<*it<<"\n";
+		BSONObj document = BSONObjBuilder().genOID().append("NodeName", *it).append("ObjectName", objectName).append("ModelName", modelName).append("description", description).obj();
 		c->insert(dbCollectionPath, document);
 
 		document.getObjectID(oi);
 		o=oi.__oid();
+		cout<<"OID: "<<o.toString()<<"\n";
 
 		if(*it=="SOM" || *it=="SSOM")
 			modelArrayBuilder.append(BSONObjBuilder().append("childOID", o.toString()).obj());
@@ -368,15 +365,15 @@ void MongoBase::initModel(const string & modelName, bool addToModelFlag,  Base::
 	}
 	c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
 	c->createIndex(dbCollectionPath, BSON("ModelName"<<1));
-	c->createIndex(dbCollectionPath, BSON("Type"<<1));
+	c->createIndex(dbCollectionPath, BSON("NodeName"<<1));
 
 	BSONArray modelArr = modelArrayBuilder.arr();
 	BSONArray somArr = somArrayBuilder.arr();
 	BSONArray ssomArr = ssomArrayBuilder.arr();
 
-	c->update(dbCollectionPath, Query(BSON("Type"<<"Model"<<"ObjectName"<<objectName<<"ModelName"<<modelName)), BSON("$set"<<BSON("childOIDs"<<modelArr)), false, true);
-	c->update(dbCollectionPath, Query(BSON("Type"<<"SOM"<<"ObjectName"<<objectName<<"ModelName"<<modelName)), BSON("$set"<<BSON("childOIDs"<<somArr)), false, true);
-	c->update(dbCollectionPath, Query(BSON("Type"<<"SSOM"<<"ObjectName"<<objectName<<"ModelName"<<modelName)), BSON("$set"<<BSON("childOIDs"<<ssomArr)), false, true);
+	c->update(dbCollectionPath, Query(BSON("NodeName"<<"Model"<<"ObjectName"<<objectName<<"ModelName"<<modelName)), BSON("$set"<<BSON("childOIDs"<<modelArr)), false, true);
+	c->update(dbCollectionPath, Query(BSON("NodeName"<<"SOM"<<"ObjectName"<<objectName<<"ModelName"<<modelName)), BSON("$set"<<BSON("childOIDs"<<somArr)), false, true);
+	c->update(dbCollectionPath, Query(BSON("NodeName"<<"SSOM"<<"ObjectName"<<objectName<<"ModelName"<<modelName)), BSON("$set"<<BSON("childOIDs"<<ssomArr)), false, true);
 }
 void MongoBase::getFileFromGrid(const GridFile& file, const string& tempFn)
 {
@@ -406,6 +403,7 @@ void MongoBase::setModelOrViewName(const string& childNodeName, const BSONObj& c
 
 void MongoBase::setMime( const string& extension,  string& mime)
 {
+	cout<<"Extension : "<<extension<<std::endl;
 	if (extension=="png")
 		mime="image/png";
 	else if(extension=="jpg")
@@ -536,34 +534,34 @@ void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbColle
 			  if(type=="View")
 			  {
 				  std::cout<<"\nView\n";
-				  items = c.count(dbCollectionPath, (BSON("Type"<<nodeName<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName)), options, limit, skip);
+				  items = c.count(dbCollectionPath, (BSON("NodeName"<<nodeName<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName)), options, limit, skip);
 				  if(items>0)
-					  cursorCollection =c.query(dbCollectionPath, (Query(BSON("Type"<<nodeName<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName))));
+					  cursorCollection =c.query(dbCollectionPath, (Query(BSON("NodeName"<<nodeName<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName))));
 			  }
 			  else if(type=="Model")
 			  {
 				  std::cout<<"\nModel\n";
-				  items = c.count(dbCollectionPath, BSON("Type"<<nodeName<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName), options, limit, skip);
+				  items = c.count(dbCollectionPath, BSON("NodeName"<<nodeName<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName), options, limit, skip);
 				  if (items>0)
-					  cursorCollection =c.query(dbCollectionPath, Query(BSON("Type"<<nodeName<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName)));
+					  cursorCollection =c.query(dbCollectionPath, Query(BSON("NodeName"<<nodeName<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName)));
 			  }
 			  else
 			  {
-				  items = c.count(dbCollectionPath, BSON("Type"<<nodeName<<"ObjectName"<<objectName<<type<<modelOrViewName), options, limit, skip);
+				  items = c.count(dbCollectionPath, BSON("NodeName"<<nodeName<<"ObjectName"<<objectName<<type<<modelOrViewName), options, limit, skip);
 
 				  if(items>0)
-					  cursorCollection =c.query(dbCollectionPath, (Query(BSON("Type"<<nodeName<<"ObjectName"<<objectName<<type<<modelOrViewName))));
+					  cursorCollection =c.query(dbCollectionPath, (Query(BSON("NodeName"<<nodeName<<"ObjectName"<<objectName<<type<<modelOrViewName))));
 			  }
 		  }
     	  else
     	  {
     		  std::cout<<"\nObject\n";
-			  std::cout<<"Type"<<nodeName<<"\tObjectName"<<objectName<<"\n";
+			  std::cout<<"NodeName"<<nodeName<<"\tObjectName"<<objectName<<"\n";
 
-    		  items = c.count(dbCollectionPath, BSON("Type"<<nodeName<<"ObjectName"<<objectName), options, limit, skip);
+    		  items = c.count(dbCollectionPath, BSON("NodeName"<<nodeName<<"ObjectName"<<objectName), options, limit, skip);
     		  cout<<"items: "<<items<<"\n";
     		  if(items>0)
-    			  cursorCollection =c.query(dbCollectionPath, (Query(BSON("Type"<<nodeName<<"ObjectName"<<objectName))));
+    			  cursorCollection =c.query(dbCollectionPath, (Query(BSON("NodeName"<<nodeName<<"ObjectName"<<objectName))));
     	  }
     	 }
       catch(DBException &e)

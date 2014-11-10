@@ -6,6 +6,11 @@
 
 
 #include "MongoDBExporter.hpp"
+
+#define siftPointSize 133
+#define xyzPointSize 3
+#define xyzrgbPointSize 4
+
 namespace Processors {
 namespace MongoDBExporter  {
 using namespace cv;
@@ -18,26 +23,26 @@ MongoDBExporter::MongoDBExporter(const string & name) : Base::Component(name),
 		objectName("objectName", string("GreenCup")),
 		description("description", string("My green coffe cup")),
 		collectionName("collectionName", string("containers")),
-		extensions("extensions", string("*.png,*.jpg,*.txt")),
 		nodeNameProp("nodeName", string("Object")),
 		folderName("folderName", string("/home/lzmuda/mongo_driver_tutorial/")),
 		viewNameProp("viewName", string("")),
 		sceneNamesProp("sceneNamesProp", string("scene1,scene2,scene3")),
 		modelNameProp("modelName", string(""))
-		//folderName("folderName", string("./"))
 {
         registerProperty(mongoDBHost);
         registerProperty(objectName);
         registerProperty(description);
         registerProperty(collectionName);
-        registerProperty(extensions);
         registerProperty(nodeNameProp);
         registerProperty(folderName);
         registerProperty(viewNameProp);
         registerProperty(modelNameProp);
         registerProperty(sceneNamesProp);
+        fileExtensions.push_back("*.png");
+        fileExtensions.push_back("*.jpg");
+        fileExtensions.push_back("*.txt");
+        fileExtensions.push_back("*.pcd");
 
-        //base = new MongoBase::MongoBase();
 
         CLOG(LTRACE) << "Hello MongoDBExporter";
 }
@@ -50,8 +55,6 @@ void MongoDBExporter::write2DB()
 {
         CLOG(LNOTICE) << "MongoDBExporter::write2DB";
 
-        string ext =extensions;
-        boost::split(fileExtensions, ext, is_any_of(","));
         string sceneNames = sceneNamesProp;
         boost::split(MongoBase::splitedSceneNames, sceneNames, is_any_of(","));
         if(modelNameProp!="")
@@ -60,38 +63,35 @@ void MongoDBExporter::write2DB()
             insert2MongoDB(nodeNameProp,viewNameProp, "View");
         else
         	insert2MongoDB(nodeNameProp,"", "");
+
 }
 
 void MongoDBExporter::prepareInterface() {
         CLOG(LTRACE) << "MongoDBExporter::prepareInterface";
         h_write2DB.setup(this, &MongoDBExporter::write2DB);
         registerHandler("write2DB", &h_write2DB);
-	
-       	//insert2MongoDB(c, fs); 
-//      registerStream("in_img", &in_img);
-//      registerStream("out_img", &out_img);
-
-//	addDependency("insert2MongoDB", &in_img);
 }
 
 bool MongoDBExporter::onInit()
 {
-      CLOG(LTRACE) << "MongoDBExporter::initialize";
-      try
-      {
-    	  string hostname = mongoDBHost;
-    	  connectToMongoDB(hostname);
-		  if(collectionName=="containers")
+	CLOG(LTRACE) << "MongoDBExporter::initialize";
+	try
+	{
+		string hostname = mongoDBHost;
+		connectToMongoDB(hostname);
+		if(collectionName=="containers")
 			dbCollectionPath="images.containers";
-		  initViewNames();
-		  initModelNames();
-      }
-	 catch(DBException &e)
-	 {
-		 CLOG(LERROR) <<"Something goes wrong... :<";
-		 CLOG(LERROR) <<c->getLastError();
-	 }
-	 return true;
+
+		initViewNames();
+		initModelNames();
+
+	}
+	catch(DBException &e)
+	{
+		CLOG(LERROR) <<"Something goes wrong... :<";
+		CLOG(LERROR) <<c->getLastError();
+	}
+	return true;
 }
 
 bool MongoDBExporter::onFinish()
@@ -117,21 +117,23 @@ bool MongoDBExporter::onStart()
         return true;
 }
 
-
 void MongoDBExporter::createModelOrView(const std::vector<string>::iterator it, const string& type, BSONArrayBuilder& bsonBuilder)
 {
 	BSONElement bsonElement;
+	CLOG(LERROR)<<"*it : " << *it;
 	if(*it=="." || *it=="..")
 		return;
-	BSONObj model = BSONObjBuilder().genOID().append("Type", type).append("ObjectName", objectName).append(type+"Name", *it).append("description", description).obj();
+	BSONObj model = BSONObjBuilder().genOID().append("NodeName", type).append("ObjectName", objectName).append(type+"Name", *it).append("description", description).obj();
 	c->insert(dbCollectionPath, model);
 	model.getObjectID(bsonElement);
 	OID oid=bsonElement.__oid();
-	//bsonBuilder.append(BSONObjBuilder().append("childOID", oid.str()).obj());
+	CLOG(LERROR)<< "oid: " <<oid.toString();
+	bsonBuilder.append(BSONObjBuilder().append("childOID", oid.toString()).obj());
+	CLOG(LERROR) << "NodeName : "  << type;
 	if(type=="Model")
-		initModel(*it, true, nodeNameProp, objectName, description);
+		initModel(*it, false, nodeNameProp, objectName, description);
 	else if(type=="View")
-		initView(*it, true, nodeNameProp, objectName, description);
+		initView(*it, false, nodeNameProp, objectName, description);
 }
 
 void MongoDBExporter::initObject()
@@ -141,7 +143,7 @@ void MongoDBExporter::initObject()
 	bool objectInTheScene = false;
 	try
 	{
-		BSONObj object = BSONObjBuilder().genOID().append("Type", "Object").append("ObjectName", objectName).append("description", description).obj();
+		BSONObj object = BSONObjBuilder().genOID().append("NodeName", "Object").append("ObjectName", objectName).append("description", description).obj();
 		c->insert(dbCollectionPath, object);
 	//	c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
 		addScenes(object, objectName);
@@ -153,7 +155,7 @@ void MongoDBExporter::initObject()
 			CLOG(LTRACE)<<"Create Model";
 			createModelOrView(it, type, bsonBuilder);
 		}
-
+		/*
 		vector<string> views = getAllFolders((string)folderName+"/View/");
 		for(std::vector<string>::iterator it = views.begin(); it != views.end(); ++it)
 		{
@@ -161,9 +163,9 @@ void MongoDBExporter::initObject()
 			CLOG(LTRACE)<<"Create View";
 			createModelOrView(it, type, bsonBuilder);
 		}
-
+		*/
 		BSONArray destArr = bsonBuilder.arr();
-		c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<"Object")), BSON("$set"<<BSON("childOIDs"<<destArr)), false, true);
+		c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"NodeName"<<"Object")), BSON("$set"<<BSON("childOIDs"<<destArr)), false, true);
 	  }
 	  catch(DBException &e)
 	  {
@@ -172,15 +174,12 @@ void MongoDBExporter::initObject()
 	  }
 }
 
-
-
-void MongoDBExporter::insertFileToGrid( const std::vector<string>::iterator itExtension, const std::vector<string>::iterator it, const string& newFileName, BSONArrayBuilder& bsonBuilder)
+void MongoDBExporter::insertFileToGrid(string&  extension, const std::vector<string>::iterator it, string & newFileName, OID& oid)
 {
 	BSONObj o;
 	BSONElement bsonElement;
-	OID oid;
 	string mime="";
-	setMime(*itExtension, mime);
+	setMime(extension, mime);
 	GridFS fs(*c, collectionName);
 	o = fs.storeFile(*it, newFileName, mime);
 	BSONObj b = BSONObjBuilder().appendElements(o).append("ObjectName", objectName).obj();
@@ -188,12 +187,11 @@ void MongoDBExporter::insertFileToGrid( const std::vector<string>::iterator itEx
 	c->insert(dbCollectionPath, b);
 	b.getObjectID(bsonElement);
 	oid=bsonElement.__oid();
-	//bsonBuilder.append(BSONObjBuilder().append("childOID", oid.str()).obj());
+	//bsonBuilder.append(BSONObjBuilder().append("childOID", oid.toString()).obj());
 }
 
 void MongoDBExporter::writeNode2MongoDB(const string &source, const string &destination, const string &type,string modelOrViewName)
 {
-	BSONArrayBuilder bsonBuilder;
 	CLOG(LTRACE) <<"Source: " << source << " destination: "<< destination<<" dbCollectionPath: "<<dbCollectionPath;
     try{
     	for(std::vector<string>::iterator itExtension = fileExtensions.begin(); itExtension != fileExtensions.end(); ++itExtension) {
@@ -203,18 +201,29 @@ void MongoDBExporter::writeNode2MongoDB(const string &source, const string &dest
 			{
 				string fileName = *it;
 				string newFileName;
+				float sizeOfFile = get_file_size(fileName)/(1024.0*1024.0);
+				CLOG(LERROR)<<"sizeOfFile: "<<sizeOfFile;
+
 				const size_t last_slash_idx = fileName.find_last_of("/");
 				if (std::string::npos != last_slash_idx)
 				{
 					newFileName = fileName.erase(0, last_slash_idx + 1);
 				}
-				insertFileToGrid(itExtension, it, newFileName, bsonBuilder);
+				OID oid;
+				string extension = itExtension->erase(0,2);
+				if(sizeOfFile>1.0)
+					insertFileToGrid(extension, it, newFileName, oid);
+				else if(sizeOfFile<=1.0)
+				{
+					string mime;
+					setMime(extension, mime);
+					writeToMemory(mime, *it);
+					insertFileIntoCollection(oid, extension, fileName, sizeOfFile);
+				}
+				CLOG(LERROR)<<"UPDATE: "<<oid.toString();
+				c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"NodeName"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
 			}
     	}
-		BSONArray destArr = bsonBuilder.arr();
-		//if(type=="View" || type=="Model")
-		c->update(dbCollectionPath, Query(BSON("Type"<<destination<<"ObjectName"<<objectName<<type+"Name"<<modelOrViewName)),
-				BSON("$set"<<BSON("childOIDs"<<destArr)), false, true);
 		CLOG(LTRACE) <<"Files saved successfully";
     }
 	catch(DBException &e)
@@ -223,6 +232,245 @@ void MongoDBExporter::writeNode2MongoDB(const string &source, const string &dest
 		CLOG(LERROR) <<c->getLastError();
 	}
 }
+
+
+float MongoDBExporter::get_file_size(std::string& filename) // path to file
+{
+    FILE *p_file = NULL;
+    float size;
+    try{
+    	p_file = fopen(filename.c_str(),"rb");
+    	fseek(p_file,0,SEEK_END);
+    	size = (float)ftell(p_file);
+    	fclose(p_file);
+    }
+    catch(Exception & ex){ex.what();}
+    return size;
+}
+
+void MongoDBExporter::ReadPCDCloudFromFile(const string& filename)
+{
+	CLOG(LTRACE) << "MongoDBExporter::ReadPCDCloudFromFile";
+	// Try to read the cloud of XYZRGB points.
+	if(filename.find("xyzrgb")!=string::npos)
+	{
+		//cloudXYZRGB (new pcl::PointCloud<pcl::PointXYZRGB>);
+		if (pcl::io::loadPCDFile<pcl::PointXYZRGB> (filename, *cloudXYZRGB) == -1){
+			CLOG(LWARNING) <<"Cannot read PointXYZRGB cloud from "<<filename;
+		}else{
+			//out_cloud_xyzrgb.write(cloud_xyzrgb);
+			CLOG(LINFO) <<"PointXYZRGB cloud loaded properly from "<<filename;
+			//return;
+		}// else
+	}
+
+	// Try to read the cloud of XYZSIFT points.
+
+
+	 if(filename.find("xyzsift.pcd")!=string::npos)
+	 {
+		// cloudXYZRGBSIFT (new pcl::PointCloud<PointXYZSIFT>);
+		if (pcl::io::loadPCDFile<PointXYZSIFT> (filename, *cloudXYZSIFT) == -1){
+			CLOG(LWARNING) <<"Cannot read PointXYZSIFT cloud from "<<filename;
+		}else{
+			//out_cloud_xyzsift.write(cloud_xyzsift);
+			CLOG(LINFO) <<"PointXYZSIFT cloud loaded properly from "<<filename;
+
+			//return;
+		}// else
+	}
+
+	else if(filename.find("xyz")!=string::npos)
+		{
+			// Try to read the cloud of XYZ points.
+			//pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz (new pcl::PointCloud<pcl::PointXYZ>);
+			if (pcl::io::loadPCDFile<pcl::PointXYZ> (filename, *cloudXYZ) == -1){
+				CLOG(LWARNING) <<"Cannot read PointXYZ cloud from "<<filename;
+			}else{
+				//out_cloud_xyz.write(cloud_xyz);
+				CLOG(LINFO) <<"PointXYZ cloud loaded properly from "<<filename;
+				//return;
+			}// else
+		}
+}
+
+void MongoDBExporter::writeToMemory(string& mime,  string& fileName)
+{
+	if(mime=="image/png" || mime=="image/jpeg")
+	{
+		// read from disc
+		CLOG(LERROR)<<"Read file: "<<fileName;
+		tempImg = imread(fileName, CV_LOAD_IMAGE_UNCHANGED);
+		CLOG(LERROR)<<tempImg.size();
+	}
+	else if(mime=="text/plain")
+	{
+		CLOG(LINFO)<<"mime==text/plain";
+		CLOG(LINFO)<<"fileName.find(pcd): "<<fileName.find("pcd");
+		if((fileName.find("pcd"))!=string::npos)
+		{
+			CLOG(LINFO)<<"pcd :)";
+			ReadPCDCloudFromFile(fileName);
+		}
+		else if(fileName.find("txt")!=string::npos)
+		{
+			char *tempFileName = (char*)fileName.c_str();
+		    std::ifstream ifs(tempFileName); // open a file
+		    string tmpstr((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+		    str = tmpstr;
+		}
+		else
+			CLOG(LERROR)<<"Nie wiem co to za plik :/";
+	}
+}
+
+
+void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType, string& tempFileName, int size)
+{
+	CLOG(LTRACE)<<"MongoDBExporter::insertFileIntoCollection";
+	BSONObjBuilder builder;
+	BSONObj b;
+	BSONElement bsonElement;
+	CLOG(LERROR)<<"fileType : "<<fileType;
+	if (fileType=="png" || fileType=="jpg")	// save image
+	{
+		CLOG(LERROR)<<tempImg.size();
+		CLOG(LTRACE)<<"MongoDBExporter::insertFileIntoCollection, Image file";
+		std::vector<uchar> buf;
+		std::vector<int> params(2);
+
+		if(fileType=="png")
+		{
+			params[1] = 3;
+			params[0] = CV_IMWRITE_PNG_COMPRESSION;
+			cv::imencode(".png", tempImg, buf, params);
+		}
+		else
+		{
+			params[1] = 95;
+			params[0] = CV_IMWRITE_JPEG_QUALITY;
+			cv::imencode(".jpg", tempImg, buf, params);
+		}
+
+		b=BSONObjBuilder().genOID().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "collection").append("extension", fileType).obj();
+		b.getObjectID(bsonElement);
+		oid=bsonElement.__oid();
+		c->insert(dbCollectionPath, b);
+	}
+	else if(fileType=="pcd")	// save cloud
+	{
+		if(cloudType=="xyzrgb")
+		{
+			int cloudSize = cloudXYZRGB->size();
+			int fieldsNr = xyzrgbPointSize*cloudSize;
+			int totalSize = fieldsNr*sizeof(float);
+			float buff[fieldsNr];
+
+			// copy all points to memory
+			for(int iter=0; iter<cloudSize; iter++)
+			{
+				const pcl::PointXYZRGB p = cloudXYZRGB->points[iter];
+				copyXYZRGBPointToFloatArray (p, &buff[xyzrgbPointSize*iter]);
+			}
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			c->insert(dbCollectionPath, b);
+		}
+		else if(cloudType=="xyz")
+		{
+			int cloudSize = cloudXYZ->size();
+
+			int fieldsNr = xyzPointSize*cloudSize;
+			int totalSize = fieldsNr*sizeof(float);
+			float buff[fieldsNr];
+
+			// copy all points to memory
+			for(int iter=0; iter<cloudSize; iter++)
+			{
+				const pcl::PointXYZ p = cloudXYZ->points[iter];
+				copyXYZPointToFloatArray (p, &buff[xyzPointSize*iter]);
+			}
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			c->insert(dbCollectionPath, b);
+		}
+		//TODO dodac SHOT'Y
+		else if(cloudType=="xyzsift")
+		{
+			int cloudSize = cloudXYZSIFT->size();
+			int fieldsNr = siftPointSize*cloudSize;
+			int totalSize = fieldsNr*sizeof(float);
+			float buff[fieldsNr];
+
+			// copy all points to memory
+			for(int iter=0; iter<cloudSize; iter++)
+			{
+				const PointXYZSIFT p = cloudXYZSIFT->points[iter];
+				copyXYZSiftPointToFloatArray (p, &buff[siftPointSize*iter]);
+		    }
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			c->insert(dbCollectionPath, b);
+		}
+		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, PCD file end";
+	}
+	else if(fileType=="txt")
+	{
+		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, txt file";
+		string input;
+
+		// read string from input
+		//input =cipFileIn.read()+" ";
+
+		CLOG(LERROR)<<"Input:"<< str;
+
+		// convert to char*
+		char const *cipCharTable = str.c_str();
+		int size = strlen(cipCharTable);
+		CLOG(LERROR)<<string(cipCharTable);
+		CLOG(LERROR)<<"Size: "<<size;
+		// create bson object
+		b = BSONObjBuilder().genOID().appendBinData(tempFileName, size, BinDataGeneral,  cipCharTable).append("fileName", tempFileName).append("size", size).append("place", "collection").append("extension", fileType).obj();
+
+		// insert object into collection
+		c->insert(dbCollectionPath, b);
+
+		b.getObjectID(bsonElement);
+		oid=bsonElement.__oid();
+	}
+	cloudType="";
+}
+
+void MongoDBExporter::copyXYZPointToFloatArray (const pcl::PointXYZ &p, float * out) const
+{
+	out[0] = p.x;	// 4 bytes
+	out[1] = p.y;	// 4 bytes
+	out[2] = p.z;	// 4 bytes
+}
+
+void MongoDBExporter::copyXYZRGBPointToFloatArray (const pcl::PointXYZRGB &p, float * out) const
+{
+	out[0] = p.x;	// 4 bytes
+	out[1] = p.y;	// 4 bytes
+	out[2] = p.z;	// 4 bytes
+	out[3] = p.rgb;	// 4 bytes
+}
+
+void MongoDBExporter::copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const
+{
+	Eigen::Vector3f outCoordinates = p.getArray3fMap();
+	out[0] = outCoordinates[0];	// 4 bytes
+	out[1] = outCoordinates[1];	// 4 bytes
+	out[2] = outCoordinates[2];	// 4 bytes
+	//CLOG(LERROR)<<"out[0]: "<<out[0]<<"\t out[1]: "<<out[1]<<"\t out[2]: "<<out[2];
+	memcpy(&out[3], &p.multiplicity, sizeof(int)); // 4 bytes
+	memcpy(&out[4], &p.pointId, sizeof(int));	// 4 bytes
+	memcpy(&out[5], &p.descriptor, 128*sizeof(float)); // 128 * 4 bytes = 512 bytes
+}
+
 
 void MongoDBExporter::insert2MongoDB(const string &destination, const string&  modelOrViewName, const string&  type)
 {
@@ -235,7 +483,7 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 	try{
 		if(destination=="Object")
 		{
-			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<"Object"), options, limit, skip);
+			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"NodeName"<<"Object"), options, limit, skip);
 			if(nr==0)
 			{
 				CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
@@ -249,7 +497,7 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 		}
 		if(isViewLastLeaf(destination) || isModelLastLeaf(destination))
 		{
-			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<"Object"));
+			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"NodeName"<<"Object"));
 			if(nr==0)
 			{
 				CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
@@ -257,17 +505,17 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 			}
 			else
 			{
-				int items = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName), options, limit, skip);
+				int items = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"NodeName"<<type<<type+"Name"<<modelOrViewName), options, limit, skip);
 				if(items==0)
 				{
 					CLOG(LTRACE)<<"No such model/view";
-					CLOG(LTRACE)<<"Type: "<<type;
+					CLOG(LTRACE)<<"NodeName : "<<type;
 					if(type=="View")
 						initView(modelOrViewName, true, nodeNameProp, objectName, description);
 					else if(type=="Model")
 						initModel(modelOrViewName, true, nodeNameProp, objectName, description);
 				}
-				cursorCollection = c->query(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName)));
+				cursorCollection = c->query(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"NodeName"<<type<<type+"Name"<<modelOrViewName)));
 				BSONObj obj = cursorCollection->next();
 				vector<OID> childsVector;
 				// check if node has some files
@@ -286,7 +534,7 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 			{
 				if(nodeNameProp=="Model" || nodeNameProp=="View")
 				{
-					unsigned long long nr = c->count(dbCollectionPath, BSON("Type"<<type<<"ObjectName"<<objectName<<type+"Name"<<modelOrViewName), options, limit, skip);
+					unsigned long long nr = c->count(dbCollectionPath, BSON("NodeName"<<type<<"ObjectName"<<objectName<<type+"Name"<<modelOrViewName), options, limit, skip);
 					if(nr>0)
 					{
 						CLOG(LERROR)<<type+" "<< modelOrViewName<<" exists in db for object "<<objectName;
@@ -317,7 +565,8 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 								if( childCursor->more())
 								{
 									BSONObj childObj = childCursor->next();
-									string childNodeName = childObj.getField("Type").str();
+									//TODO zmienic Typa na NodeName
+									string childNodeName = childObj.getField("NodeName").str();
 									CLOG(LINFO)<< "childNodeName: "<<childNodeName;
 									if(childNodeName!="EOO")
 									{
@@ -325,7 +574,10 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 										{
 											string newName;
 											setModelOrViewName(childNodeName, childObj, newName);
-											insert2MongoDB(childNodeName, newName, type);
+											if(childNodeName=="View")
+												insert2MongoDB(childNodeName, newName, "View");
+											else
+												insert2MongoDB(childNodeName, newName, "Model");
 										}
 										else
 											insert2MongoDB(childNodeName, modelOrViewName, type);
