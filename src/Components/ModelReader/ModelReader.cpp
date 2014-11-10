@@ -251,7 +251,7 @@ void ModelReader::readFile(const OID& childOID, std::vector<AbstractObject*>& mo
 	string tempFileName = obj.getField("fileName").str();
 	CLOG(LERROR)<<"place: "<<place<<" size: "<<size<<", fileName: "<<tempFileName;
 
-	if(place=="collection")
+	if(place=="document")
 	{
 		//readFromCollection();
 		string extension = obj.getField("extension").str();

@@ -122,7 +122,7 @@ void ObjectRemover::removeFromMongoDB(string& nodeName,  string& modelOrViewName
 				if(!obj.isEmpty() && nodeNameProp=="Object")
 				{
 
-					CLOG(LFATAL)<<"Type: "<<nodeName;
+					CLOG(LFATAL)<<"NodeName: "<<nodeName;
 					CLOG(LFATAL)<<"Object: "<<objTemp;
 					//remove document
 					BSONElement oi;
@@ -175,7 +175,7 @@ void ObjectRemover::removeFromMongoDB(string& nodeName,  string& modelOrViewName
 							string place = objFile.getField("place").str();
 							CLOG(LERROR)<<"obj: "<<objFile<<", childOID: "<<*it;
 							CLOG(LERROR)<<"place: "<<place;
-							if(place=="collection")
+							if(place=="document")
 							{
 								c->remove(dbCollectionPath , Query(BSON("_id" << *it)));
 							}

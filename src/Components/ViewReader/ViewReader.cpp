@@ -289,7 +289,7 @@ void ViewReader::readFile(OID& childOID)
 	CLOG(LERROR)<<"place: "<<place<<" size: "<<size<<", fileName: "<<tempFileName;
 
 
-	if(place=="collection")
+	if(place=="document")
 	{
 		//readFromCollection();
 		string extension = obj.getField("extension").str();
