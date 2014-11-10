@@ -24,6 +24,12 @@
 #include "mongo/bson/bson.h"
 #include "Logger.hpp"
 #include <Types/MongoBase.hpp>
+#include <Types/SIFTObjectModelFactory.hpp>
+
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/io/pcd_io.h>
+#include <Types/PointXYZSIFT.hpp>
 
 namespace Processors {
 namespace MongoDBImporter {
@@ -97,7 +103,7 @@ private:
         auto_ptr<DBClientCursor> cursorCollection;
         auto_ptr<DBClientCursor> childCursor;
 
-        void readFromMongoDB(const string&, const string&, const string&);
+        void readFromMongoDB(string&, string&, string&);
         void readfromDB();
         void readFile(const string&, const string&, const string&, const OID&);
         void getFileFromGrid(const GridFile& file, const string& modelOrViewName, const string& nodeName, const string& type);

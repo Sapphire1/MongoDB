@@ -121,7 +121,7 @@ private:
         void write2DB();
         void insertToModelOrView(const string &,const string &);
 
-        void insertFileToGrid(string&, const std::vector<string>::iterator, string &, OID&);
+        void insertFileToGrid(string&, const std::vector<string>::iterator, string &, OID&, int);
         void addToObject(const Base::Property<string> & nodeNameProp, const string &);
         void writeToMemory(string& mime, string& fileName);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);

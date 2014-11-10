@@ -5,7 +5,9 @@
  */
 
 #include "MongoDBImporter.hpp"
-
+#define siftPointSize 133
+#define xyzPointSize 3
+#define xyzrgbPointSize 4
 
 namespace Processors {
 namespace MongoDBImporter  {
@@ -19,7 +21,7 @@ MongoDBImporter::MongoDBImporter(const std::string & name) : Base::Component(nam
 		collectionName("collectionName", string("containers")),
 		nodeNameProp("nodeName", string("Object")),
 		viewOrModelName("viewOrModelName", string("")),
-		type("type", string("")),
+		type("NodeName", string("")),
 		folderName("folderName", string("/home/lzmuda/mongo_driver_tutorial/test/"))
 {
 		registerProperty(mongoDBHost);
@@ -40,7 +42,10 @@ MongoDBImporter::~MongoDBImporter()
 void MongoDBImporter::readfromDB()
 {
 	CLOG(LNOTICE) << "MongoDBImporter::readfromDB";
-	readFromMongoDB(nodeNameProp, viewOrModelName, type);
+	string nodeName=(string)nodeNameProp;
+	string viewOrModName=(string)viewOrModelName;
+	string typ=(string)type;
+	readFromMongoDB(nodeName, viewOrModName, typ);
 }
 void MongoDBImporter::prepareInterface() {
         CLOG(LTRACE) << "MongoDBImporter::prepareInterface";
@@ -93,8 +98,8 @@ void MongoDBImporter::getFileFromGrid(const GridFile& file, const string& modelO
 	// type in "View","Model"
 	CLOG(LINFO)<<(string)folderName+type+"/"+modelOrViewName+"/"+nodeName+"/"+filename;
 	string name = (string)folderName+type+"/"+modelOrViewName+"/"+nodeName+"/"+filename;
-	stringstream ss;
-	string str = ss.str();
+	//stringstream ss;
+	//string str = ss.str();
 	char *fileName = (char*)name.c_str();
 	ofstream ofs(fileName);
 	gridfs_offset off = file.write(ofs);
@@ -110,21 +115,194 @@ void MongoDBImporter::getFileFromGrid(const GridFile& file, const string& modelO
 
 void MongoDBImporter::readFile(const string& modelOrViewName, const string& nodeName, const string& type, const OID& childOID)
 {
-	CLOG(LTRACE)<<"MongoDBImporter::readFile";
-	GridFS fs(*c,collectionName);
-	CLOG(LTRACE)<<"_id"<<childOID;
-	GridFile file = fs.findFile(Query(BSON("_id" << childOID)));
-	if (!file.exists())
-	{
-		CLOG(LERROR) << "File not found in grid";
-	}
+	pcl::PointCloud<pcl::PointXYZRGB>::Ptr new_cloud_xyzrgb (new pcl::PointCloud<pcl::PointXYZRGB>);
+	pcl::PointCloud<PointXYZSIFT>::Ptr new_cloud_xyzsift (new pcl::PointCloud<PointXYZSIFT>);
+	int queryOptions = 0;
+	const BSONObj *fieldsToReturn = 0;
+
+	// get bson object from collection
+	BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
+	string featuresNumber = obj.getField("mean_viewpoint_features_number").str();;
+	CLOG(LERROR)<<"obj: "<<obj<<", childOID: "<<childOID;
+	CLOG(LERROR)<<"featuresNumber: "<<featuresNumber;
+	string place = obj.getField("place").str();
+	CLOG(LERROR) << obj.getField("size").str();
+	CLOG(LERROR) << obj.getField("size").Int();
+	//float sizeFloat = obj.getField("size").Double();
+	string tempFileName;
+	int size = obj.getField("size").Int();
+	if(place=="grid")
+		tempFileName = obj.getField("filename").str();
 	else
+		tempFileName = obj.getField("fileName").str();
+	CLOG(LERROR)<<"place: "<<place<<" size: "<<size<<", filename: "<<tempFileName<<", type: "<<type;
+
+	CLOG(LERROR)<<(string)folderName+type+"/"+modelOrViewName+"/"+nodeName+"/"+tempFileName;
+	string newFileName = (string)folderName+type+"/"+modelOrViewName+"/"+nodeName+"/"+tempFileName;
+
+	if(place=="document")
 	{
-		getFileFromGrid(file, modelOrViewName, nodeName, type);
+		//readFromCollection();
+		string extension = obj.getField("extension").str();
+		if(extension=="jpg" || extension=="png")
+		{
+			CLOG(LERROR)<<"Read image\n";
+			//BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
+
+			int len;
+			uchar *data = (uchar*)obj[tempFileName].binData(len);
+
+			std::vector<uchar> v(data, data+len);
+			CLOG(LERROR)<<*data;
+			cv::Mat image = cv::imdecode(cv::Mat(v), -1);
+			CLOG(LERROR)<<image.total();
+			imwrite(newFileName, image );
+		}
+
+		else if(extension=="pcd")
+		{
+			CLOG(LERROR)<<"pcd ";
+			string cloudType;
+			if (tempFileName.find("xyzrgb") != std::string::npos)
+			{
+				cloudType="xyzrgb";
+			}
+			else if (tempFileName.find("xyzsift") != std::string::npos)
+			{
+				cloudType="xyzsift";
+			}
+			else if (tempFileName.find("xyzshot") != std::string::npos)
+			{
+				cloudType="xyzshot";
+			}
+			else if (tempFileName.find("xyz") != std::string::npos)
+			{
+				CLOG(LERROR)<<"xyz";
+				cloudType="xyz";
+			}
+			else
+			{
+				CLOG(LERROR)<<"Don't know such PC!!!";
+			}
+			try
+			{
+				// TODO typ chmury odczytywac z pliku zapisanego w bazie a nie z nazwy pliku!!!
+				//BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
+
+				const BSONObj *fieldsToReturn = 0;
+				int queryOptions = 0;
+				/*
+				if(cloudType=="xyz")
+				{
+					BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
+					// read data to buffer
+					int totalSize;
+					float* buffer = (float*)obj[tempFileName].binData(totalSize);
+					int bufferSize = totalSize/sizeof(float);
+					CLOG(LERROR)<<"bufferSize: "<<bufferSize;
+					float newBuffer[bufferSize];
+					memcpy(newBuffer, buffer, totalSize);
+					pcl::PointXYZ pt;
+					for(int i=0; i<totalSize/(xyzPointSize*sizeof(float)); i++) // now it should be 10 iterations
+					{
+						pt.x=newBuffer[i*xyzPointSize];
+						pt.y=newBuffer[i*xyzPointSize+1];
+						pt.z=newBuffer[i*xyzPointSize+2];
+
+						cloud_xyz->push_back(pt);
+					}
+					// save to file, only in test purposes
+					pcl::io::savePCDFile(newFileName, *new_cloud_xyz, false);
+
+				}
+				else
+					*/
+				if(cloudType=="xyzrgb")
+				{
+					// read data to buffer
+					int totalSize;
+					float* buffer = (float*)obj[tempFileName].binData(totalSize);
+					int bufferSize = totalSize/sizeof(float);
+					CLOG(LERROR)<<"bufferSize: "<<bufferSize;
+					float newBuffer[bufferSize];
+
+					memcpy(newBuffer, buffer, totalSize);
+					pcl::PointXYZRGB pt;
+					for(int i=0; i<totalSize/(xyzrgbPointSize*sizeof(float)); i++) // now it should be 10 iterations
+					{
+						pt.x=newBuffer[i*xyzrgbPointSize];
+						pt.y=newBuffer[i*xyzrgbPointSize+1];
+						pt.z=newBuffer[i*xyzrgbPointSize+2];
+						pt.rgb=newBuffer[i*xyzrgbPointSize+3];
+						new_cloud_xyzrgb->push_back(pt);
+					}
+					pcl::io::savePCDFile(newFileName, *new_cloud_xyzrgb, false);
+				}
+				else if(cloudType=="xyzsift")
+				{
+					// read data to buffer
+					int totalSize;
+					float* buffer = (float*)obj[tempFileName].binData(totalSize);
+					int bufferSize = totalSize/sizeof(float);
+					CLOG(LERROR)<<"bufferSize: "<<bufferSize;
+					float newBuffer[bufferSize];
+
+					memcpy(newBuffer, buffer, totalSize);
+					// for sift row size in float is equal 128+5 =133  floats
+					PointXYZSIFT pt;
+					for(int i=0; i<totalSize/(siftPointSize*sizeof(float)); i++) // now it should be 10 iterations
+					{
+						Eigen::Vector3f pointCoordinates;
+						pointCoordinates[0]=newBuffer[i*siftPointSize];
+						pointCoordinates[1]=newBuffer[i*siftPointSize+1];
+						pointCoordinates[2]=newBuffer[i*siftPointSize+2];
+						memcpy(&pt.multiplicity, &newBuffer[3+i*siftPointSize], sizeof(int)); // 4 bytes
+						memcpy(&pt.pointId, &newBuffer[4+i*siftPointSize], sizeof(int));	// 4 bytes
+						memcpy(&pt.descriptor, &newBuffer[5+i*siftPointSize], 128*sizeof(float)); // 128 * 4 bytes = 512 bytes
+
+						pt.getVector3fMap() = pointCoordinates;
+						new_cloud_xyzsift->push_back(pt);
+					}
+					pcl::io::savePCDFile(newFileName, *new_cloud_xyzsift, false);
+				}
+				CLOG(LERROR)<<"ViewReader::readFile: END";
+			}catch(Exception &ex){CLOG(LERROR)<<ex.what();}
+		}//pcd
+		else if(extension=="txt")
+		{
+			// read from collection
+			const BSONObj *fieldsToReturn = 0;
+			int queryOptions = 0;
+			// get bson object
+			//BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
+			const char *buffer;
+
+			// get data to buffer
+			buffer = obj[tempFileName].binData(size);
+
+			for (int i=0; i<size;i++)
+				CLOG(LERROR)<<buffer[i];
+
+			CLOG(LERROR)<<*buffer;
+			CLOG(LERROR)<<"size: "<<size;
+			string fromDB(buffer,size-1);
+			char *fileName = (char*)newFileName.c_str();
+			std::ofstream outfile (fileName);
+			outfile.write (buffer,size);
+		}
+	}
+	else if(place=="grid"){
+		GridFS fs(*c,collectionName);
+		CLOG(LTRACE)<<"_id"<<childOID;
+		GridFile file = fs.findFile(Query(BSON("_id" << childOID)));
+		if (!file.exists())
+			CLOG(LERROR) << "File not found in grid";
+		else
+			getFileFromGrid(file, modelOrViewName, nodeName, type);
 	}
 }
 
-void MongoDBImporter::readFromMongoDB(const string& nodeName, const string& modelOrViewName, const string& type)
+void MongoDBImporter::readFromMongoDB(string& nodeName, string& modelOrViewName, string& type)
 {
 	CLOG(LTRACE)<<"MongoDBImporter::readFromMongoDB";
 	string name;
@@ -150,7 +328,7 @@ void MongoDBImporter::readFromMongoDB(const string& nodeName, const string& mode
 						if(childCursor->more())
 						{
 							BSONObj childObj = childCursor->next();
-							string childNodeName= childObj.getField("Type").str();
+							string childNodeName= childObj.getField("NodeName").str();
 							if(childNodeName!="EOO")
 							{
 								if(isViewLastLeaf(nodeName) || isModelLastLeaf(nodeName))
@@ -161,8 +339,14 @@ void MongoDBImporter::readFromMongoDB(const string& nodeName, const string& mode
 								else if(childNodeName=="View" || childNodeName=="Model")
 								{
 									string newName;
+
 									setModelOrViewName(childNodeName, childObj, newName);
+									type=childNodeName;
 									readFromMongoDB(childNodeName, newName, type);
+								}//TODO usunac tego elsa!!!
+								else if(childNodeName=="View")
+								{
+									string newName;
 								}
 								else
 									readFromMongoDB(childNodeName, modelOrViewName, type);

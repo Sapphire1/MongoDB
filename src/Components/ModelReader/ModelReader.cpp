@@ -36,8 +36,6 @@ ModelReader::ModelReader(const std::string & name) : Base::Component(name),
         	type="";
         else
         	type="Model";
-
-        //base = new MongoBase::MongoBase();
 }
 
 ModelReader::~ModelReader()

@@ -366,7 +366,7 @@ void ModelWriter::insertFileIntoCollection(OID& oid, const string& fileType, str
 		params[0] = CV_IMWRITE_JPEG_QUALITY;
 		params[1] = 95;
 		cv::imencode(".jpg", tempImg, buf, params);
-		b=BSONObjBuilder().genOID().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "collection").append("extension", fileType).obj();
+		b=BSONObjBuilder().genOID().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
 		c->insert(dbCollectionPath, b);
@@ -386,7 +386,7 @@ void ModelWriter::insertFileIntoCollection(OID& oid, const string& fileType, str
 				const pcl::PointXYZRGB p = cloudXYZRGB->points[iter];
 				copyXYZRGBPointToFloatArray (p, &buff[xyzrgbPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
@@ -405,7 +405,7 @@ void ModelWriter::insertFileIntoCollection(OID& oid, const string& fileType, str
 				const pcl::PointXYZ p = cloudXYZ->points[iter];
 				copyXYZPointToFloatArray (p, &buff[xyzPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
@@ -424,7 +424,7 @@ void ModelWriter::insertFileIntoCollection(OID& oid, const string& fileType, str
 				const PointXYZSIFT p = cloudXYZSIFT->points[iter];
 				copyXYZSiftPointToFloatArray (p, &buff[siftPointSize*iter]);
 		    }
-			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
@@ -446,7 +446,7 @@ void ModelWriter::insertFileIntoCollection(OID& oid, const string& fileType, str
 		CLOG(LERROR)<<string(cipCharTable);
 		CLOG(LERROR)<<"Size: "<<size;
 		// create bson object
-		b = BSONObjBuilder().genOID().appendBinData(tempFileName, size, BinDataGeneral,  cipCharTable).append("fileName", tempFileName).append("size", size).append("place", "collection").append("extension", fileType).obj();
+		b = BSONObjBuilder().genOID().appendBinData(tempFileName, size, BinDataGeneral,  cipCharTable).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
 
 		// insert object into collection
 		c->insert(dbCollectionPath, b);

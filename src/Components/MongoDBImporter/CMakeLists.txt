@@ -28,9 +28,6 @@ set( LIBS_TO_LINK
 
 ADD_LIBRARY(MongoDBImporter SHARED ${files} )
 
-target_link_libraries( MongoDBImporter
-    pthread
-    ${LIBS_TO_LINK}
-)
+TARGET_LINK_LIBRARIES(MongoDBImporter pthread ${LIBS_TO_LINK} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
 
 INSTALL_COMPONENT(MongoDBImporter)

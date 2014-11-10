@@ -155,7 +155,6 @@ void MongoDBExporter::initObject()
 			CLOG(LTRACE)<<"Create Model";
 			createModelOrView(it, type, bsonBuilder);
 		}
-		/*
 		vector<string> views = getAllFolders((string)folderName+"/View/");
 		for(std::vector<string>::iterator it = views.begin(); it != views.end(); ++it)
 		{
@@ -163,7 +162,6 @@ void MongoDBExporter::initObject()
 			CLOG(LTRACE)<<"Create View";
 			createModelOrView(it, type, bsonBuilder);
 		}
-		*/
 		BSONArray destArr = bsonBuilder.arr();
 		c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"NodeName"<<"Object")), BSON("$set"<<BSON("childOIDs"<<destArr)), false, true);
 	  }
@@ -174,7 +172,7 @@ void MongoDBExporter::initObject()
 	  }
 }
 
-void MongoDBExporter::insertFileToGrid(string&  extension, const std::vector<string>::iterator it, string & newFileName, OID& oid)
+void MongoDBExporter::insertFileToGrid(string&  extension, const std::vector<string>::iterator it, string & newFileName, OID& oid, int totalSize)
 {
 	BSONObj o;
 	BSONElement bsonElement;
@@ -182,7 +180,7 @@ void MongoDBExporter::insertFileToGrid(string&  extension, const std::vector<str
 	setMime(extension, mime);
 	GridFS fs(*c, collectionName);
 	o = fs.storeFile(*it, newFileName, mime);
-	BSONObj b = BSONObjBuilder().appendElements(o).append("ObjectName", objectName).obj();
+	BSONObj b = BSONObjBuilder().appendElements(o).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").obj();
 	//c->createIndex(dbCollectionPath, BSON("filename"<<1));
 	c->insert(dbCollectionPath, b);
 	b.getObjectID(bsonElement);
@@ -201,8 +199,9 @@ void MongoDBExporter::writeNode2MongoDB(const string &source, const string &dest
 			{
 				string fileName = *it;
 				string newFileName;
-				float sizeOfFile = get_file_size(fileName)/(1024.0*1024.0);
-				CLOG(LERROR)<<"sizeOfFile: "<<sizeOfFile;
+				float sizeOfFileBytes = get_file_size(fileName);
+				float sizeOfFileMBytes = sizeOfFileBytes/(1024.0*1024.0);
+				CLOG(LERROR)<<"sizeOfFile: "<<sizeOfFileMBytes;
 
 				const size_t last_slash_idx = fileName.find_last_of("/");
 				if (std::string::npos != last_slash_idx)
@@ -211,14 +210,14 @@ void MongoDBExporter::writeNode2MongoDB(const string &source, const string &dest
 				}
 				OID oid;
 				string extension = itExtension->erase(0,2);
-				if(sizeOfFile>1.0)
-					insertFileToGrid(extension, it, newFileName, oid);
-				else if(sizeOfFile<=1.0)
+				if(sizeOfFileMBytes>1.0)
+					insertFileToGrid(extension, it, newFileName, oid, sizeOfFileBytes);
+				else if(sizeOfFileMBytes<=1.0)
 				{
 					string mime;
 					setMime(extension, mime);
 					writeToMemory(mime, *it);
-					insertFileIntoCollection(oid, extension, fileName, sizeOfFile);
+					insertFileIntoCollection(oid, extension, fileName, sizeOfFileBytes);
 				}
 				CLOG(LERROR)<<"UPDATE: "<<oid.toString();
 				c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"NodeName"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
@@ -352,7 +351,7 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 			cv::imencode(".jpg", tempImg, buf, params);
 		}
 
-		b=BSONObjBuilder().genOID().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "collection").append("extension", fileType).obj();
+		b=BSONObjBuilder().genOID().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
 		c->insert(dbCollectionPath, b);
@@ -372,7 +371,7 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 				const pcl::PointXYZRGB p = cloudXYZRGB->points[iter];
 				copyXYZRGBPointToFloatArray (p, &buff[xyzrgbPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
@@ -391,7 +390,7 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 				const pcl::PointXYZ p = cloudXYZ->points[iter];
 				copyXYZPointToFloatArray (p, &buff[xyzPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
@@ -410,7 +409,7 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 				const PointXYZSIFT p = cloudXYZSIFT->points[iter];
 				copyXYZSiftPointToFloatArray (p, &buff[siftPointSize*iter]);
 		    }
-			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "collection").append("extension", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
@@ -433,7 +432,7 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 		CLOG(LERROR)<<string(cipCharTable);
 		CLOG(LERROR)<<"Size: "<<size;
 		// create bson object
-		b = BSONObjBuilder().genOID().appendBinData(tempFileName, size, BinDataGeneral,  cipCharTable).append("fileName", tempFileName).append("size", size).append("place", "collection").append("extension", fileType).obj();
+		b = BSONObjBuilder().genOID().appendBinData(tempFileName, size, BinDataGeneral,  cipCharTable).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
 
 		// insert object into collection
 		c->insert(dbCollectionPath, b);
