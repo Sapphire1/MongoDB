@@ -4,7 +4,7 @@
  * \author Lukasz Zmuda
  */
 
-
+// todo dodac zapis gdzie zapisane i rozmiar
 #include "ViewWriter.hpp"
 #include <pcl/point_representation.h>
 #include <Eigen/Core>
@@ -143,10 +143,6 @@ void ViewWriter::Write_cloud()
 		cloudXYZ = in_cloud_xyz.read();
 		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
 			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZ->size();
-		if(sizeOfCloud>1)
-			sizeOfCloud/=(1000*1000);
-		else
-			sizeOfCloud=-1;
 	}
 	else if(typeid(PointT) == typeid(pcl::PointXYZRGB))
 	{
@@ -154,10 +150,6 @@ void ViewWriter::Write_cloud()
 		cloudXYZRGB = in_cloud_xyzrgb.read();
 		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
 			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZRGB->size();
-		if(sizeOfCloud>1)
-			sizeOfCloud/=(1000*1000);
-		else
-			sizeOfCloud=-1;
 	}
 	else if(typeid(PointT) == typeid(PointXYZSIFT))
 	{
@@ -166,10 +158,6 @@ void ViewWriter::Write_cloud()
 
 		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
 			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZSIFT->size();
-		if(sizeOfCloud>1)
-			sizeOfCloud/=(1000*1000);
-		else
-			sizeOfCloud=-1;
 	}
 	else if(typeid(PointT) == typeid(PointXYZSIFT))
 	{
@@ -177,15 +165,9 @@ void ViewWriter::Write_cloud()
 		cloudXYZRGBSIFT = in_cloud_xyzrgbsift.read();
 		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
 			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZRGBSIFT->size();
-		if(sizeOfCloud>1)
-			sizeOfCloud/=(1000*1000);
-		else
-			sizeOfCloud=-1;
 	}
 	CLOG(LINFO)<<"CloudType: "<<cloudType;
 	CLOG(LINFO)<<"PointCloudSize = "<< sizeOfCloud;
-	if(sizeOfCloud>15)
-		CLOG(LERROR)<<"File should be written to GRIDFS!";
 	writePCD2DB();
 
 }
@@ -321,7 +303,7 @@ void ViewWriter::initObject()
 	  }
 }
 
-void ViewWriter::insertFileIntoGrid(OID& oid, const string& fileType, string& tempFileName)
+void ViewWriter::insertFileIntoGrid(OID& oid, const string& fileType, string& tempFileName, int totalSize)
 {
 	try{
 		BSONObj object;
@@ -388,15 +370,13 @@ void ViewWriter::insertFileIntoGrid(OID& oid, const string& fileType, string& te
 
 		BSONObj b;
 		if(cloudType=="xyzsift")
-			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("mean_viewpoint_features_number", mean_viewpoint_features_number).append("place", "grid").obj();
+			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
 		else
-			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("place", "grid").obj();
+			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").obj();
 		c->insert(dbCollectionPath, b);
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
-
 		cloudType="";
-
 		c->createIndex(dbCollectionPath, BSON("filename"<<1));
 	}catch(DBException &e)
 	{
@@ -413,8 +393,7 @@ float ViewWriter::getFileSize(const string& fileType, string& tempFileName)
 		CLOG(LINFO)<<"Image!";
 		tempImg = in_img.read();
 		size = (float)tempImg.elemSize1()*(float)tempImg.total();
-		size = size/(1024*1024);
-		CLOG(LINFO)<<"Size of image file: " << size<<" MB";
+		CLOG(LINFO)<<"Size of image file: " << size<<" B";
 	}
 	else if(fileType=="pcd")	// save to file pcd
 	{
@@ -454,20 +433,21 @@ void ViewWriter::writeNode2MongoDB(const string &destination, const string &type
 	CLOG(LTRACE) <<"Filename: " << fileName << " destination: "<< destination<<" dbCollectionPath: "<<dbCollectionPath;
     try{
     	string tempFileName="";
-    	float sizeOfFile = getFileSize(fileType, tempFileName);
-    	if(sizeOfFile>15)
+    	float sizeOfFileBytes = getFileSize(fileType, tempFileName);
+    	float sizeOfFileMBytes = sizeOfFileBytes/(1024*1024);
+    	if(sizeOfFileMBytes>15)
     	{
     		CLOG(LERROR)<<"ViewWriter::writeNode2MongoDB, cloudType: "<<cloudType;
-			insertFileIntoGrid(oid, fileType, tempFileName);
+			insertFileIntoGrid(oid, fileType, tempFileName, sizeOfFileBytes);
 			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
     	}
 		else
 		{
 			CLOG(LERROR)<<"ViewWriter::writeNode2MongoDB, cloudType: "<<cloudType;
-			if(sizeOfFile>0.0)
+			if(sizeOfFileBytes>0.0)
 			{
-				CLOG(LERROR)<<"sizeOfFile: "<<sizeOfFile;
-				insertFileIntoCollection(oid, fileType, tempFileName, sizeOfFile);
+				CLOG(LERROR)<<"sizeOfFileBytes: "<<sizeOfFileBytes;
+				insertFileIntoCollection(oid, fileType, tempFileName, sizeOfFileBytes);
 				CLOG(LERROR)<<"UPDATE: "<<oid.toString();
 				c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
 			}

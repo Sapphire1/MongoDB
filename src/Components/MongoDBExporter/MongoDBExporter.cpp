@@ -180,7 +180,11 @@ void MongoDBExporter::insertFileToGrid(string&  extension, const std::vector<str
 	setMime(extension, mime);
 	GridFS fs(*c, collectionName);
 	o = fs.storeFile(*it, newFileName, mime);
-	BSONObj b = BSONObjBuilder().appendElements(o).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").obj();
+	BSONObj b;
+	//if(cloudType=="xyzsift")
+	//	b = BSONObjBuilder().appendElements(o).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
+	//else
+		b = BSONObjBuilder().appendElements(o).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").obj();
 	//c->createIndex(dbCollectionPath, BSON("filename"<<1));
 	c->insert(dbCollectionPath, b);
 	b.getObjectID(bsonElement);

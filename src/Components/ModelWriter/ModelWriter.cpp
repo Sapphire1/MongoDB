@@ -3,7 +3,7 @@
  * \brief
  * \author Lukasz Zmuda
  */
-
+// todo dodac zapis gdzie zapisane i rozmiar
 
 #include "ModelWriter.hpp"
 
@@ -101,22 +101,15 @@ void ModelWriter::Write_cloud()
 		cloudType="xyz";
 		cloudXYZ = in_cloud_xyz.read();
 		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
-			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZ->size();
-		if(sizeOfCloud>1)
-			sizeOfCloud/=(1000*1000);
-		else
-			sizeOfCloud=-1;
+			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZ->size();//B
 	}
 	else if(typeid(PointT) == typeid(pcl::PointXYZRGB))
 	{
 		cloudType="xyzrgb";
 		cloudXYZRGB = in_cloud_xyzrgb.read();
 		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
-			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZRGB->size();
-		if(sizeOfCloud>1)
-			sizeOfCloud/=(1000*1000);
-		else
-			sizeOfCloud=-1;
+			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZRGB->size();//B
+
 	}
 	else if(typeid(PointT) == typeid(PointXYZSIFT))
 	{
@@ -124,27 +117,17 @@ void ModelWriter::Write_cloud()
 		cloudXYZSIFT = in_cloud_xyzsift.read();
 
 		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
-			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZSIFT->size();
-		if(sizeOfCloud>1)
-			sizeOfCloud/=(1000*1000);
-		else
-			sizeOfCloud=-1;
+			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZSIFT->size();//B
 	}
 	else if(typeid(PointT) == typeid(PointXYZSIFT))
 	{
 		cloudType="xyzrgbsift";
 		cloudXYZRGBSIFT = in_cloud_xyzrgbsift.read();
 		for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
-			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZRGBSIFT->size();
-		if(sizeOfCloud>1)
-			sizeOfCloud/=(1000*1000);
-		else
-			sizeOfCloud=-1;
+			sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZRGBSIFT->size();//B
 	}
 	CLOG(LINFO)<<"CloudType: "<<cloudType;
 	CLOG(LINFO)<<"PointCloudSize = "<< sizeOfCloud;
-	if(sizeOfCloud>15)
-		CLOG(LERROR)<<"File should be written to GRIDFS!";
 	writePCD2DB();
 }
 
@@ -225,7 +208,7 @@ void ModelWriter::initObject()
 	}
 }
 
-void ModelWriter::insertFileIntoGrid(OID& oid, const string& fileType, string& tempFileName)
+void ModelWriter::insertFileIntoGrid(OID& oid, const string& fileType, string& tempFileName, int totalSize)
 {
 	try{
 		BSONObj object;
@@ -275,9 +258,9 @@ void ModelWriter::insertFileIntoGrid(OID& oid, const string& fileType, string& t
 		object = fs.storeFile(tempFileName, fileNameInMongo, mime);
 		BSONObj b;
 		if(cloudType=="xyzsift")
-			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
+			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
 		else
-			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).obj();
+			b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").obj();
 		cloudType="";
 
 		c->createIndex(dbCollectionPath, BSON("filename"<<1));
@@ -299,17 +282,18 @@ void ModelWriter::writeNode2MongoDB(const string &destination, const string &typ
 	CLOG(LTRACE) <<"Filename: " << fileName << " destination: "<< destination<<" dbCollectionPath: "<<dbCollectionPath;
     try{
     	string tempFileName="";
-    	float sizeOfFile = getFileSize(fileType, tempFileName);
-    	if(sizeOfFile>15)
+    	float sizeOfFileBytes = getFileSize(fileType, tempFileName);
+    	float sizeOfFileMBytes = sizeOfFileBytes/(1024*1024);
+    	if(sizeOfFileMBytes>15.0)
     	{
-    		insertFileIntoGrid(oid, fileType, tempFileName);
+    		insertFileIntoGrid(oid, fileType, tempFileName, sizeOfFileBytes);
 			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
 			CLOG(LTRACE) <<"Files saved successfully";
     	}
-    	else if(sizeOfFile>0.0 && sizeOfFile<=15.0)
+    	else
 		{
-			CLOG(LERROR)<<"sizeOfFile: "<<sizeOfFile;
-			insertFileIntoCollection(oid, fileType, tempFileName, sizeOfFile);
+			CLOG(LERROR)<<"sizeOfFileBytes: "<<sizeOfFileBytes;
+			insertFileIntoCollection(oid, fileType, tempFileName, sizeOfFileBytes);
 			CLOG(LERROR)<<"UPDATE: "<<oid.toString();
 			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
 		}
@@ -464,8 +448,7 @@ float ModelWriter::getFileSize(const string& fileType, string& tempFileName)
 	{
 		CLOG(LINFO)<<"Image!";
 		tempImg = in_img.read();
-		size = (float)tempImg.elemSize1()*(float)tempImg.total();
-		size = size/(1024*1024);
+		size = (float)tempImg.elemSize1()*(float)tempImg.total();//MB
 		CLOG(LINFO)<<"Size of image file: " << size<<" MB";
 	}
 	else if(fileType=="pcd")	// save to file pcd
