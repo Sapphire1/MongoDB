@@ -33,9 +33,9 @@ ModelReader::ModelReader(const std::string & name) : Base::Component(name),
 		registerProperty(modelType);
         CLOG(LTRACE) << "Hello ModelReader";
         if(nodeNameProp=="Object")
-        	type="";
+        	nodeType="";
         else
-        	type="Model";
+        	nodeType="Model";
 }
 
 ModelReader::~ModelReader()
@@ -46,7 +46,7 @@ ModelReader::~ModelReader()
 void ModelReader::readfromDB()
 {
 	CLOG(LNOTICE) << "ModelReader::readfromDB";
-	readFromMongoDB(nodeNameProp, viewOrModelName, type);
+	readFromMongoDB(nodeNameProp, viewOrModelName, nodeType);
 }
 void ModelReader::prepareInterface() {
 	CLOG(LTRACE) << "ModelReader::prepareInterface";
@@ -442,14 +442,14 @@ void ModelReader::readFile(const OID& childOID, std::vector<AbstractObject*>& mo
 	}
 }
 
-void ModelReader::readFromMongoDB(const string& nodeName, const string& modelOrViewName, const string& type)
+void ModelReader::readFromMongoDB(const string& nodeName, const string& modelOrViewName, const string& nodeType)
 {
 	CLOG(LTRACE)<<"ModelReader::readFromMongoDB";
 	string name;
 	std::vector<AbstractObject*> models;
 	try{
 		int items=0;
-		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeName, cursorCollection, modelOrViewName, type, items);
+		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeName, cursorCollection, modelOrViewName, nodeType, items);
 		if(items>0)
 		{
 			CLOG(LINFO)<<"Founded some data";
@@ -473,7 +473,7 @@ void ModelReader::readFromMongoDB(const string& nodeName, const string& modelOrV
 							if(childCursor->more())
 							{
 								BSONObj childObj = childCursor->next();
-								string childNodeName= childObj.getField("Type").str();
+								string childNodeName= childObj.getField("NodeName").str();
 								CLOG(LTRACE)<<childNodeName;
 								if(childNodeName!="EOO")
 								{
@@ -482,7 +482,7 @@ void ModelReader::readFromMongoDB(const string& nodeName, const string& modelOrV
 										CLOG(LTRACE)<<"setModelOrViewName";
 										string newName;
 										setModelOrViewName(childNodeName, childObj, newName);
-										readFromMongoDB(childNodeName, newName, type);
+										readFromMongoDB(childNodeName, newName, "Model"/*nodeType*/);
 									}
 									else if(childNodeName=="View")
 									{
@@ -493,11 +493,11 @@ void ModelReader::readFromMongoDB(const string& nodeName, const string& modelOrV
 										if(modelType==childNodeName)
 										{
 											CLOG(LINFO)<<"modelType==childNodeName";
-											readFromMongoDB(childNodeName, modelOrViewName, type);
+											readFromMongoDB(childNodeName, modelOrViewName, nodeType);
 										}
 									}
 									else
-										readFromMongoDB(childNodeName, modelOrViewName, type);
+										readFromMongoDB(childNodeName, modelOrViewName, nodeType);
 								}
 							}//if(childNodeName!="EOO")
 						}//for

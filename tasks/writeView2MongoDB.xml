@@ -17,17 +17,17 @@
 	<Subtasks>
 		<Subtask name="Processing">
 			<Executor name="Processing"  period="1">
-			 <Component name="Source" type="PCL:PCDReader" priority="1" bump="0">
+			 <!--Component name="Source" type="PCL:PCDReader" priority="1" bump="0"-->
 				<!--param name="filename">/home/lzmuda/PCL_Plane/SiftCloud.pcd</param--><!--xyzsift-->
 				<!--param name="filename">/home/lzmuda/PCL_Plane/table_scene_mug_stereo_textured_cylinder.pcd</param--><!--xyz-->
-				<param name="filename">/home/lzmuda/PCL_Plane/table_scene_mug_stereo_texturedMod.pcd</param><!--xyzrgb-->
-			</Component>
+				<!--param name="filename">/home/lzmuda/PCL_Plane/table_scene_mug_stereo_texturedMod.pcd</param--><!--xyzrgb-->
+			<!--/Component-->
 			<!--Component name="NextImageTrigger" type="DCL_CvBasic:Trigger" priority="2" bump="0"></Component-->
-			<!--Component name="Input" type="DCL_CvBasic:Sequence" priority="3">
+			<Component name="Input" type="DCL_CvBasic:Sequence" priority="3">
 				<param name="sequence.directory">/home/lzmuda/mongo_driver_tutorial/View/lab012/StereoLR/</param>
 				<param name="mode.loop">0</param>
 				<param name="mode.auto_trigger">0</param>
-			</Component-->
+			</Component>
 			<Component name="Writer" type="MongoDB:ViewWriter" priority="4">
 				  <param name="suffix">1</param>
 			</Component>
@@ -47,15 +47,15 @@
 		<!--Source name="NextImageTrigger.out_trigger">
 			<sink>Input.in_trigger</sink>
 		</Source-->
-		<Source name="Source.out_cloud_xyzrgb">
+		<!--Source name="Source.out_cloud_xyzrgb"-->
 			<!--sink>Writer.in_cloud_xyzsift</sink-->
-			<sink>Writer.in_cloud_xyzrgb</sink>
+			<!--sink>Writer.in_cloud_xyzrgb</sink-->
 			<!--sink>InputCloud.in_cloud_xyzsift</sink-->
-		</Source>
-		<!--Source name="Input.out_img">
+		<!--/Source-->
+		<Source name="Input.out_img">
 			<sink>Writer.in_img</sink>	
 			<sink>CvWindow.in_img</sink>
-		</Source-->
+		</Source>
 	</DataStreams>
 </Task>
 

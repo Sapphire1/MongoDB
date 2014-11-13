@@ -179,7 +179,7 @@ void ModelWriter::createModelOrView(const std::vector<string>::iterator it, cons
 	BSONElement bsonElement;
 	if(*it=="." || *it=="..")
 		return;
-	BSONObj model = BSONObjBuilder().genOID().append("Type", type).append("ObjectName", objectName).append(type+"Name", *it).append("description", description).obj();
+	BSONObj model = BSONObjBuilder().genOID().append("NodeName", type).append("ObjectName", objectName).append(type+"Name", *it).append("description", description).obj();
 	c->insert(dbCollectionPath, model);
 	model.getObjectID(bsonElement);
 	OID oid=bsonElement.__oid();
@@ -197,7 +197,7 @@ void ModelWriter::initObject()
 	bool objectInTheScene = false;
 	try
 	{
-		BSONObj object = BSONObjBuilder().genOID().append("Type", "Object").append("ObjectName", objectName).append("description", description).obj();
+		BSONObj object = BSONObjBuilder().genOID().append("NodeName", "Object").append("ObjectName", objectName).append("description", description).obj();
 		c->insert(dbCollectionPath, object);
 		c->createIndex(dbCollectionPath, BSON("ObjectName"<<1));
 		addScenes(object, objectName);
@@ -287,7 +287,7 @@ void ModelWriter::writeNode2MongoDB(const string &destination, const string &typ
     	if(sizeOfFileMBytes>15.0)
     	{
     		insertFileIntoGrid(oid, fileType, tempFileName, sizeOfFileBytes);
-			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
+			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"NodeName"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
 			CLOG(LTRACE) <<"Files saved successfully";
     	}
     	else
@@ -295,7 +295,7 @@ void ModelWriter::writeNode2MongoDB(const string &destination, const string &typ
 			CLOG(LERROR)<<"sizeOfFileBytes: "<<sizeOfFileBytes;
 			insertFileIntoCollection(oid, fileType, tempFileName, sizeOfFileBytes);
 			CLOG(LERROR)<<"UPDATE: "<<oid.toString();
-			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"Type"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
+			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<type+"Name"<<modelOrViewName<<"NodeName"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
 		}
     }
 	catch(DBException &e)
@@ -481,17 +481,17 @@ float ModelWriter::getFileSize(const string& fileType, string& tempFileName)
 	return size;
 }
 
-void ModelWriter::insert2MongoDB(const string &destination, const string&  modelOrViewName, const string&  type, const string& fileType)
+void ModelWriter::insert2MongoDB(const string &destination, const string&  modelOrViewName, const string&  nodeName, const string& fileType)
 {
 	CLOG(LERROR)<<"ModelWriter::insert2MongoDB";
 	auto_ptr<DBClientCursor> cursorCollection;
 	string source;
 	int items=0;
 	try{
-		if(destination=="Object")
+		/*if(destination=="Object")
 		{
 			CLOG(LERROR)<<"Object";
-			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<"Object"),0,0,0);
+			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"NodeName"<<"Object"),0,0,0);
 			if(nr==0)
 			{
 				CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
@@ -502,39 +502,40 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 					CLOG(LERROR) <<"Object "<<objectName<<" exist in "<< dbCollectionPath;
 					return;
 			}
-		}
+		}*/
 		if(isViewLastLeaf(destination) || isModelLastLeaf(destination))
 		{
 			CLOG(LERROR)<<"Last Leaf";
-			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<"Object"),0,0,0);
+			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"NodeName"<<"Object"),0,0,0);
 			if(nr==0)
 			{
-				CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
+				CLOG(LERROR) <<"Object does not exists in "<< dbCollectionPath;
 				initObject();
-				insert2MongoDB(destination, modelOrViewName, type, fileType);
+				insert2MongoDB(destination, modelOrViewName, nodeName, fileType);
 				return;
 			}
 			else
 			{
-				CLOG(LTRACE)<<"Object now exist";
-				int items = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName),1,1,1);
+				CLOG(LERROR)<<"Object now exist";
+				int items = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"NodeName"<<nodeName<<nodeName+"Name"<<modelOrViewName),1,1,1);
 				if(items==0)
 				{
-					CLOG(LTRACE)<<"No such model/view";
-					CLOG(LTRACE)<<"Type: "<<type;
+					CLOG(LERROR)<<"No such model/view";
+					CLOG(LERROR)<<"NodeName: "<<nodeName;
 					initModel(modelOrViewName, true, nodeNameProp, objectName, description);
 				}
-				cursorCollection = c->query(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<type<<type+"Name"<<modelOrViewName)));
+				CLOG(LERROR)<<"Get document";
+				cursorCollection = c->query(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"NodeName"<<nodeName<<nodeName+"Name"<<modelOrViewName)));
 				BSONObj obj = cursorCollection->next();
 				vector<OID> childsVector;
 				// check if node has some files
 				if(getChildOIDS(obj, "childOIDs", "childOID", childsVector)>0 && childsVector.size()>0)
 				{
-					CLOG(LTRACE)<<type <<"There are some files in Mongo in this node!";
+					CLOG(LTRACE)<<nodeName <<"There are some files in Mongo in this node!";
 				}
 			}
 			CLOG(LINFO)<<"Write to model";
-			writeNode2MongoDB(destination, type, modelOrViewName, fileType);
+			writeNode2MongoDB(destination, nodeName, modelOrViewName, fileType);
 		}
     }//try
 	catch(DBException &e)

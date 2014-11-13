@@ -31,9 +31,9 @@ ViewReader::ViewReader(const std::string & name) : Base::Component(name),
 		registerProperty(viewOrModelName);
 		this->position=0;
 		if(nodeNameProp=="Object")
-			type="";
+			nodeType="";
 		else
-			type="View";
+			nodeType="View";
         CLOG(LTRACE) << "Hello ViewReader";
 }
 
@@ -45,7 +45,7 @@ ViewReader::~ViewReader()
 void ViewReader::readfromDB()
 {
 	CLOG(LNOTICE) << "ViewReader::readfromDB";
-	readFromMongoDB(nodeNameProp, viewOrModelName, type);
+	readFromMongoDB(nodeNameProp, viewOrModelName, nodeType);
 }
 void ViewReader::prepareInterface() {
         CLOG(LTRACE) << "ViewReader::prepareInterface";
@@ -512,13 +512,13 @@ void ViewReader::readFile(OID& childOID)
 	}
 }
 
-void ViewReader::readFromMongoDB(const string& nodeName, const string& modelOrViewName, const string& type)
+void ViewReader::readFromMongoDB(const string& nodeName, const string& modelOrViewName, const string& nodeType)
 {
 	CLOG(LTRACE)<<"ViewReader::readFromMongoDB";
 	string name;
 	try{
 		int items=0;
-		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeName, cursorCollection, modelOrViewName, type, items);
+		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeName, cursorCollection, modelOrViewName, nodeType, items);
 		if(items>0)
 		{
 			CLOG(LINFO)<<"Founded some data";
@@ -541,17 +541,21 @@ void ViewReader::readFromMongoDB(const string& nodeName, const string& modelOrVi
 							if(childCursor->more())
 							{
 								BSONObj childObj = childCursor->next();
-								string childNodeName= childObj.getField("Type").str();
+								string childNodeName= childObj.getField("NodeName").str();
 								if(childNodeName!="EOO")
 								{
-									if(childNodeName=="View" || childNodeName=="Model")
+									if(childNodeName=="View")
 									{
 										string newName;
 										setModelOrViewName(childNodeName, childObj, newName);
-										readFromMongoDB(childNodeName, newName, type);
+										readFromMongoDB(childNodeName, newName, "View");
+									}
+									else if(childNodeName=="Model")
+									{
+										CLOG(LTRACE)<<"It's a model. Do nothing.";
 									}
 									else
-										readFromMongoDB(childNodeName, modelOrViewName, type);
+										readFromMongoDB(childNodeName, modelOrViewName, nodeType);
 								}
 							}//if(childNodeName!="EOO")
 						}//for

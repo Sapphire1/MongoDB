@@ -100,7 +100,7 @@ private:
         Base::Property<string> nodeNameProp;
         Base::Property<string> viewOrModelName;
         Base::Property<string> modelType;
-        string type;
+        string nodeType;
         string dbCollectionPath;
         auto_ptr<DBClientCursor> cursorCollection;
         auto_ptr<DBClientCursor> childCursor;
