@@ -488,7 +488,7 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 	string source;
 	int items=0;
 	try{
-		/*if(destination=="Object")
+		if(destination=="Object")
 		{
 			CLOG(LERROR)<<"Object";
 			unsigned long long nr = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"NodeName"<<"Object"),0,0,0);
@@ -502,7 +502,7 @@ void ModelWriter::insert2MongoDB(const string &destination, const string&  model
 					CLOG(LERROR) <<"Object "<<objectName<<" exist in "<< dbCollectionPath;
 					return;
 			}
-		}*/
+		}
 		if(isViewLastLeaf(destination) || isModelLastLeaf(destination))
 		{
 			CLOG(LERROR)<<"Last Leaf";

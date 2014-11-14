@@ -488,7 +488,7 @@ void ModelReader::readFromMongoDB(const string& nodeName, const string& modelOrV
 									{
 										CLOG(LTRACE)<<"It's a view. Do nothing.";
 									}
-									else if(childNodeName=="SOM" || childNodeName=="SSOM")
+									else if(modelType!="" && (childNodeName=="SOM" || childNodeName=="SSOM"))
 									{
 										if(modelType==childNodeName)
 										{

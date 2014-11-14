@@ -498,7 +498,6 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 	BSONElement bsonElement;
 	// todo dodac obsluge cv mat xyz std::vector<float> buf;
 
-	//TODO sprawdzic nazwe tempFileName dla obrazow
 	if (fileType=="png" || fileType=="jpg")	// save image
 	{
 		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, Image file";
