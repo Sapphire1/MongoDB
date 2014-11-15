@@ -105,6 +105,7 @@ private:
     	pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT;
     	string cloudType;
 		cv::Mat tempImg;
+		cv::Mat xyzrgbImage;
 		std::string str;
 		//float sizeOfCloud;
 

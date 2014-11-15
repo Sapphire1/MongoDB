@@ -42,7 +42,8 @@ MongoDBExporter::MongoDBExporter(const string & name) : Base::Component(name),
         fileExtensions.push_back("*.jpg");
         fileExtensions.push_back("*.txt");
         fileExtensions.push_back("*.pcd");
-
+        fileExtensions.push_back("*.yaml");
+        fileExtensions.push_back("*.yml");
 
         CLOG(LTRACE) << "Hello MongoDBExporter";
 }
@@ -196,7 +197,8 @@ void MongoDBExporter::writeNode2MongoDB(const string &source, const string &dest
 {
 	CLOG(LTRACE) <<"Source: " << source << " destination: "<< destination<<" dbCollectionPath: "<<dbCollectionPath;
     try{
-    	for(std::vector<string>::iterator itExtension = fileExtensions.begin(); itExtension != fileExtensions.end(); ++itExtension) {
+    	for(std::vector<string>::iterator itExtension = fileExtensions.begin(); itExtension != fileExtensions.end(); ++itExtension)
+    	{
     		CLOG(LTRACE) <<"source+*itExtension "<<source+*itExtension;
 			vector<string> files = getAllFiles(source+*itExtension);
 			for(std::vector<string>::iterator it = files.begin(); it != files.end(); ++it)
@@ -213,10 +215,12 @@ void MongoDBExporter::writeNode2MongoDB(const string &source, const string &dest
 					newFileName = fileName.erase(0, last_slash_idx + 1);
 				}
 				OID oid;
-				string extension = itExtension->erase(0,2);
-				if(sizeOfFileMBytes>1.0)
+				string extension = *itExtension;
+				extension.erase(0,2);
+				CLOG(LERROR)<<"newFileName : "<<newFileName;
+				if(sizeOfFileMBytes>15.0)
 					insertFileToGrid(extension, it, newFileName, oid, sizeOfFileBytes);
-				else if(sizeOfFileMBytes<=1.0)
+				else //if(sizeOfFileMBytes<=15.0)
 				{
 					string mime;
 					setMime(extension, mime);
@@ -296,12 +300,11 @@ void MongoDBExporter::ReadPCDCloudFromFile(const string& filename)
 			}// else
 		}
 }
-
+// read from disc
 void MongoDBExporter::writeToMemory(string& mime,  string& fileName)
 {
 	if(mime=="image/png" || mime=="image/jpeg")
 	{
-		// read from disc
 		CLOG(LERROR)<<"Read file: "<<fileName;
 		tempImg = imread(fileName, CV_LOAD_IMAGE_UNCHANGED);
 		CLOG(LERROR)<<tempImg.size();
@@ -309,7 +312,6 @@ void MongoDBExporter::writeToMemory(string& mime,  string& fileName)
 	else if(mime=="text/plain")
 	{
 		CLOG(LINFO)<<"mime==text/plain";
-		CLOG(LINFO)<<"fileName.find(pcd): "<<fileName.find("pcd");
 		if((fileName.find("pcd"))!=string::npos)
 		{
 			CLOG(LINFO)<<"pcd :)";
@@ -321,6 +323,14 @@ void MongoDBExporter::writeToMemory(string& mime,  string& fileName)
 		    std::ifstream ifs(tempFileName); // open a file
 		    string tmpstr((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 		    str = tmpstr;
+		}
+		else if(fileName.find("yaml")!=string::npos || fileName.find("yml")!=string::npos)
+		{
+			CLOG(LERROR)<<"Read file: "<<fileName;
+			cv::FileStorage file(fileName, cv::FileStorage::READ);
+			file["img"] >> xyzrgbImage;
+			//xyzrgbImage.convertTo(xyzrgbImage, CV_32FC4);
+
 		}
 		else
 			CLOG(LERROR)<<"Nie wiem co to za plik :/";
@@ -356,6 +366,27 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 		}
 
 		b=BSONObjBuilder().genOID().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
+		b.getObjectID(bsonElement);
+		oid=bsonElement.__oid();
+		c->insert(dbCollectionPath, b);
+	}
+	else if (fileType=="yaml" || fileType=="yml")	// save image
+	{
+		CLOG(LERROR)<<xyzrgbImage.size();
+		CLOG(LTRACE)<<"MongoDBExporter::insertFileIntoCollection, cv::Mat - XYZRGB";
+		int bufSize = xyzrgbImage.total()*xyzrgbImage.channels()*4;
+		float* buf;
+		buf = (float*)xyzrgbImage.data;
+		CLOG(LERROR)<<"Set buffer YAML";
+		//if(fileType=="yml"||fileType=="yaml")
+		//{
+		//	params[1] = 3;
+		//	params[0] = CV_IMWRITE_PNG_COMPRESSION;
+		//	cv::imencode(".png", xyzrgbImage, buf, params);
+		//}
+
+		b=BSONObjBuilder().genOID().appendBinData(tempFileName, bufSize, mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
+		CLOG(LERROR)<<"YAML inserted";
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
 		c->insert(dbCollectionPath, b);
@@ -568,7 +599,6 @@ void MongoDBExporter::insert2MongoDB(const string &destination, const string&  m
 								if( childCursor->more())
 								{
 									BSONObj childObj = childCursor->next();
-									//TODO zmienic Typa na NodeName
 									string childNodeName = childObj.getField("NodeName").str();
 									CLOG(LINFO)<< "childNodeName: "<<childNodeName;
 									if(childNodeName!="EOO")

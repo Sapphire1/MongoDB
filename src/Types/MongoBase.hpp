@@ -410,6 +410,8 @@ void MongoBase::setMime( const string& extension,  string& mime)
 		mime= "image/jpeg";
 	else if(extension=="txt" || extension=="pcd")
 		mime="text/plain";
+	else if(extension=="yaml" || extension=="yml")
+			mime="text/plain";
 	else
 	{
 		std::cout <<"I don't know such file extension! Please add extension to the `if` statement from http://www.sitepoint.com/web-foundations/mime-types-complete-list/";

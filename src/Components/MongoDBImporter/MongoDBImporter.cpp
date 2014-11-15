@@ -148,17 +148,53 @@ void MongoDBImporter::readFile(const string& modelOrViewName, const string& node
 		{
 			CLOG(LERROR)<<"Read image\n";
 			//BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
-
 			int len;
 			uchar *data = (uchar*)obj[tempFileName].binData(len);
-
 			std::vector<uchar> v(data, data+len);
 			CLOG(LERROR)<<*data;
 			cv::Mat image = cv::imdecode(cv::Mat(v), -1);
 			CLOG(LERROR)<<image.total();
 			imwrite(newFileName, image );
 		}
-
+		else if(extension=="yml" || extension=="yaml")
+		{
+			CLOG(LERROR)<<"Read image\n";
+			//BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
+			int len;
+			float *data = (float*)obj[tempFileName].binData(len);
+			CLOG(LFATAL)<<"len : "<<len;
+			int rows = 480;//obj.getField("rows").Int();
+			int cols = 640;//obj.getField("cols").Int();
+			int channels = 3; //obj.getField("channels").Int();
+			// if(channels==3)
+			cv::Mat imageXYZRGB(rows, cols, CV_32FC3);
+			//imageXYZRGB.convertTo(imageXYZRGB, CV_32FC4);
+			vector<float> img;
+			//rows = rows*3;
+			float img_ptr[3];
+			for (int i = 0; i < 480; ++i)
+			{
+				CLOG(LERROR)<<"i : "<<i;
+				float* xyz_p = imageXYZRGB.ptr <float> (i);
+				for (int j = 0; j < 640*3; j+=3)
+				{
+					//if channels==3
+					CLOG(LERROR)<<"i*640*3+j: " <<i*640*3+j;
+					xyz_p[0+j]=data[i*640*3+j];
+					xyz_p[1+j]=data[i*640*3+j+1];
+					xyz_p[2+j]=data[i*640*3+j+2];
+					CLOG(LERROR)<<"2";
+					//3 686 400
+				}
+			}
+			CLOG(LERROR)<<"222";
+			cv::FileStorage fs(newFileName, cv::FileStorage::WRITE);
+			CLOG(LERROR)<<"333";
+			fs << "img" << imageXYZRGB;
+			CLOG(LERROR)<<"444";
+			fs.release();
+			CLOG(LERROR)<<"555";
+		}
 		else if(extension=="pcd")
 		{
 			CLOG(LERROR)<<"pcd ";
