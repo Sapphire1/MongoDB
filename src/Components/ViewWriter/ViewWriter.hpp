@@ -117,6 +117,7 @@ private:
     	pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT;
     	pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT;
     	cv::Mat tempImg;
+    	cv::Mat xyzimage;
 
         template <class PointT>
         void Write_cloud();
@@ -135,6 +136,7 @@ private:
         void writeTXT2DB();
         void writeImage2DB();
         void writePCD2DB();
+        void writeYAML2DB();
         float getFileSize(const string& fileType, string& tempFileName);
         void insertToModelOrView(const string &,const string &);
         void insertFileIntoGrid(OID&, const string&, string&, int);

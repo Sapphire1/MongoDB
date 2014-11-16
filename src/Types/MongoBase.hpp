@@ -58,10 +58,16 @@ public:
 	Base::DataStreamIn <cv::Mat> in_img;
 
 	/// Output data stream - processed image
-	Base::DataStreamOut <Mat> out_img;
+	Base::DataStreamOut <cv::Mat> out_img;
 
 	/// Matrixes of projection, distortion etc.
 	Base::DataStreamIn <std::string> cipFileIn;
+
+	/// XYZ cv::Mat input
+	Base::DataStreamIn <cv::Mat> in_yaml;
+
+	/// XYZ cv::Mat output
+	Base::DataStreamOut <cv::Mat> out_yaml;
 
 	/// Matrixes of projection, distortion etc.
 	Base::DataStreamOut <std::string> cipFileOut;

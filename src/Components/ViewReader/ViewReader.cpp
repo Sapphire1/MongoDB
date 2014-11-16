@@ -463,7 +463,45 @@ void ViewReader::readFile(OID& childOID)
 				CLOG(LERROR)<<"ViewWriter::insertFileIntoCollection: END";
 			}catch(Exception &ex){CLOG(LERROR)<<ex.what();}
 		}//pcd
-		//TODO sprawdzic czemu czasami nie zapetla sie na samych plikach txt!!!
+		else if(extension=="yml" || extension=="yaml")
+		{
+			CLOG(LERROR)<<"Read YAML\n";
+			int len;
+			float *data = (float*)obj[tempFileName].binData(len);
+			CLOG(LFATAL)<<"len : "<<len;
+			//TODO Odczytywać to z bazy!!!
+			int rows = 480;//obj.getField("rows").Int();
+			int cols = 640;//obj.getField("cols").Int();
+			int channels = 3; //obj.getField("channels").Int();
+			cv::Mat imageXYZRGB(rows, cols, CV_32FC3);
+			//imageXYZRGB.convertTo(imageXYZRGB, CV_32FC4);
+			vector<float> img;
+			//rows = rows*3;
+			float img_ptr[3];
+			for (int i = 0; i < 480; ++i)
+			{
+				CLOG(LERROR)<<"i : "<<i;
+				float* xyz_p = imageXYZRGB.ptr <float> (i);
+				for (int j = 0; j < 640*3; j+=3)
+				{
+					//if channels==3
+					CLOG(LERROR)<<"i*640*3+j: " <<i*640*3+j;
+					xyz_p[0+j]=data[i*640*3+j];
+					xyz_p[1+j]=data[i*640*3+j+1];
+					xyz_p[2+j]=data[i*640*3+j+2];
+					CLOG(LERROR)<<"2";
+					//3 686 400
+				}
+			}
+			CLOG(LERROR)<<"222";
+			cv::FileStorage fs("yamlXYZ.yaml", cv::FileStorage::WRITE);
+			CLOG(LERROR)<<"333";
+			fs << "img" << imageXYZRGB;
+			CLOG(LERROR)<<"444";
+			fs.release();
+			CLOG(LERROR)<<"555";
+			out_yaml.write(imageXYZRGB);
+		}
 		else if(extension=="txt")
 		{
 			// read from collection
@@ -505,6 +543,7 @@ void ViewReader::readFile(OID& childOID)
 			string filename = file.getFileField("filename").str();
 			// get mime from file
 			string mime = file.getContentType();
+			//TODO zmienic to żeby brał to z properities a nie na sztywno!!!
 			string tempFile = "tempFile";
 			getFileFromGrid(file, tempFile);
 			writeToSinkFromFile(mime, tempFile, filename);

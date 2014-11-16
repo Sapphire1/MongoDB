@@ -220,7 +220,7 @@ void MongoDBExporter::writeNode2MongoDB(const string &source, const string &dest
 				CLOG(LERROR)<<"newFileName : "<<newFileName;
 				if(sizeOfFileMBytes>15.0)
 					insertFileToGrid(extension, it, newFileName, oid, sizeOfFileBytes);
-				else //if(sizeOfFileMBytes<=15.0)
+				else
 				{
 					string mime;
 					setMime(extension, mime);
@@ -329,8 +329,6 @@ void MongoDBExporter::writeToMemory(string& mime,  string& fileName)
 			CLOG(LERROR)<<"Read file: "<<fileName;
 			cv::FileStorage file(fileName, cv::FileStorage::READ);
 			file["img"] >> xyzrgbImage;
-			//xyzrgbImage.convertTo(xyzrgbImage, CV_32FC4);
-
 		}
 		else
 			CLOG(LERROR)<<"Nie wiem co to za plik :/";
@@ -370,7 +368,7 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 		oid=bsonElement.__oid();
 		c->insert(dbCollectionPath, b);
 	}
-	else if (fileType=="yaml" || fileType=="yml")	// save image
+	else if (fileType=="yaml" || fileType=="yml")	// save xyz image
 	{
 		CLOG(LERROR)<<xyzrgbImage.size();
 		CLOG(LTRACE)<<"MongoDBExporter::insertFileIntoCollection, cv::Mat - XYZRGB";
@@ -378,13 +376,6 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 		float* buf;
 		buf = (float*)xyzrgbImage.data;
 		CLOG(LERROR)<<"Set buffer YAML";
-		//if(fileType=="yml"||fileType=="yaml")
-		//{
-		//	params[1] = 3;
-		//	params[0] = CV_IMWRITE_PNG_COMPRESSION;
-		//	cv::imencode(".png", xyzrgbImage, buf, params);
-		//}
-
 		b=BSONObjBuilder().genOID().appendBinData(tempFileName, bufSize, mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
 		CLOG(LERROR)<<"YAML inserted";
 		b.getObjectID(bsonElement);

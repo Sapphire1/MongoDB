@@ -72,6 +72,7 @@ ViewWriter::~ViewWriter()
 void ViewWriter::prepareInterface() {
 	CLOG(LTRACE) << "ViewWriter::prepareInterface";
 	registerHandler("writeViewTXT2DB", boost::bind(&ViewWriter::writeTXT2DB, this));
+	registerHandler("writeViewYAML2DB", boost::bind(&ViewWriter::writeYAML2DB, this));
 	registerHandler("writeViewImage2DB", boost::bind(&ViewWriter::writeImage2DB, this));
 	registerHandler("Write_xyz", boost::bind(&ViewWriter::Write_cloud<pcl::PointXYZ>, this));
 	registerHandler("Write_xyzrgb", boost::bind(&ViewWriter::Write_cloud<pcl::PointXYZRGB>, this));
@@ -84,9 +85,11 @@ void ViewWriter::prepareInterface() {
 	registerStream("in_cloud_xyzsift", &in_cloud_xyzsift);
 	registerStream("in_cloud_xyzrgbsift", &in_cloud_xyzrgbsift);
 	registerStream("cipFileIn", &cipFileIn);
+	registerStream("in_yaml", &in_yaml);
 
 	addDependency("writeViewImage2DB", &in_img);
 	addDependency("writeViewTXT2DB", &cipFileIn);
+	addDependency("writeViewYAML2DB", &in_yaml);
 	addDependency("Write_xyzrgb", &in_cloud_xyzrgb);
 	addDependency("Write_xyz", &in_cloud_xyz);
 	addDependency("Write_xyzsift", &in_cloud_xyzsift);
@@ -104,6 +107,19 @@ void ViewWriter::writeTXT2DB()
 	else
 		CLOG(LERROR)<<"Add view name and try again";
 }
+
+void ViewWriter::writeYAML2DB()
+{
+	CLOG(LNOTICE) << "ViewWriter::writeYAML2DB";
+	string sceneNames = sceneNamesProp;
+	boost::split(MongoBase::splitedSceneNames, sceneNames, is_any_of(","));
+	string fileType = "yaml";
+	if(viewNameProp!="")
+		insert2MongoDB(nodeNameProp,viewNameProp, "View", fileType);
+	else
+		CLOG(LERROR)<<"Add view name and try again";
+}
+
 
 void ViewWriter::writeImage2DB()
 {
@@ -330,6 +346,14 @@ void ViewWriter::insertFileIntoGrid(OID& oid, const string& fileType, string& te
 			out.close();
 			CLOG(LINFO)<<"Size of CIP is lower then 16 MB: ";
 		}
+		else if(fileType=="yaml" || fileType=="yml")	// save to yaml file
+		{
+			CLOG(LINFO) << "YAML file";
+			tempFileName = string(fileName)+"."+string(fileType);
+			cv::FileStorage fs(tempFileName, cv::FileStorage::WRITE);
+			fs << "img" << xyzimage;
+			fs.release();
+		}
 		else if(fileType=="pcd")
 		{
 			CLOG(LINFO) << "PCD file";
@@ -395,6 +419,13 @@ float ViewWriter::getFileSize(const string& fileType, string& tempFileName)
 		size = (float)tempImg.elemSize1()*(float)tempImg.total();
 		CLOG(LINFO)<<"Size of image file: " << size<<" B";
 	}
+	else if ( fileType=="yml" || fileType=="yaml")
+	{
+		CLOG(LINFO)<<"YAML!";
+		xyzimage = in_yaml.read();
+		size = (float)xyzimage.elemSize1()*(float)xyzimage.total();
+		CLOG(LINFO)<<"Size of image file: " << size<<" B";
+	}
 	else if(fileType=="pcd")	// save to file pcd
 	{
 		CLOG(LINFO)<<"Cloud!";
@@ -436,7 +467,7 @@ void ViewWriter::writeNode2MongoDB(const string &destination, const string &node
     	CLOG(LERROR)<<tempFileName;
     	float sizeOfFileBytes = getFileSize(fileType, tempFileName);
     	float sizeOfFileMBytes = sizeOfFileBytes/(1024*1024);
-    	if(sizeOfFileMBytes>15)
+    	if(sizeOfFileMBytes<1.0)
     	{
     		CLOG(LERROR)<<"ViewWriter::writeNode2MongoDB, cloudType: "<<cloudType;
 			insertFileIntoGrid(oid, fileType, tempFileName, sizeOfFileBytes);
@@ -445,13 +476,11 @@ void ViewWriter::writeNode2MongoDB(const string &destination, const string &node
 		else
 		{
 			CLOG(LERROR)<<"ViewWriter::writeNode2MongoDB, cloudType: "<<cloudType;
-			if(sizeOfFileBytes>0.0)
-			{
+
 				CLOG(LERROR)<<"sizeOfFileBytes: "<<sizeOfFileBytes;
 				insertFileIntoCollection(oid, fileType, tempFileName, sizeOfFileBytes);
 				CLOG(LERROR)<<"UPDATE: "<<oid.toString();
 				c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<nodeName+"Name"<<modelOrViewName<<"NodeName"<<destination)), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<oid.toString()))), false, true);
-			}
 		}
 		CLOG(LTRACE) <<"File saved successfully";
     }
@@ -607,6 +636,21 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 			c->insert(dbCollectionPath, b);
 		}
 		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, PCD file end";
+	}
+	else if (fileType=="yaml" || fileType=="yml")	// save image
+	{
+		CLOG(LERROR)<<xyzimage.size();
+		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, cv::Mat - XYZRGB";
+		int bufSize = xyzimage.total()*xyzimage.channels()*4;
+		float* buf;
+		buf = (float*)xyzimage.data;
+		CLOG(LERROR)<<"Set buffer YAML";
+
+		b=BSONObjBuilder().genOID().appendBinData(tempFileName, bufSize, mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
+		CLOG(LERROR)<<"YAML inserted";
+		b.getObjectID(bsonElement);
+		oid=bsonElement.__oid();
+		c->insert(dbCollectionPath, b);
 	}
 	else if(fileType=="txt")
 	{
