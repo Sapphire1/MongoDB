@@ -162,29 +162,26 @@ void MongoDBImporter::readFile(const string& modelOrViewName, const string& node
 			//BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << childOID)), fieldsToReturn, queryOptions);
 			int len;
 			float *data = (float*)obj[tempFileName].binData(len);
-			CLOG(LFATAL)<<"len : "<<len;
-			int rows = 480;//obj.getField("rows").Int();
-			int cols = 640;//obj.getField("cols").Int();
-			int channels = 3; //obj.getField("channels").Int();
+			CLOG(LNOTICE)<<"len : "<<len;
+			int width = obj.getField("width").Int();//480
+			int height = obj.getField("height").Int();//640
+			int channels = obj.getField("channels").Int();
 			// if(channels==3)
-			cv::Mat imageXYZRGB(rows, cols, CV_32FC3);
+			cv::Mat imageXYZRGB(width, height, CV_32FC3);
 			//imageXYZRGB.convertTo(imageXYZRGB, CV_32FC4);
 			vector<float> img;
 			//rows = rows*3;
-			float img_ptr[3];
-			for (int i = 0; i < 480; ++i)
+			float img_ptr[channels];
+			for (int i = 0; i < width; ++i)
 			{
 				CLOG(LERROR)<<"i : "<<i;
 				float* xyz_p = imageXYZRGB.ptr <float> (i);
-				for (int j = 0; j < 640*3; j+=3)
+				for (int j = 0; j < height*channels; j+=channels)
 				{
-					//if channels==3
-					CLOG(LERROR)<<"i*640*3+j: " <<i*640*3+j;
-					xyz_p[0+j]=data[i*640*3+j];
-					xyz_p[1+j]=data[i*640*3+j+1];
-					xyz_p[2+j]=data[i*640*3+j+2];
-					CLOG(LERROR)<<"2";
-					//3 686 400
+					CLOG(LERROR)<<"i*height*channels+j: " <<i*height*channels+j;
+					xyz_p[0+j]=data[i*height*channels+j];
+					xyz_p[1+j]=data[i*height*channels+j+1];
+					xyz_p[2+j]=data[i*height*channels+j+2];
 				}
 			}
 			CLOG(LERROR)<<"222";

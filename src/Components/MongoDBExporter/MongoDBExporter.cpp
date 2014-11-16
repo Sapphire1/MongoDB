@@ -374,9 +374,12 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 		CLOG(LTRACE)<<"MongoDBExporter::insertFileIntoCollection, cv::Mat - XYZRGB";
 		int bufSize = xyzrgbImage.total()*xyzrgbImage.channels()*4;
 		float* buf;
+		int width = xyzrgbImage.size().width;
+		int height = xyzrgbImage.size().height;
+		int channels = xyzrgbImage.channels();
 		buf = (float*)xyzrgbImage.data;
 		CLOG(LERROR)<<"Set buffer YAML";
-		b=BSONObjBuilder().genOID().appendBinData(tempFileName, bufSize, mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
+		b=BSONObjBuilder().genOID().appendBinData(tempFileName, bufSize, mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).append("width", width).append("height", height).append("channels", channels).obj();
 		CLOG(LERROR)<<"YAML inserted";
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();

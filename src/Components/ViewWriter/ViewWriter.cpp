@@ -642,11 +642,13 @@ void ViewWriter::insertFileIntoCollection(OID& oid, const string& fileType, stri
 		CLOG(LERROR)<<xyzimage.size();
 		CLOG(LTRACE)<<"ViewWriter::insertFileIntoCollection, cv::Mat - XYZRGB";
 		int bufSize = xyzimage.total()*xyzimage.channels()*4;
+		int width = xyzimage.size().width;
+		int height = xyzimage.size().height;
+		int channels = xyzimage.channels();
 		float* buf;
 		buf = (float*)xyzimage.data;
 		CLOG(LERROR)<<"Set buffer YAML";
-
-		b=BSONObjBuilder().genOID().appendBinData(tempFileName, bufSize, mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
+		b=BSONObjBuilder().genOID().appendBinData(tempFileName, bufSize, mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).append("width", width).append("height", height).append("channels", channels).obj();
 		CLOG(LERROR)<<"YAML inserted";
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
