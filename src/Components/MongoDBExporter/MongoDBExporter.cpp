@@ -186,7 +186,7 @@ void MongoDBExporter::insertFileToGrid(string&  extension, const std::vector<str
 	//	b = BSONObjBuilder().appendElements(o).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
 	//else
 		b = BSONObjBuilder().appendElements(o).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").obj();
-	//c->createIndex(dbCollectionPath, BSON("filename"<<1));
+	c->createIndex(dbCollectionPath, BSON("filename"<<1));
 	c->insert(dbCollectionPath, b);
 	b.getObjectID(bsonElement);
 	oid=bsonElement.__oid();
@@ -363,7 +363,7 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 			cv::imencode(".jpg", tempImg, buf, params);
 		}
 
-		b=BSONObjBuilder().genOID().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
+		b=BSONObjBuilder().genOID().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("filename", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
 		c->insert(dbCollectionPath, b);
@@ -379,7 +379,7 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 		int channels = xyzrgbImage.channels();
 		buf = (float*)xyzrgbImage.data;
 		CLOG(LERROR)<<"Set buffer YAML";
-		b=BSONObjBuilder().genOID().appendBinData(tempFileName, bufSize, mongo::BinDataGeneral, &buf[0]).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).append("width", width).append("height", height).append("channels", channels).obj();
+		b=BSONObjBuilder().genOID().appendBinData(tempFileName, bufSize, mongo::BinDataGeneral, &buf[0]).append("filename", tempFileName).append("size", size).append("place", "document").append("extension", fileType).append("width", width).append("height", height).append("channels", channels).obj();
 		CLOG(LERROR)<<"YAML inserted";
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
@@ -400,7 +400,7 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 				const pcl::PointXYZRGB p = cloudXYZRGB->points[iter];
 				copyXYZRGBPointToFloatArray (p, &buff[xyzrgbPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("filename", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
@@ -419,7 +419,7 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 				const pcl::PointXYZ p = cloudXYZ->points[iter];
 				copyXYZPointToFloatArray (p, &buff[xyzPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("filename", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
@@ -438,7 +438,7 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 				const PointXYZSIFT p = cloudXYZSIFT->points[iter];
 				copyXYZSiftPointToFloatArray (p, &buff[siftPointSize*iter]);
 		    }
-			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("fileName", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("filename", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
@@ -461,7 +461,7 @@ void MongoDBExporter::insertFileIntoCollection(OID& oid, const string& fileType,
 		CLOG(LERROR)<<string(cipCharTable);
 		CLOG(LERROR)<<"Size: "<<size;
 		// create bson object
-		b = BSONObjBuilder().genOID().appendBinData(tempFileName, size, BinDataGeneral,  cipCharTable).append("fileName", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
+		b = BSONObjBuilder().genOID().appendBinData(tempFileName, size, BinDataGeneral,  cipCharTable).append("filename", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
 
 		// insert object into collection
 		c->insert(dbCollectionPath, b);

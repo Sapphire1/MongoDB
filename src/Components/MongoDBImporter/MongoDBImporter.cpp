@@ -131,10 +131,10 @@ void MongoDBImporter::readFile(const string& modelOrViewName, const string& node
 	//float sizeFloat = obj.getField("size").Double();
 	string tempFileName;
 	int size = obj.getField("size").Int();
-	if(place=="grid")
-		tempFileName = obj.getField("filename").str();
-	else
-		tempFileName = obj.getField("fileName").str();
+	//if(place=="grid")
+	tempFileName = obj.getField("filename").str();
+	//else
+	//	tempFileName = obj.getField("fileName").str();
 	CLOG(LERROR)<<"place: "<<place<<" size: "<<size<<", filename: "<<tempFileName<<", type: "<<type;
 
 	CLOG(LERROR)<<(string)folderName+type+"/"+modelOrViewName+"/"+nodeName+"/"+tempFileName;

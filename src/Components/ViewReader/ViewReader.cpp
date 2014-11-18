@@ -285,7 +285,7 @@ void ViewReader::readFile(OID& childOID)
 	CLOG(LERROR)<<"obj: "<<obj<<", childOID: "<<childOID;
 	string place = obj.getField("place").str();
 	int size = obj.getField("size").Int();
-	string tempFileName = obj.getField("fileName").str();
+	string tempFileName = obj.getField("filename").str();
 	CLOG(LERROR)<<"place: "<<place<<" size: "<<size<<", fileName: "<<tempFileName;
 
 

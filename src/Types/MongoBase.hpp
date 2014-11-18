@@ -12,6 +12,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <boost/algorithm/string.hpp>
+#include "Logger.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -133,25 +134,25 @@ void MongoBase::cloudEncoding(OID& oid, string& tempFileName, string & cloudType
 		pcl::io::OctreePointCloudCompression<pcl::PointXYZRGB>* PointCloudDecoderXYZRGB;
 		int QueryOptions = 0;
 		const BSONObj *fieldsToReturn = 0;
-		cout<<"dbCollectionPath: "<<dbCollectionPath<<"\n\n";
+		LOG(LNOTICE)<<"dbCollectionPath: "<<dbCollectionPath<<"\n\n";
 
 		// get bson object from collection
-		cout<<oid<<endl;
+		LOG(LNOTICE)<<oid<<endl;
 		BSONObj obj = c->findOne(dbCollectionPath, Query( BSON("_id" << oid)), fieldsToReturn, QueryOptions);
 
 		// read data to buffer
 		int readSize;
-		cout<<obj<<"\n";
+		LOG(LNOTICE)<<obj<<"\n";
 
 		const char* charPtr= (const char*)(obj[tempFileName].binData(readSize));
-		cout<<"Readed: "<<readSize<<" B.";
-		cout<<"charPtr: "<<charPtr;
+		LOG(LNOTICE)<<"Readed: "<<readSize<<" B.";
+		LOG(LNOTICE)<<"charPtr: "<<charPtr;
 		stringstream * strPtr = (stringstream*)charPtr;
-		cout<<"strPtr: "<<strPtr;
-		cout<<"charPtr[0]: "<<charPtr[0];
-		cout<<*charPtr;
-		cout<<*strPtr;
-		cout<<strPtr->str();
+		LOG(LNOTICE)<<"strPtr: "<<strPtr;
+		LOG(LNOTICE)<<"charPtr[0]: "<<charPtr[0];
+		LOG(LNOTICE)<<*charPtr;
+		LOG(LNOTICE)<<*strPtr;
+		LOG(LNOTICE)<<strPtr->str();
 
 
 		if(cloudType=="xyz")
@@ -168,15 +169,15 @@ void MongoBase::cloudEncoding(OID& oid, string& tempFileName, string & cloudType
 			PointCloudDecoderXYZRGB->decodePointCloud (*strPtr, cloudXYZRGB);
 			pcl::io::savePCDFile("newCloud2.pcd", *cloudXYZRGB, false);
 		}
-		cout<<"ViewWriter::insertFileIntoCollection: END";
-	}catch(Exception &ex){cout<<ex.what();}
+		LOG(LNOTICE)<<"ViewWriter::insertFileIntoCollection: END";
+	}catch(Exception &ex){LOG(LNOTICE)<<ex.what();}
 }
 void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Property<string>& nodeNameProp, Base::Property<string>& objectName, Base::Property<string>& description)
 {
 	BSONElement oi;
     OID o;
     BSONArrayBuilder stereoPCArrayBuilder, kinectPCArrayBuilder, tofPCArrayBuilder, objectArrayBuilder, viewArrayBuilder, stereoArrayBuilder, kinectArrayBuilder, tofArrayBuilder, viewBuilder;
-    cout<<"Init View\n";
+    LOG(LNOTICE)<<"Init View\n";
     //add view to object
     if(addToObjectFlag)
     {
@@ -191,7 +192,7 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
 		//docViewsNames.push_back("ToFRGBD");
 		//docViewsNames.push_back("ToFRX");
 		//docViewsNames.push_back("ToFRXM");
-		cout<< "Add to "<< *it<<" , this: "<<o.toString()<<" in "<<dbCollectionPath<<"\n";
+		LOG(LNOTICE)<< "Add to "<< *it<<" , this: "<<o.toString()<<" in "<<dbCollectionPath<<"\n";
 		if(*it=="Stereo" || *it=="Kinect" || *it=="ToF")
 			viewArrayBuilder.append(BSONObjBuilder().append("childOID", o.toString()).obj());
 		else if(*it=="StereoLR" || *it=="StereoRX" || *it=="StereoRXM" || *it=="StereoPC")
@@ -230,7 +231,7 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
 
 void MongoBase::addToObject(const Base::Property<string>& nodeNameProp,const string & name, Base::Property<string>& objectName, Base::Property<string>& description)
 {
-	cout<<"Create View";
+	LOG(LNOTICE)<<"Create View";
 	int options=0;
 	int limit=0;
 	int skip=0;
@@ -251,19 +252,19 @@ void MongoBase::addToObject(const Base::Property<string>& nodeNameProp,const str
 	// add object
 	if(nr==0)
 	{
-		cout<<"Create Object";
+		LOG(LNOTICE)<<"Create Object";
 		//CLOG(LTRACE) <<"Object does not exists in "<< dbCollectionPath;
 		BSONObj object = BSONObjBuilder().genOID().append("NodeName", "Object").append("ObjectName", objectName).append("description", description).obj();
 		c->insert(dbCollectionPath, object);
 		addScenes(object, objectName);
 	}
 	// add model/view
-	cout<<"Create Model/View";
+	LOG(LNOTICE)<<"Create Model/View";
 	BSONObj modelorView = BSONObjBuilder().genOID().append("NodeName", type).append("ObjectName", objectName).append(type+"Name", name).append("description", description).obj();
 	c->insert(dbCollectionPath, modelorView);
 	modelorView.getObjectID(oi);
 	o=oi.__oid();
-	cout << "\n"<<o.toString() << "\n";
+	LOG(LNOTICE) << "\n"<<o.toString() << "\n";
 	c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"NodeName"<<"Object")), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<o.toString()))), false, true);
 }
 
@@ -285,7 +286,7 @@ void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
 		{
 			auto_ptr<DBClientCursor> cursorCollection =c->query(dbCollectionPath, Query(BSON("SceneName"<<*itSceneName)));
 			BSONObj scene = cursorCollection->next();
-			cout<<"Add scene to the object!";
+			LOG(LNOTICE)<<"Add scene to the object!";
 			scene.getObjectID(oi);
 			o=oi.__oid();
 
@@ -313,7 +314,7 @@ void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
 			}
 			if(!objectInTheScene)
 			{
-				cout<<"Adding object to the scene";
+				LOG(LNOTICE)<<"Adding object to the scene";
 				object.getObjectID(oi);
 				o=oi.__oid();
 				c->update(dbCollectionPath, Query(BSON("SceneName"<<*itSceneName)), BSON("$addToSet"<<BSON("objectsOIDs"<<BSON("objectOID"<<o.toString()))), false, true);
@@ -322,7 +323,7 @@ void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
 		else
 		{
 			c->createIndex(dbCollectionPath, BSON("SceneName"<<1));
-			cout<<"Create scene and add object to array list";
+			LOG(LNOTICE)<<"Create scene and add object to array list";
 			BSONObj scene = BSONObjBuilder().genOID().append("SceneName", *itSceneName).obj();
 			c->insert(dbCollectionPath, scene);
 
@@ -342,7 +343,7 @@ void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
 
 void MongoBase::initModel(const string & modelName, bool addToModelFlag,  Base::Property<string>& nodeNameProp, Base::Property<string>& objectName, Base::Property<string>& description)
 {
-	cout<<"initModel";
+	LOG(LNOTICE)<<"initModel";
 	BSONElement oi;
 	OID o;
 	BSONArrayBuilder objectArrayBuilder, modelArrayBuilder, somArrayBuilder, ssomArrayBuilder;
@@ -353,13 +354,13 @@ void MongoBase::initModel(const string & modelName, bool addToModelFlag,  Base::
 	}
 
 	for(std::vector<string>::iterator it = docModelsNames.begin(); it != docModelsNames.end(); ++it){
-		cout<<"*it: "<<*it<<"\n";
+		LOG(LNOTICE)<<"*it: "<<*it<<"\n";
 		BSONObj document = BSONObjBuilder().genOID().append("NodeName", *it).append("ObjectName", objectName).append("ModelName", modelName).append("description", description).obj();
 		c->insert(dbCollectionPath, document);
 
 		document.getObjectID(oi);
 		o=oi.__oid();
-		cout<<"OID: "<<o.toString()<<"\n";
+		LOG(LNOTICE)<<"OID: "<<o.toString()<<"\n";
 
 		if(*it=="SOM" || *it=="SSOM")
 			modelArrayBuilder.append(BSONObjBuilder().append("childOID", o.toString()).obj());
@@ -388,16 +389,16 @@ void MongoBase::getFileFromGrid(const GridFile& file, const string& tempFn)
 	stringstream ss;
 	string str = ss.str();
 	char *tempFilename = (char*)tempFn.c_str();
-	std::cout<<"\n\ntempFilename: "<<tempFilename<<"\n";
+	LOG(LNOTICE)<<"\n\ntempFilename: "<<tempFilename<<"\n";
 	ofstream ofs(tempFilename);
 	gridfs_offset off = file.write(ofs);
 	if (off != file.getContentLength())
 	{
-		std::cout << "\nFailed to read a file from mongoDB\n";
+		LOG(LNOTICE) << "\nFailed to read a file from mongoDB\n";
 	}
 	else
 	{
-		std::cout << "\nSuccess read a file from mongoDB\n";
+		LOG(LNOTICE) << "\nSuccess read a file from mongoDB\n";
 	}
 }
 
@@ -409,7 +410,7 @@ void MongoBase::setModelOrViewName(const string& childNodeName, const BSONObj& c
 
 void MongoBase::setMime( const string& extension,  string& mime)
 {
-	cout<<"Extension : "<<extension<<std::endl;
+	LOG(LNOTICE)<<"Extension : "<<extension<<std::endl;
 	if (extension=="png")
 		mime="image/png";
 	else if(extension=="jpg")
@@ -420,7 +421,7 @@ void MongoBase::setMime( const string& extension,  string& mime)
 			mime="text/plain";
 	else
 	{
-		std::cout <<"I don't know such file extension! Please add extension to the `if` statement from http://www.sitepoint.com/web-foundations/mime-types-complete-list/";
+		LOG(LNOTICE) <<"I don't know such file extension! Please add extension to the `if` statement from http://www.sitepoint.com/web-foundations/mime-types-complete-list/";
 		return;
 	}
 }
@@ -430,16 +431,16 @@ void MongoBase::connectToMongoDB(string& hostname)
 	try{
 		//if(!c->isStillConnected())
 		{
-	//		cout<<"\n\n\nNot Connected?\n\n\n";
+	//		LOG(LNOTICE)<<"\n\n\nNot Connected?\n\n\n";
 			c->connect(hostname);
-			cout<<"Connected to base\n";
+			LOG(LNOTICE)<<"Connected to base\n";
 		}
 	//	else
-	//		cout<<"\n\n\nConnected?\n\n\n";
+	//		LOG(LNOTICE)<<"\n\n\nConnected?\n\n\n";
 
 	}catch(ConnectException& ex)
 	{
-		std::cout<<ex.what();
+		LOG(LNOTICE)<<ex.what();
 	}
 }
 
@@ -534,21 +535,21 @@ void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbColle
 	int options=0;
 	int limit=0;
 	int skip=0;
-	  std::cout<<"\nMongoBase::findDocumentInCollection\n";
+	LOG(LNOTICE)<<"\nMongoBase::findDocumentInCollection\n";
 
       try{
     	  if(type!="")
     	  {
 			  if(type=="View")
 			  {
-				  std::cout<<"\nView\n";
+				  LOG(LNOTICE)<<"\nView\n";
 				  items = c.count(dbCollectionPath, (BSON("NodeName"<<nodeName<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName)), options, limit, skip);
 				  if(items>0)
 					  cursorCollection =c.query(dbCollectionPath, (Query(BSON("NodeName"<<nodeName<<"ObjectName"<<objectName<<"ViewName"<<modelOrViewName))));
 			  }
 			  else if(type=="Model")
 			  {
-				  std::cout<<"\nModel\n";
+				  LOG(LNOTICE)<<"\nModel\n";
 				  items = c.count(dbCollectionPath, BSON("NodeName"<<nodeName<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName), options, limit, skip);
 				  if (items>0)
 					  cursorCollection =c.query(dbCollectionPath, Query(BSON("NodeName"<<nodeName<<"ObjectName"<<objectName<<"ModelName"<<modelOrViewName)));
@@ -563,11 +564,11 @@ void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbColle
 		  }
     	  else
     	  {
-    		  std::cout<<"\nObject\n";
-			  std::cout<<"NodeName"<<nodeName<<"\tObjectName"<<objectName<<"\n";
+    		  LOG(LNOTICE)<<"\nObject\n";
+			  LOG(LNOTICE)<<"NodeName"<<nodeName<<"\tObjectName"<<objectName<<"\n";
 
     		  items = c.count(dbCollectionPath, BSON("NodeName"<<nodeName<<"ObjectName"<<objectName), options, limit, skip);
-    		  cout<<"items: "<<items<<"\n";
+    		  LOG(LNOTICE)<<"items: "<<items<<"\n";
     		  if(items>0)
     			  cursorCollection =c.query(dbCollectionPath, (Query(BSON("NodeName"<<nodeName<<"ObjectName"<<objectName))));
     	  }
