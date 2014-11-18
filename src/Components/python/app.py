@@ -135,7 +135,23 @@ def showViewsInfo():
 	    <SELECT name="NodeName">
 		<OPTGROUP label="NodeName">
 		  <OPTION selected label="StereoLR" value="StereoLR">StereoLR</OPTION>
-		  <OPTION label="SXM" value="SXM">SXM</OPTION>
+		  <OPTION label="StereoPCXYZRGB" value="StereoPCXYZRGB">StereoPCXYZRGB</OPTION>
+		  <OPTION label="StereoPCXYZSIFT" value="StereoPCXYZSIFT">StereoPCXYZSIFT</OPTION>
+		  <OPTION label="StereoPCXYZSHOT" value="StereoPCXYZSHOT">StereoPCXYZSHOT</OPTION>
+		  <OPTION label="ToFPCXYZSIFT" value="ToFPCXYZSIFT">ToFPCXYZSIFT</OPTION>
+		  <OPTION label="ToFPCXYZRGB" value="ToFPCXYZRGB">ToFPCXYZRGB</OPTION>
+		  <OPTION label="ToFPCXYZSHOT" value="ToFPCXYZSHOT">ToFPCXYZSHOT</OPTION>
+		  <OPTION label="KinectPCXYZSHOT" value="KinectPCXYZSHOT">KinectPCXYZSHOT</OPTION>
+		  <OPTION label="KinectPCXYZSIFT" value="KinectPCXYZSIFT">KinectPCXYZSIFT</OPTION>
+		  <OPTION label="KinectPCXYZRGB" value="KinectPCXYZRGB">KinectPCXYZRGB</OPTION>
+		  <OPTION label="StereoLR" value="StereoLR">StereoLR</OPTION>
+		  <OPTION label="KinectRGBD" value="KinectRGBD">KinectRGBD</OPTION>
+		  <OPTION label="ToFRGBD" value="ToFRGBD">ToFRGBD</OPTION>
+		  <OPTION label="StereoRX" value="StereoRX">StereoRX</OPTION>
+		  <OPTION label="KinectRX" value="KinectRX">KinectRX</OPTION>
+		  <OPTION label="StereoRXM" value="StereoRXM">StereoRXM</OPTION>
+		  <OPTION label="KinectRXM" value="KinectRXM">KinectRXM</OPTION>
+		  <OPTION label="ToFRXM" value="ToFRXM">ToFRXM</OPTION>
 		</OPTGROUP>
 	    </SELECT>
 	    <input value="Get childs info" type="submit" />
@@ -166,7 +182,7 @@ def get_img(_id,contentType,extension):
 def retrieve_image(_id,contentType,extension):
     oid = ObjectId(str(_id))
     document = containers.find_one({"_id":oid})
-    filename = document["fileName"]
+    filename = document["filename"]
     data1 = json.loads(dumps(document))
     img = data1
     img1 = img[filename]
@@ -252,7 +268,7 @@ def view_images():
 	      foto = "<p> Focia %s:</p>  <p><img src=%s></p>" %(filename,path)
 	  if place=="document":
 	      document = containers.find_one({"_id":oid})
-	      filename = document["fileName"]
+	      filename = document["filename"]
 	      data1 = json.loads(dumps(document))
 	      img = data1
 	      img1 = img[filename]
@@ -265,4 +281,3 @@ def view_images():
     return foto2
     
 run(host='localhost', port=8080)
-
