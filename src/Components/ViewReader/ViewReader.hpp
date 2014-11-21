@@ -117,10 +117,8 @@ private:
         int position;
 
         void readFromMongoDB(const string&, const string&, const string&);
-        void ReadPCDCloud(const string&, const string&);
+        //void ReadPCDCloud(const string&, const string&);
         void readfromDB();
-        void writeToSinkFromFile(string& mime, string& filename, string& fileName);
-        void readFile(OID& childOID);
         void readAllFilesTriggered();
         void addToAllChilds(std::vector<OID>&);
         void cloudEncoding(OID& oid, string& tempFileName, string & cloudType);
