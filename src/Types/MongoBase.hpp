@@ -58,7 +58,7 @@ using namespace std;
 using namespace boost;
 
 enum keyTypes {	xml, xyz, rgb, density, intensity, mask, stereoL, stereoR, stereoLTextured, stereoRTextured,
-pc_xyz, pc_xyzrgb, pc_xyzsift, pc_xyzrgbsift, pc_xyzshot, pc_xyzrgbnormal};
+pc_xyz, pc_xyzrgb, pc_xyzsift, pc_xyzrgbsift, pc_xyzshot, pc_xyzrgbnormal, stereo, stereoTextured};
 
 class MongoBase {
 public:

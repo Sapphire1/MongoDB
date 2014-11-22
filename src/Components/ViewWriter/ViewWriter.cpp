@@ -17,7 +17,7 @@
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/assume_abstract.hpp>
-#include <Types/View.hpp>
+
 
 
 #define siftPointSize 133
@@ -39,7 +39,7 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	objectName("objectName", string("GreenCup")),
 	description("description", string("My green coffe cup")),
 	collectionName("collectionName", string("containers")),
-	viewNameProp("viewName", string("lab012")),
+	viewName("viewName", string("lab012")),
 	fileName("fileName", string("tempFile")),
 	nodeNameProp("nodeNameProp", string("StereoLR")),
 	remoteFileName("remoteFileName", string("sweetFoto")),
@@ -53,7 +53,7 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	registerProperty(objectName);
 	registerProperty(description);
 	registerProperty(collectionName);
-	registerProperty(viewNameProp);
+	registerProperty(viewName);
 	registerProperty(sceneNamesProp);
 	registerProperty(fileName);
 	registerProperty(nodeNameProp);
@@ -136,18 +136,28 @@ template <keyTypes keyType>
 void ViewWriter::writeData()
 {
 	CLOG(LNOTICE) << "ViewWriter::writeData";
-	View* viewPtr = new View(/*viewName*/);
-	// viewPtr->checkIfExist()
-	// viewPtr->createViewDocument
-	// template <class Data, keyTypes keyType>
-	//View::putDataToFile(Data, keyTypes)
-	// usage:
-	// viewPtr->putDataToFile(xmlData, keyType)
-	// File * file;
-	// file->putDataxml(data, keyType)
-	// file: switch(keyType)
-	// case xml:
-	// xmlData = data;
+	string vn = string (viewName);
+	shared_ptr<View> viewPtr(new View(vn));
+	bool exist = viewPtr->checkIfExist();
+	if(!exist)
+		viewPtr->create();
+	else
+	{
+		CLOG(LERROR)<<"View exist in data base!!!";
+		exit(-1);
+	}
+	std::vector<keyTypes> requiredTypes;
+	//viewPtr->setRequiredKeyTypes(requiredTypes);
+
+	// read dataTypes from mongo when inserting add to readed from mongo
+	// and then check if such type exist in view
+	bool fileExist = viewPtr->checkIfFileExist(keyType);
+	if(fileExist)
+	{
+		LOG(LERROR)<<"File exist in data base. You can't write file. File type is: "<< keyType;
+		exit(-1);
+	}
+	//
 
 	CLOG(LNOTICE)<<"keyType : "<< keyType;
 	// read data from input
@@ -156,76 +166,91 @@ void ViewWriter::writeData()
 		case xml:
 		{
 			string xmlData = in_xml.read();
+			viewPtr->putStringToFile(xmlData, keyType);
 			break;
 		}
 		case rgb:
 		{
 			cv::Mat rgbData = in_rgb.read();
+			viewPtr->putMatToFile(rgbData, keyType);
 			break;
 		}
 		case density:
 		{
 			cv::Mat densityData = in_density.read();
+			viewPtr->putMatToFile(densityData, keyType);
 			break;
 		}
 		case intensity:
 		{
 			cv::Mat intensityData = in_intensity.read();
+			viewPtr->putMatToFile(intensityData, keyType);
 			break;
 		}
 		case mask:
 		{
 			cv::Mat maskData = in_mask.read();
+			viewPtr->putMatToFile(maskData, keyType);
 			break;
 		}
 		case stereoL:
 		{
 			cv::Mat stereoLData = in_stereoL.read();
+			viewPtr->putMatToFile(stereoLData, keyType);
 			break;
 		}
 		case stereoR:
 		{
 			cv::Mat stereoRData = in_stereoR.read();
+			viewPtr->putMatToFile(stereoRData, keyType);
 			break;
 		}
 		case stereoLTextured:
 		{
 			cv::Mat stereoLTexturedData = in_stereoLTextured.read();
+			viewPtr->putMatToFile(stereoLTexturedData, keyType);
 			break;
 		}
 		case stereoRTextured:
 		{
 			cv::Mat stereoRTexturedData = in_stereoRTextured.read();
+			viewPtr->putMatToFile(stereoRTexturedData, keyType);
 			break;
 		}
 		case pc_xyz:
 		{
 			pcl::PointCloud<pcl::PointXYZ>::Ptr pc_xyz_Data = in_pc_xyz.read();
+			viewPtr->putPCxyzToFile(pc_xyz_Data, keyType);
 			break;
 		}
 		case pc_xyzrgb:
 		{
 			pcl::PointCloud<pcl::PointXYZRGB>::Ptr pc_xyzrgb_Data = in_pc_xyzrgb.read();
+			viewPtr->putPCyxzrgbToFile(pc_xyzrgb_Data, keyType);
 			break;
 		}
 		case pc_xyzsift:
 		{
 			pcl::PointCloud<PointXYZSIFT>::Ptr pc_xyzsift_Data = in_pc_xyzsift.read();
+			viewPtr->putPCxyzsiftToFile(pc_xyzsift_Data, keyType);
 			break;
 		}
 		case pc_xyzrgbsift:
 		{
 			pcl::PointCloud<PointXYZRGBSIFT>::Ptr pc_xyzrgbsift_Data = in_pc_xyzrgbsift.read();
+			viewPtr->putPCxyzrgbsiftToFile(pc_xyzrgbsift_Data, keyType);
 			break;
 		}
 		case pc_xyzshot:
 		{
 			pcl::PointCloud<PointXYZSHOT>::Ptr pc_xyzshot_Data = in_pc_xyzshot.read();
+			viewPtr->putPCxyzshotToFile(pc_xyzshot_Data, keyType);
 			break;
 		}
 		case pc_xyzrgbnormal:
 		{
 			pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr pc_xyzrgbnormal_Data = in_pc_xyzrgbnormal.read();
+			viewPtr->putPCxyzrgbNormalToFile(pc_xyzrgbnormal_Data, keyType);
 			break;
 		}
 	}
@@ -239,8 +264,8 @@ void ViewWriter::writeTXT2DB()
 	string fileExtension = "txt";
 	pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud_xyzrgb_normals;
 	tempFileName = string(fileName)+"."+string(fileExtension);
-	if(viewNameProp!="")
-		insert2MongoDB(nodeNameProp,viewNameProp, "View", fileExtension);
+	if(viewName!="")
+		insert2MongoDB(nodeNameProp,viewName, "View", fileExtension);
 	else
 		CLOG(LERROR)<<"Add view name and try again";
 }
@@ -252,8 +277,8 @@ void ViewWriter::writeYAML2DB()
 	boost::split(MongoBase::splitedSceneNames, sceneNames, is_any_of(","));
 	string fileExtension = "yaml";
 	tempFileName = string(fileName)+"."+string(fileExtension);
-	if(viewNameProp!="")
-		insert2MongoDB(nodeNameProp,viewNameProp, "View", fileExtension);
+	if(viewName!="")
+		insert2MongoDB(nodeNameProp,viewName, "View", fileExtension);
 	else
 		CLOG(LERROR)<<"Add view name and try again";
 }
@@ -266,8 +291,8 @@ void ViewWriter::writeImage2DB()
 	boost::split(MongoBase::splitedSceneNames, sceneNames, is_any_of(","));
 	string fileExtension = "png";
 	tempFileName = string(fileName)+"."+string(fileExtension);
-	if(viewNameProp!="")
-		insert2MongoDB(nodeNameProp,viewNameProp, "View", fileExtension);
+	if(viewName!="")
+		insert2MongoDB(nodeNameProp,viewName, "View", fileExtension);
 	else
 		CLOG(LERROR)<<"Add view name and try again";
 }
@@ -279,8 +304,8 @@ void ViewWriter::writePCD2DB()
 	boost::split(MongoBase::splitedSceneNames, sceneNames, is_any_of(","));
 	CLOG(LERROR)<<"cloudType: "<<cloudType;
 	string fileType = "pcd";
-	if(viewNameProp!="")
-		insert2MongoDB(nodeNameProp,viewNameProp, "View", fileType);
+	if(viewName!="")
+		insert2MongoDB(nodeNameProp,viewName, "View", fileType);
 	else
 		CLOG(LERROR)<<"Add view name and try again";
 }
@@ -491,71 +516,7 @@ void ViewWriter::insertFileIntoGrid(OID& oid, const string& fileType, int totalS
 		CLOG(LERROR) << e.what();
 	}
 }
-float ViewWriter::getFileSize(const string& fileType)
-{
-	float size = 0.0;
-	if (fileType=="png" || fileType=="jpg")
-	{
-		CLOG(LINFO)<<"Image!";
-		//tempImg = in_img.read();
-		//size = (float)tempImg.elemSize1()*(float)tempImg.total();
-		//CLOG(LINFO)<<"Size of 2D image file: " << size<<" B";
-	}
-	else if ( fileType=="yml" || fileType=="yaml")
-	{
-		//CLOG(LINFO)<<"YAML!";
-		//xyzimage = in_yaml.read();
-		//size = (float)xyzimage.elemSize1()*(float)xyzimage.total();
-		//CLOG(LINFO)<<"Size of 3D image file: " << size<<" B";
-	}
-	else if(fileType=="pcd")	// save to file pcd
-	{
-		CLOG(LINFO)<<"Cloud!";
-		std::vector< pcl::PCLPointField> fields;
-		if(cloudType=="xyz")
-		{
-			pcl::getFields<pcl::PointXYZ>(fields);
-			for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
-				sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZ->size();
-		}
-		else if(cloudType=="xyzrgb")
-		{
-			pcl::getFields<pcl::PointXYZRGB>(fields);
-			for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
-				sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZRGB->size();
-		}
-		else if(cloudType=="xyzsift")
-		{
-			pcl::getFields<PointXYZSIFT>(fields);
-			for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
-				sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZSIFT->size();
-		}
-		else if(cloudType=="xyzrgbsift")
-		{
-			pcl::getFields<PointXYZRGBSIFT>(fields);
-			for(std::vector< pcl::PCLPointField>::iterator it = fields.begin(); it != fields.end(); ++it)
-				sizeOfCloud+=(float)pcl::getFieldSize(it->datatype)*cloudXYZRGBSIFT->size();
-		}
-		size=sizeOfCloud;
-		CLOG(LINFO) << "cloudType: "<< cloudType << endl;
-		CLOG(LINFO)<<"Size of PCD cloud: " << size<<" MB";
-	}
-	else if(fileType=="txt")	// save to file pcd
-	{
-		// TODO change from txt extension to xml extension
-		//TODO add counting size of file
-		CLOG(LINFO) << "CIP file";
-		size=1.0;
-		//TODO remove setting tempFileName from this place
-		tempFileName=std::string(fileName) + std::string(".txt");
-	}
-	else
-	{
-		CLOG(LERROR)<<"I don't know such extension file :(";
-		exit(1);
-	}
-	return size;
-}
+
 
 void ViewWriter::writeNode2MongoDB(const string &destination, const string &nodeName,string modelOrViewName, const string& fileType)
 {

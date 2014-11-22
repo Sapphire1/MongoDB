@@ -33,6 +33,7 @@
 #include <Types/PointXYZSIFT.hpp>
 #include <Types/PointXYZRGBSIFT.hpp>
 #include <Types/PointXYZSHOT.hpp>
+#include <Types/View.hpp>
 
 namespace Processors {
 namespace ViewWriter {
@@ -150,7 +151,7 @@ private:
 	Base::Property<string> objectName;
 	Base::Property<string> description;
 	Base::Property<string> collectionName;
-	Base::Property<string> viewNameProp;
+	Base::Property<string> viewName;
 	Base::Property<string> sceneNamesProp;
 	Base::Property<string> fileName;
 	Base::Property<int> mean_viewpoint_features_number;
