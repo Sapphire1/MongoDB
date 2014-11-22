@@ -148,22 +148,7 @@ private:
 	//TODO make ENUM fileType
 	keyTypes fileType; 		// mask, rgb, depth, I, XYZ, cameraInfo, PCL
 	string PCLType;			// SIFT, SHOT, XYZ, ORB, NORMALS
-	// LR
-	/*
-	struct notTextured
-	{
-		cv::Mat leftImage;
-		cv::Mat rightImage;
-	};
 
-	// LR + LR textured
-	struct textured
-	{
-		struct notTextured notTextur;
-		cv::Mat leftImageTextured;
-		cv::Mat rightImageTextured;
-	};
-	*/
 	boost::variant<	cv::Mat,
 	string,
 	pcl::PointCloud<pcl::PointXYZ>::Ptr,
@@ -175,6 +160,46 @@ private:
 	> data;
 
 public:
+	PrimitiveFile(const cv::Mat& img, keyTypes& key) : data(img), fileType(key), sizeMBytes(0), sizeBytes(0)
+	{
+		LOG(LNOTICE)<<"Constructor cv::Mat";
+		this->setSize();
+	};
+	PrimitiveFile(const std::string& str, keyTypes& key) : data(str), fileType(key), sizeMBytes(0), sizeBytes(0)
+	{
+		LOG(LNOTICE)<<"Constructor std::string";
+		this->setSize();
+	};
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,  keyTypes& key) : data(cloud), fileType(key), sizeMBytes(0), sizeBytes(0)
+	{
+		LOG(LNOTICE)<<"Constructor <pcl::PointXYZ>";
+		this->setSize();
+	};
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud, keyTypes& key) : data(cloud), fileType(key), sizeMBytes(0), sizeBytes(0)
+	{
+		LOG(LNOTICE)<<"Constructor <pcl::PointXYZRGB>";
+		this->setSize();
+	};
+	PrimitiveFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloud, keyTypes& key) : data(cloud), fileType(key), sizeMBytes(0), sizeBytes(0)
+	{
+		LOG(LNOTICE)<<"Constructor <PointXYZSIFT>";
+		this->setSize();
+	};
+	PrimitiveFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloud, keyTypes& key) : data(cloud), fileType(key), sizeMBytes(0), sizeBytes(0)
+	{
+		LOG(LNOTICE)<<"Constructor <PointXYZRGBSIFT>";
+		this->setSize();
+	};
+	PrimitiveFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloud, keyTypes& key) : data(cloud), fileType(key), sizeMBytes(0), sizeBytes(0)
+	{
+		LOG(LNOTICE)<<"Constructor <PointXYZSHOT>";
+		this->setSize();
+	};
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, keyTypes& key) : data(cloud), fileType(key), sizeMBytes(0), sizeBytes(0)
+	{
+		LOG(LNOTICE)<<"Constructor <pcl::PointXYZRGBNormal>";
+		this->setSize();
+	};
 
 	void saveIntoDisc();
 	void saveIntoDucument();
@@ -182,16 +207,6 @@ public:
 	void saveIntoGrid();
 	void setMime();
 	void getMime();
-
-	void putString(const std::string& str, keyTypes key);
-	void putMat(const cv::Mat& image, keyTypes key);
-	void putPCxyz(const pcl::PointCloud<pcl::PointXYZ>::Ptr&, keyTypes key);
-	void putPCyxzrgb(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&, keyTypes key);
-	void putPCxyzsift(const pcl::PointCloud<PointXYZSIFT>::Ptr&, keyTypes key);
-	void putPCxyzrgbsift(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr&, keyTypes key);
-	void putPCxyzshot(const pcl::PointCloud<PointXYZSHOT>::Ptr&, keyTypes key);
-	void putPCxyzrgbNormal(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr&, keyTypes key);
-
 	void readFromMongoDB();
 	void readFromGrid();
 	void readFromDocument();
@@ -207,161 +222,18 @@ public:
 	};
 
 	void getSize();
+	void setSize()
+	{
+		// get size of data in Bytes
+		sizeBytes = boost::apply_visitor(setSizeVisitor(), data);
+		// convert to MBytes
+		sizeMBytes = sizeBytes/(1024*1024);
+
+		LOG(LNOTICE)<< "sizeBytes: "<<sizeBytes;
+		LOG(LNOTICE)<< "sizeMBytes: "<<sizeMBytes;
+
+	};
 };
-
-void PrimitiveFile::putString(const std::string& str, keyTypes key)
-{
-	LOG(LNOTICE)<< "File::putString";
-	LOG(LNOTICE)<< "key: "<<key;
-	data = str;
-	// use boost variant to do this
-	setType(key);
-
-	// get size of data in Bytes
-	sizeBytes = boost::apply_visitor( setSizeVisitor(), data);
-
-	// convert to MBytes
-	sizeMBytes = sizeBytes/(1024*1024);
-
-	LOG(LNOTICE)<<"sizeBytes: " << sizeBytes;
-	LOG(LNOTICE)<<"sizeMBytes: " << sizeMBytes;
-
-}
-
-void PrimitiveFile::putMat(const cv::Mat& img, keyTypes key)
-{
-	LOG(LNOTICE)<< "PrimitiveFile::putMat";
-	LOG(LNOTICE)<< "key: "<<key;
-
-	data = img;
-
-	setType(key);
-
-	// get size of data in Bytes
-	sizeBytes = boost::apply_visitor(setSizeVisitor(), data);
-
-	// convert to MBytes
-	sizeMBytes = sizeBytes/(1024*1024);
-
-	LOG(LNOTICE)<<"sizeBytes: " << sizeBytes;
-	LOG(LNOTICE)<<"sizeMBytes: " << sizeMBytes;
-
-}
-
-void PrimitiveFile::putPCxyz(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudXYZ, keyTypes key)
-{
-	LOG(LNOTICE)<< "PrimitiveFile::putPCxyz";
-	LOG(LNOTICE)<< "key: "<<key;
-
-	data = cloudXYZ;
-
-	setType(key);
-
-	// get size of data in Bytes
-	sizeBytes = boost::apply_visitor( setSizeVisitor(), data);
-
-	// convert to MBytes
-	sizeMBytes = sizeBytes/(1024*1024);
-
-	LOG(LNOTICE)<<"sizeBytes: " << sizeBytes;
-	LOG(LNOTICE)<<"sizeMBytes: " << sizeMBytes;
-
-}
-
-void PrimitiveFile::putPCyxzrgb(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloudXYZRGB, keyTypes key)
-{
-	LOG(LNOTICE)<< "PrimitiveFile::putPCyxzrgb";
-	LOG(LNOTICE)<< "key: "<<key;
-
-	data = cloudXYZRGB;
-
-	setType(key);
-
-	// get size of data in Bytes
-	sizeBytes = boost::apply_visitor( setSizeVisitor(), data);
-
-	// convert to MBytes
-	sizeMBytes = sizeBytes/(1024*1024);
-
-	LOG(LNOTICE)<<"sizeBytes: " << sizeBytes;
-	LOG(LNOTICE)<<"sizeMBytes: " << sizeMBytes;
-}
-
-void PrimitiveFile::putPCxyzsift(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloudXYZSIFT, keyTypes key)
-{
-	LOG(LNOTICE)<< "PrimitiveFile::putPCxyzsift";
-	LOG(LNOTICE)<< "key: "<<key;
-
-	data = cloudXYZSIFT;
-
-	setType(key);
-
-	// get size of data in Bytes
-	sizeBytes = boost::apply_visitor( setSizeVisitor(), data);
-
-	// convert to MBytes
-	sizeMBytes = sizeBytes/(1024*1024);
-
-	LOG(LNOTICE)<<"sizeBytes: " << sizeBytes;
-	LOG(LNOTICE)<<"sizeMBytes: " << sizeMBytes;
-}
-
-void PrimitiveFile::putPCxyzrgbsift(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloudXYZRGBSIFT, keyTypes key)
-{
-	LOG(LNOTICE)<< "PrimitiveFile::putPCxyzrgbsift";
-	LOG(LNOTICE)<< "key: "<<key;
-
-	data = cloudXYZRGBSIFT;
-
-	setType(key);
-
-	// get size of data in Bytes
-	sizeBytes = boost::apply_visitor( setSizeVisitor(), data);
-
-	// convert to MBytes
-	sizeMBytes = sizeBytes/(1024*1024);
-
-	LOG(LNOTICE)<<"sizeBytes: " << sizeBytes;
-	LOG(LNOTICE)<<"sizeMBytes: " << sizeMBytes;
-}
-
-void PrimitiveFile::putPCxyzshot(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloudXYZSHOT, keyTypes key)
-{
-	LOG(LNOTICE)<< "PrimitiveFile::putPCxyzshot";
-	LOG(LNOTICE)<< "key: "<<key;
-
-	data = cloudXYZSHOT;
-
-	setType(key);
-
-	// get size of data in Bytes
-	sizeBytes = boost::apply_visitor( setSizeVisitor(), data);
-
-	// convert to MBytes
-	sizeMBytes = sizeBytes/(1024*1024);
-
-	LOG(LNOTICE)<<"sizeBytes: " << sizeBytes;
-	LOG(LNOTICE)<<"sizeMBytes: " << sizeMBytes;
-}
-
-void PrimitiveFile::putPCxyzrgbNormal(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloudXYZRGBNormal, keyTypes key)
-{
-	LOG(LNOTICE)<< "PrimitiveFile::putPCxyzrgbNormal";
-	LOG(LNOTICE)<< "key: "<<key;
-
-	data = cloudXYZRGBNormal;
-
-	setType(key);
-
-	// get size of data in Bytes
-	sizeBytes = boost::apply_visitor( setSizeVisitor(), data);
-
-	// convert to MBytes
-	sizeMBytes = sizeBytes/(1024*1024);
-
-	LOG(LNOTICE)<<"sizeBytes: " << sizeBytes;
-	LOG(LNOTICE)<<"sizeMBytes: " << sizeMBytes;
-}
 
 }//namespace File
 }//MongoBase

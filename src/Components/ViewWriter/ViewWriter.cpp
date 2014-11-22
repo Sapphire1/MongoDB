@@ -160,6 +160,7 @@ void ViewWriter::writeData()
 	//
 
 	CLOG(LNOTICE)<<"keyType : "<< keyType;
+
 	// read data from input
 	switch(keyType)
 	{

@@ -91,6 +91,7 @@ public:
 
 	// check if exist this same kind of file
 	bool checkIfFileExist(keyTypes key);
+	void pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>&, keyTypes);
 
 	bool checkIfAllFiles();
 	void putStringToFile(const std::string& str, keyTypes key);
@@ -103,6 +104,26 @@ public:
 	void putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr&, keyTypes key);
 
 };// class View
+
+void View::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, keyTypes key)
+{
+	// add file to vector
+	files.push_back(file);
+	insertedKeyTypes.push_back(key);
+
+	// check if all required files are present in view
+	bool allFiles = checkIfAllFiles();
+
+	if(allFiles)
+	{
+		LOG(LNOTICE)<<"Write view to data base";
+		// saveAllFiles()
+	}
+	else
+	{
+		LOG(LNOTICE) << "Waiting for all files to save them in mongoDB";
+	}
+}
 
 // check if all required types of file are present in vector
 // if types are stereo, check  all stereo files and stereo textured files if needed
@@ -174,78 +195,41 @@ void View::create()
 	return;
 }
 
+void View::putMatToFile(const cv::Mat& img, keyTypes key)
+{
+	LOG(LNOTICE)<< "View::putMatToFile";
+	LOG(LNOTICE)<< "key: "<<key;
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(img, key));
+	pushFile(file, key);
+}
+
 void View::putStringToFile(const std::string& str, keyTypes key)
 {
 	LOG(LNOTICE)<< "View::putStringToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile);
-
-	// insert data to file
-	// moze przerobic to na konstruktor? Wtedy mógłby być jeden przeciążony konstruktor
-	// do wszystkiego :)
-	file->putString(str, key);
-	// i wszystko co poniżej byłoby już w jednej metodzie...
-
-	// create new method from here
-
-	// add file to vector
-	files.push_back(file);
-	insertedKeyTypes.push_back(key);
-
-	// check if all required files are present in view
-	bool allFiles = checkIfAllFiles();
-
-	if(allFiles)
-	{
-		LOG(LNOTICE)<<"Write view to data base";
-		// saveAllFiles()
-	}
-	else
-	{
-		LOG(LNOTICE) << "Waiting for all files to save them in mongoDB";
-	}
-
-	// to here
-
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(str, key));
+	pushFile(file, key);
 }
 
 void View::putPCxyzToFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudXYZ, keyTypes key)
 {
 	LOG(LNOTICE)<< "View::putPCxyzToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile);
-	file->putPCxyz(cloudXYZ, key);
-	// add file to vector
-	files.push_back(file);
-	insertedKeyTypes.push_back(key);
-
-	// check if all required files are present in view
-	bool allFiles = checkIfAllFiles();
-
-	if(allFiles)
-	{
-		LOG(LNOTICE)<<"Write view to data base";
-		// saveAllFiles()
-	}
-	else
-	{
-		LOG(LNOTICE) << "Waiting for all files to save them in mongoDB";
-	}
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZ, key));
+	pushFile(file, key);
 }
 void View::putPCyxzrgbToFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloudXYZRGB, keyTypes key)
 {
 	LOG(LNOTICE)<< "View::putPCyxzrgbToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile);
-	file->putPCyxzrgb(cloudXYZRGB, key);
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGB, key));
 	files.push_back(file);
 }
 void View::putPCxyzsiftToFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloudXYZSIFT, keyTypes key)
 {
 	LOG(LNOTICE)<< "View::putPCxyzsiftToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile);
-	file->putPCxyzsift(cloudXYZSIFT, key);
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSIFT, key));
 	files.push_back(file);
 }
 
@@ -253,51 +237,24 @@ void View::putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cl
 {
 	LOG(LNOTICE)<< "View::putPCxyzrgbsiftToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile);
-	file->putPCxyzrgbsift(cloudXYZRGBSIFT, key);
-	files.push_back(file);
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBSIFT, key));
+	pushFile(file, key);
 }
 
 void View::putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloudXYZSHOT, keyTypes key)
 {
 	LOG(LNOTICE)<< "View::putPCxyzshotToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile);
-	file->putPCxyzshot(cloudXYZSHOT, key);
-	files.push_back(file);
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSHOT, key));
+	pushFile(file, key);
 }
 
 void View::putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloudXYZRGBNormal, keyTypes key)
 {
 	LOG(LNOTICE)<< "View::putPCxyzrgbNormalToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile);
-	file->putPCxyzrgbNormal(cloudXYZRGBNormal, key);
-	files.push_back(file);
-}
-
-void View::putMatToFile(const cv::Mat& img, keyTypes key)
-{
-	LOG(LNOTICE)<< "View::putMatToFile";
-	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile);
-	file->putMat(img, key);
-	// add file to vector
-	files.push_back(file);
-	insertedKeyTypes.push_back(key);
-
-	// check if all required files are present in view
-	bool allFiles = checkIfAllFiles();
-
-	if(allFiles)
-	{
-		LOG(LNOTICE)<<"Write view to data base";
-		// saveAllFiles()
-	}
-	else
-	{
-		LOG(LNOTICE) << "Waiting for all files to save them in mongoDB";
-	}
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBNormal, key));
+	pushFile(file, key);
 }
 
 }//namespace MongoBase
