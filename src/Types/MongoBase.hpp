@@ -110,17 +110,17 @@ public:
 
 //	Base::DataStreamOut<std::vector<AbstractObject*> > out_models;
 
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB;
-	pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT;
-	pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT;
+//	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ;
+//	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB;
+//	pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT;
+//	pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT;
     float sizeOfCloud;
 	string cloudType;
 	cv::Mat tempImg;
 	cv::Mat xyzimage;
-	std::string tempFileName;
 	std::string tempFileOnDisc;
 	OID fileOID;
+	string tempFileName;
 
 
 	MongoBase();
@@ -142,7 +142,7 @@ public:
 	void initViewNames();
 	void initModelNames();
 
-	void setMime(const string& extension,  string& mime);
+	void setMime(const keyTypes key,  string& mime);
 	void connectToMongoDB(std::string &);
 	void setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName);
     void getFileFromGrid(const GridFile &);
@@ -151,9 +151,6 @@ public:
     void addToObject(const Base::Property<string>& nodeNameProp,const string & name, Base::Property<string>& objectName, Base::Property<string>& description);
     void initView(const string & viewName, bool addToObjectFlag, Base::Property<string>& nodeNameProp, Base::Property<string>& objectName, Base::Property<string>& description);
     void cloudEncoding(OID& oid, string& tempFileName, string & cloudType);
-    void saveXYZFileOnDisc(Base::Property<bool>& suffix, Base::Property<bool> binary, std::string& fn);
-    void saveXYZRGBFileOnDisc(Base::Property<bool>& suffix, Base::Property<bool> binary, std::string& fn);
-    void saveXYZSIFTFileOnDisc(Base::Property<bool>& suffix, Base::Property<bool> binary, std::string& fn);
     void ReadPCDCloud(const string& filename);
     void writeToSinkFromFile(string& mime, string& fileName);
     void readTextFileFromDocument(mongo::OID& childOID, int size);
@@ -418,51 +415,6 @@ void MongoBase::readPointCloudFromDocument(mongo::OID& fileOID, int size)
 	{
 		LOG(LERROR)<<ex.what();
 	}
-}
-
-void MongoBase::saveXYZFileOnDisc(Base::Property<bool>& suffix, Base::Property<bool> binary, std::string& fn)
-{
-	if(suffix)
-	{
-		size_t f = fn.find(".pcd");
-		if(f != std::string::npos)
-		{
-			fn.erase(f);
-		}
-		fn = std::string(fn) + std::string("_xyz.pcd");
-	}
-	LOG(LINFO) <<"FileName:"<<fn;
-	pcl::io::savePCDFile(fn, *cloudXYZ, binary);
-}
-
-void MongoBase::saveXYZRGBFileOnDisc(Base::Property<bool>& suffix, Base::Property<bool> binary, std::string& fn)
-{
-	if(suffix)
-	{
-		size_t f = fn.find(".pcd");
-		if(f != std::string::npos)
-		{
-			fn.erase(f);
-		}
-		fn = std::string(fn) + std::string("_xyzrgb.pcd");
-	}
-	LOG(LINFO) <<"FileName:"<<fn;
-	pcl::io::savePCDFile(fn, *cloudXYZRGB, binary);
-}
-
-void MongoBase::saveXYZSIFTFileOnDisc(Base::Property<bool>& suffix, Base::Property<bool> binary, std::string& fn)
-{
-	if(suffix)
-	{
-		size_t f = fn.find(".pcd");
-		if(f != std::string::npos)
-		{
-			fn.erase(f);
-		}
-		fn = std::string(fn) + std::string("_xyzsift.pcd");
-	}
-	LOG(LINFO) <<"FileName:"<<fn;
-	pcl::io::savePCDFile(fn, *cloudXYZSIFT, binary);
 }
 
 void MongoBase::cloudEncoding(OID& oid, string& tempFileName, string & cloudType)
@@ -745,20 +697,19 @@ void MongoBase::setModelOrViewName(const string& childNodeName, const BSONObj& c
 	newName = childObj.getField(type+"Name").str();
 }
 
-void MongoBase::setMime( const string& extension,  string& mime)
+void MongoBase::setMime( const keyTypes fileType,  string& mime)
 {
-	LOG(LNOTICE)<<"Extension : "<<extension<<std::endl;
-	if (extension=="png")
+	LOG(LNOTICE)<<"fileType : "<<fileType<<std::endl;
+
+	if (fileType==rgb || fileType==density || fileType==intensity || fileType==mask || fileType==stereoL || fileType==stereoR || fileType==stereoLTextured || fileType==stereoRTextured)
 		mime="image/png";
-	else if(extension=="jpg")
-		mime= "image/jpeg";
-	else if(extension=="txt" || extension=="pcd")
+	else if(fileType==xml || fileType==pc_xyz || fileType==pc_xyzrgb || fileType==pc_xyzsift || fileType==pc_xyzrgbsift || fileType==pc_xyzshot ||fileType==pc_xyzrgbnormal)
 		mime="text/plain";
-	else if(extension=="yaml" || extension=="yml")
+	else if(fileType==xyz )
 			mime="text/plain";
 	else
 	{
-		LOG(LNOTICE) <<"I don't know such file extension! Please add extension to the `if` statement from http://www.sitepoint.com/web-foundations/mime-types-complete-list/";
+		LOG(LNOTICE) <<"I don't know such typeFile! Please add extension to the `if` statement from http://www.sitepoint.com/web-foundations/mime-types-complete-list/";
 		return;
 	}
 }
