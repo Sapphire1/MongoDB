@@ -136,7 +136,7 @@ public:
     }
 };
 
-class PrimitiveFile
+class PrimitiveFile : public MongoBase
 {
 private:
 	string mongoFileName;	// file name in mongo base
@@ -145,7 +145,6 @@ private:
 	string place;			// {grid, document}
 	float sizeBytes;
 	float sizeMBytes;
-	//TODO make ENUM fileType
 	keyTypes fileType; 		// mask, rgb, depth, I, XYZ, cameraInfo, PCL
 	string PCLType;			// SIFT, SHOT, XYZ, ORB, NORMALS
 
@@ -163,6 +162,7 @@ public:
 	PrimitiveFile(const cv::Mat& img, keyTypes& key) : data(img), fileType(key), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor cv::Mat";
+		//TODO change it - read from component
 		this->setSize();
 	};
 	PrimitiveFile(const std::string& str, keyTypes& key) : data(str), fileType(key), sizeMBytes(0), sizeBytes(0)
@@ -202,9 +202,10 @@ public:
 	};
 
 	void saveIntoDisc();
-	void saveIntoDucument();
+	void saveIntoMongoBase();
+	void insertFileIntoGrid();
+	void insertFileIntoDocument();
 	void convertToBuffer();
-	void saveIntoGrid();
 	void setMime();
 	void getMime();
 	void readFromMongoDB();
@@ -234,6 +235,216 @@ public:
 
 	};
 };
+
+void PrimitiveFile::saveIntoMongoBase()
+{
+	//if(sizeMBytes<15)
+		insertFileIntoDocument();
+	//else if(sizeMBytes>=15)
+	//	insertFileIntoGrid();
+}
+
+void PrimitiveFile::insertFileIntoDocument()
+{
+	// use variant here...
+	LOG(LNOTICE)<<"PrimitiveFile::insertFileIntoCollection";
+	BSONObjBuilder builder;
+	BSONObj b;
+	BSONElement bsonElement;
+	OID oid;
+	switch(fileType)
+	{
+		case xml:
+		{
+			break;
+		}
+		case rgb:
+		{
+			LOG(LNOTICE)<<"Insert RGB";
+			cv::Mat* img =  boost::get<cv::Mat>(&data);
+
+			std::vector<uchar> buf;
+			std::vector<int> params(2);
+			params[0] = CV_IMWRITE_JPEG_QUALITY;
+			params[1] = 95;
+			cv::imencode(".jpg", *img, buf, params);
+			string tempFileName = "temp";
+			// TODO add proper tempFileName
+			BSONObj b=BSONObjBuilder().genOID().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("filename", tempFileName).append("size", 12).append("place", "document").append("extension", fileType).obj();
+			BSONElement bsonElement;
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			// niech view ma klienta i podczas tworzenia pliku niech przekazuje na niego referencję
+			// a widok w konstruktorze tworzy sobie klienta i się z nim łączy
+			// usunąć z komponentu tworzenie i łączenie się !!!
+			// todo przeniesc to do konstruktora!!!
+			c->connect("localhost");
+			dbCollectionPath = "images.containers";
+			/////////////////////////////////////
+			c->insert(dbCollectionPath, b);
+			break;
+		}
+		case density:
+		{
+			break;
+		}
+		case intensity:
+		{
+			break;
+		}
+		case mask:
+		{
+			break;
+		}
+		case stereoL:
+		{
+			break;
+		}
+		case stereoR:
+		{
+			break;
+		}
+		case stereoLTextured:
+		{
+			break;
+		}
+		case stereoRTextured:
+		{
+			break;
+		}
+		case pc_xyz:
+		{
+			break;
+		}
+		case pc_xyzrgb:
+		{
+			break;
+		}
+		case pc_xyzsift:
+		{
+			break;
+		}
+		case pc_xyzrgbsift:
+		{
+			break;
+		}
+		case pc_xyzshot:
+		{
+			break;
+		}
+		case pc_xyzrgbnormal:
+		{
+			break;
+		}
+	}
+
+	/*
+	if (fileType=="png" || fileType=="jpg")	// save image
+	{
+
+	}
+	else if(fileType=="pcd")	// save cloud
+	{
+		if(cloudType=="xyzrgb")
+		{
+			int cloudSize = cloudXYZRGB->size();
+			int fieldsNr = xyzrgbPointSize*cloudSize;
+			int totalSize = fieldsNr*sizeof(float);
+			float buff[fieldsNr];
+
+			// copy all points to memory
+			for(int iter=0; iter<cloudSize; iter++)
+			{
+				const pcl::PointXYZRGB p = cloudXYZRGB->points[iter];
+				copyXYZRGBPointToFloatArray (p, &buff[xyzrgbPointSize*iter]);
+			}
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("filename", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			c->insert(dbCollectionPath, b);
+		}
+		else if(cloudType=="xyz")
+		{
+			int cloudSize = cloudXYZ->size();
+			int fieldsNr = xyzPointSize*cloudSize;
+			int totalSize = fieldsNr*sizeof(float);
+			float buff[fieldsNr];
+
+			// copy all points to memory
+			for(int iter=0; iter<cloudSize; iter++)
+			{
+				const pcl::PointXYZ p = cloudXYZ->points[iter];
+				copyXYZPointToFloatArray (p, &buff[xyzPointSize*iter]);
+			}
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("filename", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			c->insert(dbCollectionPath, b);
+		}
+		//TODO dodac SHOT'Y
+		else if(cloudType=="xyzsift")
+		{
+			int cloudSize = cloudXYZSIFT->size();
+			int fieldsNr = siftPointSize*cloudSize;
+			int totalSize = fieldsNr*sizeof(float);
+			float buff[fieldsNr];
+
+			// copy all points to memory
+			for(int iter=0; iter<cloudSize; iter++)
+			{
+				const PointXYZSIFT p = cloudXYZSIFT->points[iter];
+				copyXYZSiftPointToFloatArray (p, &buff[siftPointSize*iter]);
+			}
+			b=BSONObjBuilder().genOID().appendBinData(tempFileName, totalSize, mongo::BinDataGeneral, &buff[0]).append("filename", tempFileName).append("size", totalSize).append("place", "document").append("extension", fileType).obj();
+			b.getObjectID(bsonElement);
+			oid=bsonElement.__oid();
+			c->insert(dbCollectionPath, b);
+		}
+		LOG(LNOTICE)<<"ViewWriter::insertFileIntoCollection, PCD file end";
+	}
+	else if (fileType=="yaml" || fileType=="yml")	// save image
+	{
+		LOG(LNOTICE)<<xyzimage.size();
+		LOG(LNOTICE)<<"ViewWriter::insertFileIntoCollection, cv::Mat - XYZRGB";
+		int bufSize = xyzimage.total()*xyzimage.channels()*4;
+		int width = xyzimage.size().width;
+		int height = xyzimage.size().height;
+		int channels = xyzimage.channels();
+		float* buf;
+		buf = (float*)xyzimage.data;
+		LOG(LNOTICE)<<"Set buffer YAML";
+		b=BSONObjBuilder().genOID().appendBinData(tempFileName, bufSize, mongo::BinDataGeneral, &buf[0]).append("filename", tempFileName).append("size", size).append("place", "document").append("extension", fileType).append("width", width).append("height", height).append("channels", channels).obj();
+		LOG(LNOTICE)<<"YAML inserted";
+		b.getObjectID(bsonElement);
+		oid=bsonElement.__oid();
+		c->insert(dbCollectionPath, b);
+	}
+	else if(fileType=="xml")
+	{
+		LOG(LNOTICE)<<"ViewWriter::insertFileIntoCollection, xml file";
+		string input;
+
+		// read string from input
+		//input =cipFileIn.read()+" ";
+		LOG(LNOTICE)<<"Input:"<< input;
+		input="";
+		// convert to char*
+		char const *cipCharTable = input.c_str();
+		int size = strlen(cipCharTable);
+		LOG(LNOTICE)<<string(cipCharTable);
+		LOG(LNOTICE)<<"Size: "<<size;
+		// create bson object
+		b = BSONObjBuilder().genOID().appendBinData(tempFileName, size, BinDataGeneral,  cipCharTable).append("filename", tempFileName).append("size", size).append("place", "document").append("extension", fileType).obj();
+
+		// insert object into collection
+		c->insert(dbCollectionPath, b);
+
+		b.getObjectID(bsonElement);
+		oid=bsonElement.__oid();
+	}
+	cloudType="";
+	*/
+}
 
 }//namespace File
 }//MongoBase

@@ -105,6 +105,15 @@ public:
 
 };// class View
 
+void View::saveAllFiles()
+{
+
+	for(std::vector<boost::shared_ptr<PrimitiveFile::PrimitiveFile> >::iterator it = files.begin(); it != files.end(); ++it)
+	{
+		it->get()->saveIntoMongoBase();
+	}
+	return ;
+}
 void View::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, keyTypes key)
 {
 	// add file to vector
@@ -112,12 +121,12 @@ void View::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, keyTypes key
 	insertedKeyTypes.push_back(key);
 
 	// check if all required files are present in view
-	bool allFiles = checkIfAllFiles();
-
+	//bool allFiles = checkIfAllFiles();
+	bool allFiles=true;
 	if(allFiles)
 	{
 		LOG(LNOTICE)<<"Write view to data base";
-		// saveAllFiles()
+		saveAllFiles();
 	}
 	else
 	{
@@ -223,14 +232,14 @@ void View::putPCyxzrgbToFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud
 	LOG(LNOTICE)<< "View::putPCyxzrgbToFile";
 	LOG(LNOTICE)<< "key: "<<key;
 	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGB, key));
-	files.push_back(file);
+	pushFile(file, key);
 }
 void View::putPCxyzsiftToFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloudXYZSIFT, keyTypes key)
 {
 	LOG(LNOTICE)<< "View::putPCxyzsiftToFile";
 	LOG(LNOTICE)<< "key: "<<key;
 	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSIFT, key));
-	files.push_back(file);
+	pushFile(file, key);
 }
 
 void View::putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloudXYZRGBSIFT, keyTypes key)

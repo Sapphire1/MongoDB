@@ -157,7 +157,7 @@ void ViewWriter::writeData()
 		LOG(LERROR)<<"File exist in data base. You can't write file. File type is: "<< keyType;
 		exit(-1);
 	}
-	//
+
 
 	CLOG(LNOTICE)<<"keyType : "<< keyType;
 
