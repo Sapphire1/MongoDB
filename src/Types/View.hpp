@@ -65,15 +65,18 @@ private:
 	string dateOfInsert;					// 02042013
 	std::vector<shared_ptr<PrimitiveFile::PrimitiveFile> > files;
 	std::vector<string>	fileTypes;			// [MASK, IMAGE, …, IMAGE3D]
-
 	// all required types to store
 	std::vector<keyTypes> requiredKeyTypes;
-
+	string hostname;
 	// inserted file types of file
 	std::vector<keyTypes> insertedKeyTypes;
 
 public:
-	View(string& viewName) : ViewName(viewName){};
+	View(string& viewName, string& host) : ViewName(viewName), hostname(host)
+	{
+		dbCollectionPath="images.containers";
+		connectToMongoDB(hostname);
+	};
 	void setRequiredKeyTypes(std::vector<keyTypes> &);
 	void addFile();
 	void getAllFiles();
@@ -94,14 +97,14 @@ public:
 	void pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>&, keyTypes);
 
 	bool checkIfAllFiles();
-	void putStringToFile(const std::string& str, keyTypes key);
-	void putMatToFile(const cv::Mat& image, keyTypes key);
-	void putPCxyzToFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr&, keyTypes key);
-	void putPCyxzrgbToFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&, keyTypes key);
-	void putPCxyzsiftToFile(const pcl::PointCloud<PointXYZSIFT>::Ptr&, keyTypes key);
-	void putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr&, keyTypes key);
-	void putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr&, keyTypes key);
-	void putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr&, keyTypes key);
+	void putStringToFile(const std::string& str, keyTypes key, string& fileName);
+	void putMatToFile(const cv::Mat& image, keyTypes key, string& fileName);
+	void putPCxyzToFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr&, keyTypes key, string& fileName);
+	void putPCyxzrgbToFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&, keyTypes key, string& fileName);
+	void putPCxyzsiftToFile(const pcl::PointCloud<PointXYZSIFT>::Ptr&, keyTypes key, string& fileName);
+	void putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr&, keyTypes key, string& fileName);
+	void putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr&, keyTypes key, string& fileName);
+	void putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr&, keyTypes key, string& fileName);
 
 };// class View
 
@@ -116,6 +119,7 @@ void View::saveAllFiles()
 }
 void View::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, keyTypes key)
 {
+	//file->setMongoClient(c);
 	// add file to vector
 	files.push_back(file);
 	insertedKeyTypes.push_back(key);
@@ -204,65 +208,65 @@ void View::create()
 	return;
 }
 
-void View::putMatToFile(const cv::Mat& img, keyTypes key)
+void View::putMatToFile(const cv::Mat& img, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "View::putMatToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(img, key));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(img, key, c, fileName));
 	pushFile(file, key);
 }
 
-void View::putStringToFile(const std::string& str, keyTypes key)
+void View::putStringToFile(const std::string& str, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "View::putStringToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(str, key));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(str, key, c, fileName));
 	pushFile(file, key);
 }
 
-void View::putPCxyzToFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudXYZ, keyTypes key)
+void View::putPCxyzToFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudXYZ, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "View::putPCxyzToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZ, key));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZ, key, c, fileName));
 	pushFile(file, key);
 }
-void View::putPCyxzrgbToFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloudXYZRGB, keyTypes key)
+void View::putPCyxzrgbToFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloudXYZRGB, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "View::putPCyxzrgbToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGB, key));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGB, key, c, fileName));
 	pushFile(file, key);
 }
-void View::putPCxyzsiftToFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloudXYZSIFT, keyTypes key)
+void View::putPCxyzsiftToFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloudXYZSIFT, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "View::putPCxyzsiftToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSIFT, key));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSIFT, key, c, fileName));
 	pushFile(file, key);
 }
 
-void View::putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloudXYZRGBSIFT, keyTypes key)
+void View::putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloudXYZRGBSIFT, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "View::putPCxyzrgbsiftToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBSIFT, key));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBSIFT, key, c, fileName));
 	pushFile(file, key);
 }
 
-void View::putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloudXYZSHOT, keyTypes key)
+void View::putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloudXYZSHOT, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "View::putPCxyzshotToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSHOT, key));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSHOT, key, c, fileName));
 	pushFile(file, key);
 }
 
-void View::putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloudXYZRGBNormal, keyTypes key)
+void View::putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloudXYZRGBNormal, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "View::putPCxyzrgbNormalToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBNormal, key));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBNormal, key, c, fileName));
 	pushFile(file, key);
 }
 

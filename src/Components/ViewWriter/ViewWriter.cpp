@@ -137,7 +137,8 @@ void ViewWriter::writeData()
 {
 	CLOG(LNOTICE) << "ViewWriter::writeData";
 	string vn = string (viewName);
-	shared_ptr<View> viewPtr(new View(vn));
+	string hostname = mongoDBHost;
+	shared_ptr<View> viewPtr(new View(vn, hostname));
 	bool exist = viewPtr->checkIfExist();
 	if(!exist)
 		viewPtr->create();
@@ -162,96 +163,97 @@ void ViewWriter::writeData()
 	CLOG(LNOTICE)<<"keyType : "<< keyType;
 
 	// read data from input
+	string filename = (string)fileName;
 	switch(keyType)
 	{
 		case xml:
 		{
 			string xmlData = in_xml.read();
-			viewPtr->putStringToFile(xmlData, keyType);
+			viewPtr->putStringToFile(xmlData, keyType, filename);
 			break;
 		}
 		case rgb:
 		{
 			cv::Mat rgbData = in_rgb.read();
-			viewPtr->putMatToFile(rgbData, keyType);
+			viewPtr->putMatToFile(rgbData, keyType, filename);
 			break;
 		}
 		case density:
 		{
 			cv::Mat densityData = in_density.read();
-			viewPtr->putMatToFile(densityData, keyType);
+			viewPtr->putMatToFile(densityData, keyType, filename);
 			break;
 		}
 		case intensity:
 		{
 			cv::Mat intensityData = in_intensity.read();
-			viewPtr->putMatToFile(intensityData, keyType);
+			viewPtr->putMatToFile(intensityData, keyType, filename);
 			break;
 		}
 		case mask:
 		{
 			cv::Mat maskData = in_mask.read();
-			viewPtr->putMatToFile(maskData, keyType);
+			viewPtr->putMatToFile(maskData, keyType, filename);
 			break;
 		}
 		case stereoL:
 		{
 			cv::Mat stereoLData = in_stereoL.read();
-			viewPtr->putMatToFile(stereoLData, keyType);
+			viewPtr->putMatToFile(stereoLData, keyType, filename);
 			break;
 		}
 		case stereoR:
 		{
 			cv::Mat stereoRData = in_stereoR.read();
-			viewPtr->putMatToFile(stereoRData, keyType);
+			viewPtr->putMatToFile(stereoRData, keyType, filename);
 			break;
 		}
 		case stereoLTextured:
 		{
 			cv::Mat stereoLTexturedData = in_stereoLTextured.read();
-			viewPtr->putMatToFile(stereoLTexturedData, keyType);
+			viewPtr->putMatToFile(stereoLTexturedData, keyType, filename);
 			break;
 		}
 		case stereoRTextured:
 		{
 			cv::Mat stereoRTexturedData = in_stereoRTextured.read();
-			viewPtr->putMatToFile(stereoRTexturedData, keyType);
+			viewPtr->putMatToFile(stereoRTexturedData, keyType, filename);
 			break;
 		}
 		case pc_xyz:
 		{
 			pcl::PointCloud<pcl::PointXYZ>::Ptr pc_xyz_Data = in_pc_xyz.read();
-			viewPtr->putPCxyzToFile(pc_xyz_Data, keyType);
+			viewPtr->putPCxyzToFile(pc_xyz_Data, keyType, filename);
 			break;
 		}
 		case pc_xyzrgb:
 		{
 			pcl::PointCloud<pcl::PointXYZRGB>::Ptr pc_xyzrgb_Data = in_pc_xyzrgb.read();
-			viewPtr->putPCyxzrgbToFile(pc_xyzrgb_Data, keyType);
+			viewPtr->putPCyxzrgbToFile(pc_xyzrgb_Data, keyType, filename);
 			break;
 		}
 		case pc_xyzsift:
 		{
 			pcl::PointCloud<PointXYZSIFT>::Ptr pc_xyzsift_Data = in_pc_xyzsift.read();
-			viewPtr->putPCxyzsiftToFile(pc_xyzsift_Data, keyType);
+			viewPtr->putPCxyzsiftToFile(pc_xyzsift_Data, keyType, filename);
 			break;
 		}
 		case pc_xyzrgbsift:
 		{
 			pcl::PointCloud<PointXYZRGBSIFT>::Ptr pc_xyzrgbsift_Data = in_pc_xyzrgbsift.read();
-			viewPtr->putPCxyzrgbsiftToFile(pc_xyzrgbsift_Data, keyType);
+			viewPtr->putPCxyzrgbsiftToFile(pc_xyzrgbsift_Data, keyType, filename);
 			break;
 		}
 		case pc_xyzshot:
 		{
 			pcl::PointCloud<PointXYZSHOT>::Ptr pc_xyzshot_Data = in_pc_xyzshot.read();
-			viewPtr->putPCxyzshotToFile(pc_xyzshot_Data, keyType);
+			viewPtr->putPCxyzshotToFile(pc_xyzshot_Data, keyType, filename);
 			break;
 		}
 		case pc_xyzrgbnormal:
 		{
 			pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr pc_xyzrgbnormal_Data = in_pc_xyzrgbnormal.read();
-			viewPtr->putPCxyzrgbNormalToFile(pc_xyzrgbnormal_Data, keyType);
+			viewPtr->putPCxyzrgbNormalToFile(pc_xyzrgbnormal_Data, keyType, filename);
 			break;
 		}
 	}
@@ -350,10 +352,10 @@ CLOG(LTRACE) << "ViewWriter::initialize";
 try
 {
 	cloudType="";
-	string hostname = mongoDBHost;
-	connectToMongoDB(hostname);
-	if(collectionName=="containers")
-		MongoBase::dbCollectionPath=dbCollectionPath="images.containers";
+//	string hostname = mongoDBHost;
+//	connectToMongoDB(hostname);
+//	if(collectionName=="containers")
+//		MongoBase::dbCollectionPath=dbCollectionPath="images.containers";
 	initViewNames();
 }
 catch(DBException &e)

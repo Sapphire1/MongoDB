@@ -62,13 +62,13 @@ pc_xyz, pc_xyzrgb, pc_xyzsift, pc_xyzrgbsift, pc_xyzshot, pc_xyzrgbnormal, stere
 
 class MongoBase {
 public:
-
+	string dbCollectionPath;
+	string hostname;
     boost::shared_ptr<DBClientConnection> c;
+
 	vector<string>  docViewsNames;
 	vector<string>  docModelsNames;
 	vector<string> splitedSceneNames;
-	string dbCollectionPath;
-
 	 /// Input data stream
 //	Base::DataStreamIn <cv::Mat> in_img;
 
@@ -125,6 +125,14 @@ public:
 
 	MongoBase();
 	virtual ~MongoBase();
+	boost::shared_ptr<DBClientConnection> getMongoClient()
+	{
+		 return c;
+	}
+	void setMongoClient(boost::shared_ptr<DBClientConnection>& client)
+	{
+		 c =client;
+	}
 	vector<string> getAllFiles(const string& pattern);
 	vector<string> getAllFolders(const string& pattern);
 	int getChildOIDS(BSONObj &obj, const string&,  const string&, vector<OID>&);
@@ -133,8 +141,9 @@ public:
 	void findDocumentInCollection(DBClientConnection&, string&, Base::Property<string> &, const string &, auto_ptr<DBClientCursor> &, const string &, const string & , int&);
 	void initViewNames();
 	void initModelNames();
+
 	void setMime(const string& extension,  string& mime);
-	void connectToMongoDB(string&);
+	void connectToMongoDB(std::string &);
 	void setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName);
     void getFileFromGrid(const GridFile &);
     void addScenes(BSONObj& object, Base::Property<string>& objectName);
@@ -160,6 +169,7 @@ MongoBase::MongoBase() {
 	mongo::client::initialize();
 	dbCollectionPath="";
 	sizeOfCloud=0;
+	hostname = "localhost";
 	tempFileOnDisc="tempFile";
 	fileOID = OID("000000000000000000000000");
 }
@@ -753,13 +763,13 @@ void MongoBase::setMime( const string& extension,  string& mime)
 	}
 }
 
-void MongoBase::connectToMongoDB(string& hostname)
+void MongoBase::connectToMongoDB(std::string & host)
 {
 	try{
 		//if(!c->isStillConnected())
 		{
-	//		LOG(LNOTICE)<<"\n\n\nNot Connected?\n\n\n";
-			c->connect(hostname);
+			LOG(LNOTICE)<<"hostname "<<hostname;
+			c->connect(host);
 			LOG(LNOTICE)<<"Connected to base\n";
 		}
 	//	else

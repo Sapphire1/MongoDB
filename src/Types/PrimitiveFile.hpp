@@ -140,6 +140,7 @@ class PrimitiveFile : public MongoBase
 {
 private:
 	string mongoFileName;	// file name in mongo base
+	string fileName;
 	string pcdCloudType;	// sift, shot, xyz,  itd... itp...
 	string extension;		// png, jpg, yaml, xml
 	string place;			// {grid, document}
@@ -157,47 +158,55 @@ private:
 	pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr,
 	pcl::PointCloud<PointXYZSHOT>::Ptr
 	> data;
+	boost::shared_ptr<DBClientConnection> c;
 
 public:
-	PrimitiveFile(const cv::Mat& img, keyTypes& key) : data(img), fileType(key), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const cv::Mat& img, keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(img), fileType(key), c(client), fileName(name), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor cv::Mat";
-		//TODO change it - read from component
+		dbCollectionPath="images.containers";
 		this->setSize();
 	};
-	PrimitiveFile(const std::string& str, keyTypes& key) : data(str), fileType(key), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const std::string& str, keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(str), fileType(key), c(client), fileName(name), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor std::string";
+		dbCollectionPath="images.containers";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,  keyTypes& key) : data(cloud), fileType(key), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,  keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(cloud), fileType(key), c(client), fileName(name), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <pcl::PointXYZ>";
+		dbCollectionPath="images.containers";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud, keyTypes& key) : data(cloud), fileType(key), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud, keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(cloud), fileType(key), c(client), fileName(name), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <pcl::PointXYZRGB>";
+		dbCollectionPath="images.containers";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloud, keyTypes& key) : data(cloud), fileType(key), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloud, keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(cloud), fileType(key), c(client), fileName(name), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <PointXYZSIFT>";
+		dbCollectionPath="images.containers";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloud, keyTypes& key) : data(cloud), fileType(key), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloud, keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(cloud), fileType(key), c(client), fileName(name), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <PointXYZRGBSIFT>";
+		dbCollectionPath="images.containers";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloud, keyTypes& key) : data(cloud), fileType(key), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloud, keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(cloud), fileType(key), c(client), fileName(name), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <PointXYZSHOT>";
+		dbCollectionPath="images.containers";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, keyTypes& key) : data(cloud), fileType(key), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(cloud), fileType(key), fileName(name), c(client), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <pcl::PointXYZRGBNormal>";
+		dbCollectionPath="images.containers";
 		this->setSize();
 	};
 
@@ -268,19 +277,10 @@ void PrimitiveFile::insertFileIntoDocument()
 			params[0] = CV_IMWRITE_JPEG_QUALITY;
 			params[1] = 95;
 			cv::imencode(".jpg", *img, buf, params);
-			string tempFileName = "temp";
-			// TODO add proper tempFileName
-			BSONObj b=BSONObjBuilder().genOID().appendBinData(tempFileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("filename", tempFileName).append("size", 12).append("place", "document").append("extension", fileType).obj();
+			BSONObj b=BSONObjBuilder().genOID().appendBinData(fileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append("size", sizeBytes).append("place", "document").append("extension", fileType).obj();
 			BSONElement bsonElement;
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
-			// niech view ma klienta i podczas tworzenia pliku niech przekazuje na niego referencję
-			// a widok w konstruktorze tworzy sobie klienta i się z nim łączy
-			// usunąć z komponentu tworzenie i łączenie się !!!
-			// todo przeniesc to do konstruktora!!!
-			c->connect("localhost");
-			dbCollectionPath = "images.containers";
-			/////////////////////////////////////
 			c->insert(dbCollectionPath, b);
 			break;
 		}
