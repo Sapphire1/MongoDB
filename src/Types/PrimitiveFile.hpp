@@ -147,6 +147,10 @@ private:
 	float sizeMBytes;
 	keyTypes fileType; 		// mask, rgb, depth, I, XYZ, cameraInfo, PCL
 	string PCLType;			// SIFT, SHOT, XYZ, ORB, NORMALS
+	string viewName;
+	string modelName;
+	string collectionName;
+	string documentType;	// View or Model
 
 	boost::variant<	cv::Mat,
 	string,
@@ -164,55 +168,63 @@ public:
 	{
 		LOG(LNOTICE)<<"Constructor cv::Mat";
 		dbCollectionPath="images.containers";
+		collectionName = "containers";
 		this->setSize();
 	};
 	PrimitiveFile(const std::string& str, keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(str), fileType(key), c(client), fileName(name), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor std::string";
 		dbCollectionPath="images.containers";
+		collectionName = "containers";
 		this->setSize();
 	};
 	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,  keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(cloud), fileType(key), c(client), fileName(name), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <pcl::PointXYZ>";
 		dbCollectionPath="images.containers";
+		collectionName = "containers";
 		this->setSize();
 	};
 	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud, keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(cloud), fileType(key), c(client), fileName(name), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <pcl::PointXYZRGB>";
 		dbCollectionPath="images.containers";
+		collectionName = "containers";
 		this->setSize();
 	};
 	PrimitiveFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloud, keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(cloud), fileType(key), c(client), fileName(name), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <PointXYZSIFT>";
 		dbCollectionPath="images.containers";
+		collectionName = "containers";
 		this->setSize();
 	};
 	PrimitiveFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloud, keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(cloud), fileType(key), c(client), fileName(name), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <PointXYZRGBSIFT>";
 		dbCollectionPath="images.containers";
+		collectionName = "containers";
 		this->setSize();
 	};
 	PrimitiveFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloud, keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(cloud), fileType(key), c(client), fileName(name), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <PointXYZSHOT>";
 		dbCollectionPath="images.containers";
+		collectionName = "containers";
 		this->setSize();
 	};
 	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, keyTypes& key, boost::shared_ptr<DBClientConnection> & client, string& name) : data(cloud), fileType(key), fileName(name), c(client), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <pcl::PointXYZRGBNormal>";
 		dbCollectionPath="images.containers";
+		collectionName = "containers";
 		this->setSize();
 	};
 
 	void saveIntoDisc();
 	void saveIntoMongoBase();
-	void insertFileIntoGrid();
-	void insertFileIntoDocument();
+	void insertFileIntoGrid(OID& oid);
+	void insertFileIntoDocument(OID& oid);
 	void convertToBuffer();
 	//void setMime();
 	void getMime();
@@ -233,6 +245,16 @@ public:
 	void savePCxyzSIFTFileToDisc(bool suffix, bool binary, std::string& fn);
 	void savePCxyzRGBNormalFileToDisc(bool suffix, bool binary, std::string& fn);
 	void savePCxyzSHOTFileToDisc(bool suffix, bool binary, std::string& fn);
+
+	void setDocumentType(string& DocumentType)
+	{
+		this->documentType = DocumentType;
+	};
+
+	void setViewName(string& ViewName)
+	{
+		this->viewName = ViewName;
+	};
 
 
 	void setType(keyTypes key)
@@ -262,10 +284,23 @@ public:
 
 void PrimitiveFile::saveIntoMongoBase()
 {
+	OID oid;
 	//if(sizeMBytes<15)
-	//	insertFileIntoDocument();
+		insertFileIntoDocument(oid);
 	//else if(sizeMBytes>=15)
-		insertFileIntoGrid();
+	//	insertFileIntoGrid(oid);
+
+	// update document
+	if (documentType=="View")
+	{
+		c->update(dbCollectionPath, Query(BSON("ViewName"<<viewName<<"DocumentType"<<documentType)), BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString()))), false, true);
+		c->update(dbCollectionPath, Query(BSON("ViewName"<<viewName<<"DocumentType"<<documentType)), BSON("$addToSet"<<BSON("FileTypes"<<BSON("Type"<<fileType))), false, true);
+	}
+	else if (documentType=="Model")
+	{
+		c->update(dbCollectionPath, Query(BSON("ModelName"<<modelName<<"DocumentType"<<documentType)), BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString()))), false, true);
+		c->update(dbCollectionPath, Query(BSON("ModelName"<<modelName<<"DocumentType"<<documentType)), BSON("$addToSet"<<BSON("FileTypes"<<BSON("Type"<<fileType))), false, true);
+	}
 }
 void PrimitiveFile::saveImage(OID& oid)
 {
@@ -276,7 +311,7 @@ void PrimitiveFile::saveImage(OID& oid)
 	params[0] = CV_IMWRITE_JPEG_QUALITY;
 	params[1] = 95;
 	cv::imencode(".jpg", *img, buf, params);
-	BSONObj b=BSONObjBuilder().genOID().appendBinData(fileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
+	BSONObj b=BSONObjBuilder().genOID().appendBinData(fileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
 	BSONElement bsonElement;
 	b.getObjectID(bsonElement);
 	oid=bsonElement.__oid();
@@ -338,14 +373,14 @@ void PrimitiveFile::copyXYZSHOTPointToFloatArray (const PointXYZSHOT &p, float *
 
 }
 
-void PrimitiveFile::insertFileIntoDocument()
+void PrimitiveFile::insertFileIntoDocument(OID& oid)
 {
 	// use variant here...
 	LOG(LNOTICE)<<"PrimitiveFile::insertFileIntoCollection";
 	BSONObjBuilder builder;
 	BSONObj b;
 	BSONElement bsonElement;
-	OID oid;
+
 	switch(fileType)
 	{
 		case xml:
@@ -357,7 +392,7 @@ void PrimitiveFile::insertFileIntoDocument()
 			char const *cipCharTable = input->c_str();
 			LOG(LNOTICE)<<string(cipCharTable);
 			// create bson object
-			b = BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, BinDataGeneral,  cipCharTable).append("filename", fileName).append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
+			b = BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, BinDataGeneral,  cipCharTable).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
 
 			// insert object into collection
 			c->insert(dbCollectionPath, b);
@@ -420,7 +455,7 @@ void PrimitiveFile::insertFileIntoDocument()
 				const pcl::PointXYZ p = cloudXYZ->points[iter];
 				copyXYZPointToFloatArray (p, &buff[xyzPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
@@ -440,7 +475,7 @@ void PrimitiveFile::insertFileIntoDocument()
 				const pcl::PointXYZRGB p = cloudXYZRGB->points[iter];
 				copyXYZRGBPointToFloatArray (p, &buff[xyzrgbPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
@@ -461,7 +496,7 @@ void PrimitiveFile::insertFileIntoDocument()
 				const PointXYZSIFT p = cloudXYZSIFT->points[iter];
 				copyXYZSiftPointToFloatArray (p, &buff[siftPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			c->insert(dbCollectionPath, b);
@@ -493,7 +528,7 @@ void PrimitiveFile::insertFileIntoDocument()
 			float* buf;
 			buf = (float*)xyzimage->data;
 			LOG(LNOTICE)<<"Set buffer YAML";
-			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append("size", sizeBytes).append("place", "document").append("fileType", fileType).append("width", width).append("height", height).append("channels", channels).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", fileType).append("width", width).append("height", height).append("channels", channels).obj();
 			LOG(LNOTICE)<<"YAML inserted";
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
@@ -588,7 +623,7 @@ void PrimitiveFile::saveImageOnDisc()
 {
 	LOG(LTRACE)<<"Save image to disc";
 	cv::Mat* img = boost::get<cv::Mat>(&data);
-	cv::imwrite(fileName+".png", *img);
+	cv::imwrite(fileName, *img);
 }
 
 void PrimitiveFile::saveToDisc(bool suffix, bool binary)
@@ -692,9 +727,8 @@ void PrimitiveFile::saveToDisc(bool suffix, bool binary)
 	}
 }
 
-void PrimitiveFile::insertFileIntoGrid()
+void PrimitiveFile::insertFileIntoGrid(OID& oid)
 {
-
 	LOG(LNOTICE)<<"Writting to GRIDFS!";
 	try{
 		BSONObj object;
@@ -705,43 +739,30 @@ void PrimitiveFile::insertFileIntoGrid()
 		bool suffix = true;
 		bool binary = false;
 		saveToDisc(suffix, binary);
+
+		// create GridFS client
+		GridFS fs(*c, collectionName);
+
+		// save in grid
+		object = fs.storeFile(fileName, fileName, mime);
+
+		//	if(cloudType=="xyzsift")
+		//		b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
+		//	else
+		//		b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").obj();
+		BSONObj b = BSONObjBuilder().appendElements(object).append("ViewName", viewName).append("FileType", fileType).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
+
+		c->insert(dbCollectionPath, b);
+		b.getObjectID(bsonElement);
+		oid=bsonElement.__oid();
+		c->createIndex(dbCollectionPath, BSON("filename"<<1));
 	}catch(DBException &e)
 	{
 		LOG(LNOTICE) <<"Something goes wrong... :<\nBye!";
 		LOG(LNOTICE) <<c->getLastError();
 		LOG(LNOTICE) << e.what();
 	}
-
 }
-	//	boost::posix_time::time_facet *facet = new boost::posix_time::time_facet("%d_%m_%Y_%H_%M_%S");
-	//	time.imbue(locale(cout.getloc(), facet));
-	//	time<<second_clock::local_time();
-	//	LOG(LNOTICE) << "Time: "<< time.str() << endl;
-
-		// create GridFS client
-	//	GridFS fs(*c, dbCollectionPath);
-	//	string fileNameInMongo;
-	//	if(cloudType!="")
-		//	fileNameInMongo = (string)remoteFileName+"_"+ cloudType + time.str()+"."+string(fileType);
-	//	else
-	//		fileNameInMongo = (string)remoteFileName + time.str()+"."+string(fileType);
-	//	CLOG(LERROR)<<"tempFileName: "<<tempFileName;
-
-		// save in grid
-		//object = fs.storeFile(fileName, fileName, mime);
-
-	//	BSONObj b;
-	//	if(cloudType=="xyzsift")
-	//		b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
-	//	else
-	//		b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").obj();
-	//	c->insert(dbCollectionPath, b);
-	//	b.getObjectID(bsonElement);
-	//	oid=bsonElement.__oid();
-	//	cloudType="";
-	//	c->createIndex(dbCollectionPath, BSON("filename"<<1));
-
-
 
 }//namespace File
 }//MongoBase

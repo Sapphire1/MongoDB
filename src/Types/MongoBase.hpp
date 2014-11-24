@@ -68,7 +68,7 @@ public:
 
 	vector<string>  docViewsNames;
 	vector<string>  docModelsNames;
-	vector<string> splitedSceneNames;
+	vector<string>	splitedSceneNames;
 	 /// Input data stream
 //	Base::DataStreamIn <cv::Mat> in_img;
 
@@ -160,9 +160,9 @@ public:
     void readFile();
 };
 
-MongoBase::MongoBase() {
-	DBClientConnection *c_ptr = new DBClientConnection();
-	c = boost::shared_ptr<DBClientConnection>(c_ptr);
+MongoBase::MongoBase()
+{
+	c = boost::shared_ptr<DBClientConnection>(new DBClientConnection());
 	mongo::client::initialize();
 	dbCollectionPath="";
 	sizeOfCloud=0;

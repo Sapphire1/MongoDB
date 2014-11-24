@@ -148,18 +148,29 @@ protected:
 
 private:
 	Base::Property<string> mongoDBHost;
-	Base::Property<string> objectName;
 	Base::Property<string> description;
-	Base::Property<string> collectionName;
 	Base::Property<string> viewName;
-	Base::Property<string> sceneNamesProp;
 	Base::Property<string> fileName;
-	Base::Property<int> mean_viewpoint_features_number;
-	Base::Property<string> remoteFileName;
-	std::vector<std::string> splitedSceneNames;
-	Base::Property<string> nodeNameProp;
-	Base::Property<bool> binary;
-	Base::Property<bool> suffix;
+	Base::Property<string> SensorType;
+	Base::Property<string> objects;
+	Base::Property<bool> xmlProp;
+	Base::Property<bool> xyzProp;
+	Base::Property<bool> rgbProp;
+	Base::Property<bool> densityProp;
+	Base::Property<bool> intensityProp;
+	Base::Property<bool> maskProp;
+	Base::Property<bool> stereoProp;
+	Base::Property<bool> stereoTexturedProp;
+	Base::Property<bool> pc_xyzProp;
+	Base::Property<bool> pc_xyzrgbProp;
+	Base::Property<bool> pc_xyzsiftProp;
+	Base::Property<bool> pc_xyzrgbsiftProp;
+	Base::Property<bool> pc_xyzshotProp;
+	Base::Property<bool> pc_xyzrgbnormalProp;
+
+	boost::shared_ptr<std::vector<keyTypes> >requiredTypes;
+
+	//Base::Property<int> mean_viewpoint_features_number;
 
 	template <keyTypes key>
 	void writeData();
@@ -169,6 +180,7 @@ private:
 	void Write_xyzsift();
 
 	void initObject();
+	void setInputFiles();
 	void writeNode2MongoDB(const string &destination, const string &option, string,  const string& fileType);
 	void insert2MongoDB(const string &destination,  const string&,  const string&,  const string& fileType );
 	void writeTXT2DB();
