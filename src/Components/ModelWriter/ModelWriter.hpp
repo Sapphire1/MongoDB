@@ -29,6 +29,9 @@
 #include <dirent.h>
 #include <Types/MongoBase.hpp>
 #include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZRGBSIFT.hpp>
+#include <Types/PointXYZSHOT.hpp>
+#include <Types/Model.hpp>
 
 namespace Processors {
 namespace ModelWriter {
@@ -36,25 +39,45 @@ namespace ModelWriter {
 using namespace cv;
 using namespace mongo;
 using namespace std;
+using namespace MongoBase;
 
 
 class ModelWriter: public Base::Component, MongoBase::MongoBase
 {
 public:
-        /*!
-         * Constructor.
-         */
-	   ModelWriter(const std::string & name = "");
+	/*!
+	 * Constructor.
+	 */
+	ModelWriter(const std::string & name = "");
 
-        /*!
-         * Destructor
-         */
-        virtual ~ModelWriter();
+	/*!
+	 * Destructor
+	 */
+	virtual ~ModelWriter();
 
-        /*!
-         * Prepares communication interface.
-         */
-        virtual void prepareInterface();
+	/*!
+	 * Prepares communication interface.
+	 */
+	virtual void prepareInterface();
+
+	//PCL - Point Clouds
+	/// Cloud containing points with Cartesian coordinates (XYZ).
+	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZ>::Ptr > in_pc_xyz;
+
+	/// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
+	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > in_pc_xyzrgb;
+
+	/// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
+	Base::DataStreamIn<pcl::PointCloud<PointXYZSIFT>::Ptr > in_pc_xyzsift;
+
+	/// Cloud containing points with Cartesian coordinates,  SIFT descriptor and color (XYZ + RGB + 128)
+	Base::DataStreamIn<pcl::PointCloud<PointXYZRGBSIFT>::Ptr > in_pc_xyzrgbsift;
+
+	/// Cloud containing points with Cartesian coordinates and SHOT descriptor  (XYZ + SHOT).
+	Base::DataStreamIn<pcl::PointCloud<PointXYZSHOT>::Ptr > in_pc_xyzshot;
+
+	/// Cloud containing points with Cartesian coordinates, colors and normals (XYZ + RGB + NORMAL).
+	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr> in_pc_xyzrgbnormal;
 
 protected:
 
@@ -90,45 +113,47 @@ protected:
 
         /// Event handler.
 
-
-
 private:
 	Base::Property<string> mongoDBHost;
-	Base::Property<string> objectName;
 	Base::Property<string> description;
-	Base::Property<string> collectionName;
-	Base::Property<string> modelNameProp;
-	Base::Property<string> sceneNamesProp;
+	Base::Property<string> modelName;
 	Base::Property<string> fileName;
-	Base::Property<string> remoteFileName;
-	std::vector<std::string> splitedSceneNames;
-	Base::Property<string> nodeNameProp;
-	Base::Property<int> mean_viewpoint_features_number;
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ;
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB;
-	pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT;
-	pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT;
-	Base::Property<bool> binary;
-	Base::Property<bool> suffix;
-	string cloudType;
-	cv::Mat tempImg;
-	float sizeOfCloud;
+	Base::Property<string> object;
+	Base::Property<bool> pc_xyzProp;
+	Base::Property<bool> pc_xyzrgbProp;
+	Base::Property<bool> pc_xyzsiftProp;
+	Base::Property<bool> pc_xyzrgbsiftProp;
+	Base::Property<bool> pc_xyzshotProp;
+	Base::Property<bool> pc_xyzrgbnormalProp;
+	boost::shared_ptr<std::vector<keyTypes> >requiredTypes;
 
-	template <class PointT>
-	void Write_cloud();
+	//Base::Property<int> mean_viewpoint_features_number;
+	//Model* modelPtr;
+	shared_ptr<Model> modelPtr;
+	template <keyTypes key>
+	void writeData();
+
+	void Write_xyz();
+	void Write_xyzrgb();
+	void Write_xyzsift();
 
 	void initObject();
+	void setInputFiles();
+	void writeNode2MongoDB(const string &destination, const string &option, string,  const string& fileType);
+	void insert2MongoDB(const string &destination,  const string&,  const string&,  const string& fileType );
+	void writeTXT2DB();
+	void writeImage2DB();
 	void writePCD2DB();
-	void writeNode2MongoDB(const string &destination, const string &option, string, const string& fileType );
-    void insert2MongoDB(const string &destination,  const string&,  const string&,  const string& fileType );
+	void writeYAML2DB();
+	float getFileSize(const string& fileType);
 	void insertToModelOrView(const string &,const string &);
-	float getFileSize(const string& fileType, string& tempFileName);
+	void insertFileIntoGrid(OID&, const string&, int);
+	void insertFileIntoCollection(OID& oid, const string& fileType, string& tempFileName, int);
 	void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
-	void insertFileIntoCollection(OID& oid, const string& fileType, string& tempFileName, int size);
-    void copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const;
-    void copyXYZPointToFloatArray (const pcl::PointXYZ &p, float * out) const;
-    void copyXYZRGBPointToFloatArray (const pcl::PointXYZRGB &p, float * out) const;
-    void insertFileIntoGrid(OID& oid, const string& fileType, string& tempFileName, int);
+	void copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const;
+	void copyXYZPointToFloatArray (const pcl::PointXYZ &p, float * out) const;
+	void copyXYZRGBPointToFloatArray (const pcl::PointXYZRGB &p, float * out) const;
+	char* serializeTable( int &length, 	std::stringstream& compressedData);
 
 };
 }//: namespace ModelWriter

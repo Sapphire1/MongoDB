@@ -61,18 +61,21 @@ class View : public MongoBase::MongoBase
 {
 private:
 	string ViewName;						// lab012
-	//TODO add init of this field in  constructor!!!
 	string SensorType;						// Stereo, ToF...
 	string dateOfInsert;					// 02042013
 	std::vector<shared_ptr<PrimitiveFile::PrimitiveFile> > files;
 	std::vector<string>	fileTypes;			// [MASK, IMAGE, …, IMAGE3D]
-	// all required types to store
-	boost::shared_ptr<std::vector<keyTypes> > requiredKeyTypes;
 	std::string description;
 	string hostname;
+	std::vector<std::string> splitedObjectNames;
+
+	// all required types to store
+	boost::shared_ptr<std::vector<keyTypes> > requiredKeyTypes;
+
 	// inserted file types of file
 	std::vector<keyTypes> insertedKeyTypes;
-	std::vector<std::string> splitedObjectNames;
+
+
 
 public:
 	View(string& viewName, string& host) : ViewName(viewName), hostname(host)

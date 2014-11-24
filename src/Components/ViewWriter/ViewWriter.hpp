@@ -111,6 +111,8 @@ public:
    	/// Cloud containing points with Cartesian coordinates, colors and normals (XYZ + RGB + NORMAL).
    	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr> in_pc_xyzrgbnormal;
 
+	shared_ptr<View> viewPtr;
+
 protected:
 
 	/*!

@@ -88,7 +88,9 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	CLOG(LTRACE) << "Hello ViewWriter";
 	//std::vector<keyTypes>* key_ptr = ;
 	requiredTypes = boost::shared_ptr<std::vector<keyTypes> >(new std::vector<keyTypes>());
-
+	string vn = string(viewName);
+	string hostname = mongoDBHost;
+	viewPtr = boost::shared_ptr<View>(new View(vn, hostname));
 }
 
 ViewWriter::~ViewWriter()
@@ -161,9 +163,7 @@ template <keyTypes keyType>
 void ViewWriter::writeData()
 {
 	CLOG(LNOTICE) << "ViewWriter::writeData";
-	string vn = string (viewName);
-	string hostname = mongoDBHost;
-	shared_ptr<View> viewPtr(new View(vn, hostname));
+
 	bool exist = viewPtr->checkIfExist();
 	if(!exist)
 	{
@@ -336,6 +336,7 @@ bool ViewWriter::onStart()
 
 void ViewWriter::setInputFiles()
 {
+	requiredTypes->clear();
 	if(xmlProp==true)
 		requiredTypes->push_back(xml);
 	if(xyzProp==true)

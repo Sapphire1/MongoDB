@@ -139,7 +139,7 @@ public:
 class PrimitiveFile : public MongoBase
 {
 private:
-	string mongoFileName;	// file name in mongo base
+	//string mongoFileName;	// file name in mongo base
 	string fileName;
 	string pcdCloudType;	// sift, shot, xyz,  itd... itp...
 	string place;			// {grid, document}
@@ -220,7 +220,7 @@ public:
 		collectionName = "containers";
 		this->setSize();
 	};
-
+	string getFileName(){return fileName;}
 	void saveIntoDisc();
 	void saveIntoMongoBase();
 	void insertFileIntoGrid(OID& oid);
@@ -256,6 +256,10 @@ public:
 		this->viewName = ViewName;
 	};
 
+	void setModelName(string& ModelName)
+	{
+		this->modelName = ModelName;
+	};
 
 	void setType(keyTypes key)
 	{
