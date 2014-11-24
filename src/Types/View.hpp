@@ -135,8 +135,6 @@ void View::saveAllFiles()
 }
 void View::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, keyTypes key)
 {
-	string documentType = "View";
-	file->setDocumentType(documentType);
 	file->setViewName(ViewName);
 	// add file to vector
 	files.push_back(file);

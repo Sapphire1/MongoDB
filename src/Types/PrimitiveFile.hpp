@@ -150,7 +150,7 @@ private:
 	string viewName;
 	string modelName;
 	string collectionName;
-	string documentType;	// View or Model
+	string documentType;	// View, Model, Object, file
 
 	boost::variant<	cv::Mat,
 	string,
@@ -246,11 +246,6 @@ public:
 	void savePCxyzRGBNormalFileToDisc(bool suffix, bool binary, std::string& fn);
 	void savePCxyzSHOTFileToDisc(bool suffix, bool binary, std::string& fn);
 
-	void setDocumentType(string& DocumentType)
-	{
-		this->documentType = DocumentType;
-	};
-
 	void setViewName(string& ViewName)
 	{
 		this->viewName = ViewName;
@@ -295,15 +290,15 @@ void PrimitiveFile::saveIntoMongoBase()
 	//	insertFileIntoGrid(oid);
 
 	// update document
-	if (documentType=="View")
+	if (viewName!="")
 	{
-		c->update(dbCollectionPath, Query(BSON("ViewName"<<viewName<<"DocumentType"<<documentType)), BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString()))), false, true);
-		c->update(dbCollectionPath, Query(BSON("ViewName"<<viewName<<"DocumentType"<<documentType)), BSON("$addToSet"<<BSON("FileTypes"<<BSON("Type"<<fileType))), false, true);
+		c->update(dbCollectionPath, Query(BSON("ViewName"<<viewName<<"DocumentType"<<"View")), BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString()))), false, true);
+		c->update(dbCollectionPath, Query(BSON("ViewName"<<viewName<<"DocumentType"<<"View")), BSON("$addToSet"<<BSON("FileTypes"<<BSON("Type"<<fileType))), false, true);
 	}
-	else if (documentType=="Model")
+	else if (modelName!="")
 	{
-		c->update(dbCollectionPath, Query(BSON("ModelName"<<modelName<<"DocumentType"<<documentType)), BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString()))), false, true);
-		c->update(dbCollectionPath, Query(BSON("ModelName"<<modelName<<"DocumentType"<<documentType)), BSON("$addToSet"<<BSON("FileTypes"<<BSON("Type"<<fileType))), false, true);
+		c->update(dbCollectionPath, Query(BSON("ModelName"<<modelName<<"DocumentType"<<"Model")), BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString()))), false, true);
+		c->update(dbCollectionPath, Query(BSON("ModelName"<<modelName<<"DocumentType"<<"Model")), BSON("$addToSet"<<BSON("FileTypes"<<BSON("Type"<<fileType))), false, true);
 	}
 }
 void PrimitiveFile::saveImage(OID& oid)
@@ -754,7 +749,11 @@ void PrimitiveFile::insertFileIntoGrid(OID& oid)
 		//		b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
 		//	else
 		//		b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").obj();
-		BSONObj b = BSONObjBuilder().appendElements(object).append("ViewName", viewName).append("FileType", fileType).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
+		BSONObj b;
+		if(viewName!="")
+			b = BSONObjBuilder().appendElements(object).append("ViewName", viewName).append("FileType", fileType).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
+		else if(modelName!="")
+			b = BSONObjBuilder().appendElements(object).append("modelName", modelName).append("FileType", fileType).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
 
 		c->insert(dbCollectionPath, b);
 		b.getObjectID(bsonElement);

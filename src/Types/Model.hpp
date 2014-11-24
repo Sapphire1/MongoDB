@@ -133,8 +133,6 @@ void Model::saveAllFiles()
 }
 void Model::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, keyTypes key)
 {
-	string documentType = "Model";
-	file->setDocumentType(documentType);
 	file->setModelName(ModelName);
 	// add file to vector
 	LOG(LNOTICE)<<"Push file to the vector files";
@@ -164,10 +162,6 @@ bool Model::checkIfAllFiles()
 {
 	LOG(LNOTICE)<<"checkIfAllFiles";
 	bool present = false;
-	bool stereoLPresent = false;
-	bool stereoRPresent = false;
-	bool stereoLTexturedPresent = false;
-	bool stereoRTexturedPresent = false;
 
 	for(std::vector<keyTypes>::iterator reqTypes = requiredKeyTypes->begin(); reqTypes != requiredKeyTypes->end(); ++reqTypes)
 	{
@@ -181,29 +175,11 @@ bool Model::checkIfAllFiles()
 				present = true;
 				break;
 			}
-			else if(*insTypes==stereoL)
-				stereoLPresent = true;
-			else if(*insTypes==stereoR)
-				stereoRPresent = true;
-			else if(*insTypes==stereoLTextured)
-				stereoLTexturedPresent = true;
-			else if(*insTypes==stereoRTextured)
-				stereoRTexturedPresent = true;
 		}// for
 		if(present)
 		{
 			LOG(LNOTICE)<<"Present";
 			present = false;
-		}
-		else if(*reqTypes==stereo)
-		{
-			if(!stereoLPresent || !stereoRPresent)
-				return false;
-		}
-		else if(*reqTypes==stereoTextured)
-		{
-			if(!stereoLPresent ||  !stereoRPresent || !stereoLTexturedPresent || !stereoRTexturedPresent)
-				return false;
 		}
 		else
 			return false;
