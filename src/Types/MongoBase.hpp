@@ -61,59 +61,15 @@ enum keyTypes {	xml, xyz, rgb, density, intensity, mask, stereoL, stereoR, stere
 pc_xyz, pc_xyzrgb, pc_xyzsift, pc_xyzrgbsift, pc_xyzshot, pc_xyzrgbnormal, stereo, stereoTextured};
 
 class MongoBase {
-public:
+private:
 	string dbCollectionPath;
 	string hostname;
     boost::shared_ptr<DBClientConnection> c;
-
+public:
+    string collectionName;
 	vector<string>  docViewsNames;
 	vector<string>  docModelsNames;
 	vector<string>	splitedSceneNames;
-	 /// Input data stream
-//	Base::DataStreamIn <cv::Mat> in_img;
-
-	/// Output data stream - processed image
-//	Base::DataStreamOut <cv::Mat> out_img;
-
-	/// Matrixes of projection, distortion etc.
-//	Base::DataStreamIn <std::string> cipFileIn;
-
-	/// XYZ cv::Mat input
-//	Base::DataStreamIn <cv::Mat> in_yaml;
-
-	/// XYZ cv::Mat output
-//	Base::DataStreamOut <cv::Mat> out_yaml;
-
-	/// Matrixes of projection, distortion etc.
-//	Base::DataStreamOut <std::string> cipFileOut;
-
-	/// Cloud containing points with Cartesian coordinates (XYZ).
-//	Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZ>::Ptr > out_cloud_xyz;
-
-	/// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
-//	Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > out_cloud_xyzrgb;
-
-	/// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
-//	Base::DataStreamOut<pcl::PointCloud<PointXYZSIFT>::Ptr > out_cloud_xyzsift;
-
-	/// Cloud containing points with Cartesian coordinates (XYZ).
-//	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZ>::Ptr > in_cloud_xyz;
-
-	/// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
-//	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > in_cloud_xyzrgb;
-
-	/// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
-//	Base::DataStreamIn<pcl::PointCloud<PointXYZSIFT>::Ptr> in_cloud_xyzsift;
-
-	/// Cloud containing points with Cartesian coordinates, RGB Color and SIFT descriptor (XYZ+ RGB + 128).
-//	Base::DataStreamIn<pcl::PointCloud<PointXYZRGBSIFT>::Ptr> in_cloud_xyzrgbsift;
-
-//	Base::DataStreamOut<std::vector<AbstractObject*> > out_models;
-
-//	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ;
-//	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB;
-//	pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT;
-//	pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT;
     float sizeOfCloud;
 	string cloudType;
 	cv::Mat tempImg;
@@ -122,17 +78,7 @@ public:
 	OID fileOID;
 	string tempFileName;
 
-
-	MongoBase();
-	virtual ~MongoBase();
-	boost::shared_ptr<DBClientConnection> getMongoClient()
-	{
-		 return c;
-	}
-	void setMongoClient(boost::shared_ptr<DBClientConnection>& client)
-	{
-		 c =client;
-	}
+	MongoBase(string& hostname);
 	vector<string> getAllFiles(const string& pattern);
 	vector<string> getAllFolders(const string& pattern);
 	int getChildOIDS(BSONObj &obj, const string&,  const string&, vector<OID>&);
@@ -143,7 +89,7 @@ public:
 	void initModelNames();
 
 	void setMime(const keyTypes key,  string& mime);
-	void connectToMongoDB(std::string &);
+	void connectToMongoDB();
 	void setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName);
     void getFileFromGrid(const GridFile &);
     void addScenes(BSONObj& object, Base::Property<string>& objectName);
@@ -158,20 +104,24 @@ public:
     void readPointCloudFromDocument(mongo::OID& childOID, int size);
     void readImageFromDocument(mongo::OID& childOID, int size);
     void readFile();
+    void insert(BSONObj&);
+    int count(BSONObj & object);
+    void update(BSONObj& query, BSONObj& update);
+    auto_ptr<DBClientCursor> query(BSONObj& query);
+    boost::shared_ptr<DBClientConnection>  getClient();
+    void index(string& field);
 };
 
-MongoBase::MongoBase()
+MongoBase::MongoBase(string& hostname) : hostname(hostname)
 {
 	c = boost::shared_ptr<DBClientConnection>(new DBClientConnection());
 	mongo::client::initialize();
-	dbCollectionPath="";
+	connectToMongoDB();
 	sizeOfCloud=0;
-	hostname = "localhost";
 	tempFileOnDisc="tempFile";
 	fileOID = OID("000000000000000000000000");
-}
-
-MongoBase::~MongoBase() {
+	dbCollectionPath="images.containers";
+	collectionName = "containers";
 }
 
 void MongoBase::readTextFileFromDocument(mongo::OID& fileOID, int size)
@@ -193,6 +143,13 @@ void MongoBase::readTextFileFromDocument(mongo::OID& fileOID, int size)
 	LOG(LERROR)<<"Save to sink";
 	//cipFileOut.write(fromDB);
 }
+
+boost::shared_ptr<DBClientConnection>  MongoBase::getClient()
+{
+	boost::shared_ptr<DBClientConnection> c2 = c;
+	return c2;
+}
+
 void MongoBase::readXYZMatFromDocument(mongo::OID& fileOID, int size)
 {
 	LOG(LERROR)<<"Read XYZ Mat\n";
@@ -230,6 +187,34 @@ void MongoBase::readXYZMatFromDocument(mongo::OID& fileOID, int size)
 	fs << "img" << imageXYZRGB;
 	fs.release();
 	//out_yaml.write(imageXYZRGB);
+}
+
+void MongoBase::insert(BSONObj & object)
+{
+	c->insert(dbCollectionPath, object);
+}
+
+int MongoBase::count(BSONObj & object)
+{
+	int options=0;
+	int limit=0;
+	int skip=0;
+	return c->count(dbCollectionPath, object, options, limit, skip);
+}
+
+void MongoBase::update(BSONObj& query, BSONObj& update)
+{
+	c->update(dbCollectionPath, Query(query), update, false, true);
+}
+
+auto_ptr<DBClientCursor> MongoBase::query(BSONObj& query)
+{
+	return c->query(dbCollectionPath, (Query(query)));
+}
+
+void MongoBase::index(string& field)
+{
+	c->createIndex(dbCollectionPath, BSON(field<<1));
 }
 
 void MongoBase::readFile()
@@ -714,13 +699,13 @@ void MongoBase::setMime( const keyTypes fileType,  string& mime)
 	}
 }
 
-void MongoBase::connectToMongoDB(std::string & host)
+void MongoBase::connectToMongoDB()
 {
 	try{
 		//if(!c->isStillConnected())
 		{
 			LOG(LNOTICE)<<"hostname "<<hostname;
-			c->connect(host);
+			c->connect(hostname);
 			LOG(LNOTICE)<<"Connected to base\n";
 		}
 	//	else

@@ -42,7 +42,7 @@ using namespace std;
 using namespace MongoBase;
 
 
-class ModelWriter: public Base::Component, MongoBase::MongoBase
+class ModelWriter: public Base::Component
 {
 public:
 	/*!

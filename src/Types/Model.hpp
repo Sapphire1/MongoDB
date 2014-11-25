@@ -56,7 +56,7 @@ using namespace mongo;
 using namespace std;
 using namespace boost;
 
-class Model : public MongoBase::MongoBase
+class Model //: public MongoBase::MongoBase
 {
 private:
 	std::string ModelName;					// model1
@@ -73,13 +73,13 @@ private:
 
 	// inserted file types of file
 	std::vector<keyTypes> insertedKeyTypes;
+	boost::shared_ptr<MongoBase> basePtr;
 
 
 public:
 	Model(string& modelName, string& host) : ModelName(modelName), hostname(host)
 	{
-		dbCollectionPath="images.containers";
-		connectToMongoDB(hostname);
+		basePtr = boost::shared_ptr<MongoBase>(new MongoBase(hostname));
 	};
 	void setRequiredKeyTypes(boost::shared_ptr<std::vector<keyTypes> > &requiredKeyTypes)
 	{
@@ -192,7 +192,8 @@ bool Model::checkIfExist()
 	int options=0;
 	int limit=0;
 	int skip=0;
-	int items = c->count(dbCollectionPath, BSON("ModelName"<<ModelName<<"DocumentType"<<"Model"), options, limit, skip);
+	BSONObj b = BSON("ModelName"<<ModelName<<"DocumentType"<<"Model");
+	int items = basePtr->count(b);
 	LOG(LNOTICE)<<"items: "<<items<<"\n";
 	if(items==0)
 		return false;
@@ -224,23 +225,27 @@ void Model::create()
 	model.getObjectID(bsonElement);
 	OID modelOID;
 	modelOID=bsonElement.__oid();
-	c->insert(dbCollectionPath, model);
+	basePtr->insert(model);
 	// thesis: model doesn't exist so doesn't contain any object
 
 	// check if object exist
-	int items = c->count(dbCollectionPath, BSON("ObjectName"<<objectName<<"DocumentType"<<"Object"), options, limit, skip);
+	BSONObj b = BSON("ObjectName"<<objectName<<"DocumentType"<<"Object");
+	int items = basePtr->count(b);
 	// document of object doesn't exist
 	if(items==0)
 	{
 		BSONObj object = BSONObjBuilder().genOID().append("ObjectName", objectName).append("DocumentType","Object").obj();
-		c->insert(dbCollectionPath, object);
+		basePtr->insert(object);
 	}
+	BSONObj query = BSON("ObjectName"<<objectName<<"DocumentType"<<"Object");
+	BSONObj update = BSON("$addToSet"<<BSON("ModelsList"<<BSON("modelOID"<<modelOID.toString())));
 	// insert model oid to object document
-	c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"DocumentType"<<"Object")), BSON("$addToSet"<<BSON("ModelsList"<<BSON("modelOID"<<modelOID.toString()))), false, true);
+	basePtr->update(query, update);
 
 	// insert object oid to model document
 	BSONObj object;
-	auto_ptr<DBClientCursor> cursorCollection =c->query(dbCollectionPath, (Query(BSON("ObjectName"<<objectName<<"DocumentType"<<"Object"))));
+	query = BSON("ObjectName"<<objectName<<"DocumentType"<<"Object");
+	auto_ptr<DBClientCursor> cursorCollection =basePtr->query(query);
 	while(cursorCollection->more())
 	{
 		object = cursorCollection->next();
@@ -248,7 +253,9 @@ void Model::create()
 	object.getObjectID(bsonElement);
 	OID objectOID;
 	objectOID=bsonElement.__oid();
-	c->update(dbCollectionPath, Query(BSON("ModelName"<<ModelName<<"DocumentType"<<"Model")), BSON("$addToSet"<<BSON("ObjectsList"<<BSON("objectOID"<<objectOID.toString()))), false, true);
+	query = BSON("ModelName"<<ModelName<<"DocumentType"<<"Model");
+	update = BSON("$addToSet"<<BSON("ObjectsList"<<BSON("objectOID"<<objectOID.toString())));
+	basePtr->update(query, update);
 	return;
 }
 
@@ -256,7 +263,7 @@ void Model::putMatToFile(const cv::Mat& img, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "Model::putMatToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(img, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(img, key, fileName, hostname));
 	pushFile(file, key);
 }
 
@@ -264,7 +271,7 @@ void Model::putStringToFile(const std::string& str, keyTypes key, string& fileNa
 {
 	LOG(LNOTICE)<< "Model::putStringToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(str, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(str, key, fileName, hostname));
 	pushFile(file, key);
 }
 
@@ -272,21 +279,21 @@ void Model::putPCxyzToFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudXYZ, 
 {
 	LOG(LNOTICE)<< "Model::putPCxyzToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZ, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZ, key, fileName, hostname));
 	pushFile(file, key);
 }
 void Model::putPCyxzrgbToFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloudXYZRGB, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "Model::putPCyxzrgbToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGB, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGB, key, fileName, hostname));
 	pushFile(file, key);
 }
 void Model::putPCxyzsiftToFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloudXYZSIFT, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "Model::putPCxyzsiftToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSIFT, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSIFT, key, fileName, hostname));
 	pushFile(file, key);
 }
 
@@ -294,7 +301,7 @@ void Model::putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& c
 {
 	LOG(LNOTICE)<< "Model::putPCxyzrgbsiftToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBSIFT, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBSIFT, key, fileName, hostname));
 	pushFile(file, key);
 }
 
@@ -302,7 +309,7 @@ void Model::putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloudXY
 {
 	LOG(LNOTICE)<< "Model::putPCxyzshotToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSHOT, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSHOT, key, fileName, hostname));
 	pushFile(file, key);
 }
 
@@ -310,7 +317,7 @@ void Model::putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal
 {
 	LOG(LNOTICE)<< "Model::putPCxyzrgbNormalToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBNormal, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBNormal, key, fileName, hostname));
 	pushFile(file, key);
 }
 

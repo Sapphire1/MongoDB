@@ -57,7 +57,7 @@ using namespace std;
 using namespace boost;
 using namespace PrimitiveFile;
 
-class View : public MongoBase::MongoBase
+class View //: public MongoBase::MongoBase
 {
 private:
 	string ViewName;						// lab012
@@ -75,13 +75,13 @@ private:
 	// inserted file types of file
 	std::vector<keyTypes> insertedKeyTypes;
 
-
+	// pointer to MongoBase object
+	boost::shared_ptr<MongoBase> basePtr;
 
 public:
 	View(string& viewName, string& host) : ViewName(viewName), hostname(host)
 	{
-		dbCollectionPath="images.containers";
-		connectToMongoDB(hostname);
+		basePtr = boost::shared_ptr<MongoBase>(new MongoBase(hostname));
 	};
 	void setRequiredKeyTypes(boost::shared_ptr<std::vector<keyTypes> > &requiredKeyTypes)
 	{
@@ -211,10 +211,8 @@ bool View::checkIfAllFiles()
 
 bool View::checkIfExist()
 {
-	int options=0;
-	int limit=0;
-	int skip=0;
-	int items = c->count(dbCollectionPath, BSON("ViewName"<<ViewName<<"DocumentType"<<"View"), options, limit, skip);
+	BSONObj b = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");
+	int items = basePtr->count(b);
 	LOG(LNOTICE)<<"items: "<<items<<"\n";
 	if(items==0)
 		return false;
@@ -234,9 +232,6 @@ bool View::checkIfFileExist(keyTypes key)
 
 void View::create()
 {
-	int options=0;
-	int limit=0;
-	int skip=0;
 	BSONArrayBuilder objectArrayBuilder;
 	BSONObj view = BSONObjBuilder().genOID().append("ViewName", ViewName).append("DocumentType","View").append("sensorType", SensorType).append("description", description).obj();
 	// get view oid
@@ -244,24 +239,28 @@ void View::create()
 	view.getObjectID(bsonElement);
 	OID viewOID;
 	viewOID=bsonElement.__oid();
-	c->insert(dbCollectionPath, view);
+	basePtr->insert(view);
 	// thesis: view doesn't exist so doesn't contain any object
 	for(std::vector<string>::iterator itObject = splitedObjectNames.begin(); itObject != splitedObjectNames.end(); ++itObject)
 	{
+		BSONObj b = BSON("ObjectName"<<*itObject<<"DocumentType"<<"Object");
 		// check if object exist
-		int items = c->count(dbCollectionPath, BSON("ObjectName"<<*itObject<<"DocumentType"<<"Object"), options, limit, skip);
+		int items = basePtr->count(b);
 		// document of object doesn't exist
 		if(items==0)
 		{
 			BSONObj object = BSONObjBuilder().genOID().append("ObjectName", *itObject).append("DocumentType","Object").obj();
-			c->insert(dbCollectionPath, object);
+			basePtr->insert(object);
 		}
 		// insert view oid to object document
-		c->update(dbCollectionPath, Query(BSON("ObjectName"<<*itObject<<"DocumentType"<<"Object")), BSON("$addToSet"<<BSON("ViewsList"<<BSON("viewOID"<<viewOID.toString()))), false, true);
+		BSONObj query = BSON("ObjectName"<<*itObject<<"DocumentType"<<"Object");
+		BSONObj update = BSON("$addToSet"<<BSON("ViewsList"<<BSON("viewOID"<<viewOID.toString())));
+		basePtr->update(query, update);
 
 		// insert object oid to view document
 		BSONObj object;
-		auto_ptr<DBClientCursor> cursorCollection =c->query(dbCollectionPath, (Query(BSON("ObjectName"<<*itObject<<"DocumentType"<<"Object"))));
+		query = BSON("ObjectName"<<*itObject<<"DocumentType"<<"Object");
+		auto_ptr<DBClientCursor> cursorCollection =basePtr->query(query);
 		while(cursorCollection->more())
 		{
 			object = cursorCollection->next();
@@ -269,7 +268,9 @@ void View::create()
 		object.getObjectID(bsonElement);
 		OID objectOID;
 		objectOID=bsonElement.__oid();
-		c->update(dbCollectionPath, Query(BSON("ViewName"<<ViewName<<"DocumentType"<<"View")), BSON("$addToSet"<<BSON("ObjectsList"<<BSON("objectOID"<<objectOID.toString()))), false, true);
+		query = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");
+		update = BSON("$addToSet"<<BSON("ObjectsList"<<BSON("objectOID"<<objectOID.toString())));
+		basePtr->update(query, update);
 	}
 	return;
 }
@@ -278,7 +279,7 @@ void View::putMatToFile(const cv::Mat& img, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "View::putMatToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(img, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(img, key, fileName, hostname));
 	pushFile(file, key);
 }
 
@@ -286,7 +287,7 @@ void View::putStringToFile(const std::string& str, keyTypes key, string& fileNam
 {
 	LOG(LNOTICE)<< "View::putStringToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(str, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(str, key, fileName, hostname));
 	pushFile(file, key);
 }
 
@@ -294,21 +295,21 @@ void View::putPCxyzToFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudXYZ, k
 {
 	LOG(LNOTICE)<< "View::putPCxyzToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZ, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZ, key, fileName, hostname));
 	pushFile(file, key);
 }
 void View::putPCyxzrgbToFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloudXYZRGB, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "View::putPCyxzrgbToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGB, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGB, key, fileName, hostname));
 	pushFile(file, key);
 }
 void View::putPCxyzsiftToFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloudXYZSIFT, keyTypes key, string& fileName)
 {
 	LOG(LNOTICE)<< "View::putPCxyzsiftToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSIFT, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSIFT, key, fileName, hostname));
 	pushFile(file, key);
 }
 
@@ -316,7 +317,7 @@ void View::putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cl
 {
 	LOG(LNOTICE)<< "View::putPCxyzrgbsiftToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBSIFT, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBSIFT, key, fileName, hostname));
 	pushFile(file, key);
 }
 
@@ -324,7 +325,7 @@ void View::putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloudXYZ
 {
 	LOG(LNOTICE)<< "View::putPCxyzshotToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSHOT, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSHOT, key, fileName, hostname));
 	pushFile(file, key);
 }
 
@@ -332,7 +333,7 @@ void View::putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>
 {
 	LOG(LNOTICE)<< "View::putPCxyzrgbNormalToFile";
 	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBNormal, key, c, fileName));
+	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBNormal, key, fileName, hostname));
 	pushFile(file, key);
 }
 

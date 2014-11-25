@@ -44,7 +44,7 @@ using namespace std;
 using namespace MongoBase;
 
 
-class ViewWriter: public Base::Component, MongoBase::MongoBase
+class ViewWriter: public Base::Component
 {
 public:
 	/*!

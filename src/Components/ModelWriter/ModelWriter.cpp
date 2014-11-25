@@ -112,7 +112,7 @@ void ModelWriter::writeData()
 	bool fileExist = modelPtr->checkIfFileExist(keyType);
 	if(fileExist)
 	{
-		LOG(LERROR)<<"File exist in view. You can't write file. File type is: "<< keyType;
+		LOG(LERROR)<<"File exist in model. You can't write file. File type is: "<< keyType;
 		exit(-1);
 	}
 
