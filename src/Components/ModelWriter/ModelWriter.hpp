@@ -27,11 +27,12 @@
 #include "DataStream.hpp"
 #include "Property.hpp"
 #include <dirent.h>
-#include <Types/MongoBase.hpp>
+#include <Types/MongoProxy.hpp>
 #include <Types/PointXYZSIFT.hpp>
 #include <Types/PointXYZRGBSIFT.hpp>
 #include <Types/PointXYZSHOT.hpp>
 #include <Types/Model.hpp>
+#include <Types/PrimitiveFile.hpp>
 
 namespace Processors {
 namespace ModelWriter {
@@ -39,7 +40,7 @@ namespace ModelWriter {
 using namespace cv;
 using namespace mongo;
 using namespace std;
-using namespace MongoBase;
+using namespace MongoProxy;
 
 
 class ModelWriter: public Base::Component
@@ -125,12 +126,12 @@ private:
 	Base::Property<bool> pc_xyzrgbsiftProp;
 	Base::Property<bool> pc_xyzshotProp;
 	Base::Property<bool> pc_xyzrgbnormalProp;
-	boost::shared_ptr<std::vector<keyTypes> >requiredTypes;
+	boost::shared_ptr<std::vector<fileTypes> >requiredTypes;
 
 	//Base::Property<int> mean_viewpoint_features_number;
 	//Model* modelPtr;
-	shared_ptr<Model> modelPtr;
-	template <keyTypes key>
+	shared_ptr<MongoDB::Model> modelPtr;
+	string hostname;
 	void writeData();
 
 	void Write_xyz();
@@ -145,6 +146,9 @@ private:
 	void writeImage2DB();
 	void writePCD2DB();
 	void writeYAML2DB();
+	void cleanInputData(fileTypes & type);
+	void saveFile(fileTypes & fileType);
+	bool checkProvidedData(std::vector<fileTypes> & requiredFileTypes, bool& anyMarked);
 	float getFileSize(const string& fileType);
 	void insertToModelOrView(const string &,const string &);
 	void insertFileIntoGrid(OID&, const string&, int);

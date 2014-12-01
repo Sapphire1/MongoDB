@@ -3,7 +3,6 @@
  * \brief
  * \author Lukasz Zmuda
  */
-// todo dodac zapis gdzie zapisane i rozmiar
 
 #include "ModelWriter.hpp"
 
@@ -18,7 +17,9 @@ using namespace mongo;
 using namespace std;
 using namespace boost;
 using namespace boost::posix_time;
-using namespace MongoBase;
+using namespace MongoDB;
+using namespace MongoProxy;
+using namespace PrimitiveFile;
 
 ModelWriter::ModelWriter(const string & name) : Base::Component(name),
 		mongoDBHost("mongoDBHost", string("localhost")),
@@ -49,11 +50,7 @@ ModelWriter::ModelWriter(const string & name) : Base::Component(name),
 	//registerProperty(mean_viewpoint_features_number);
 
 	CLOG(LTRACE) << "Hello ModelWriter";
-	requiredTypes = boost::shared_ptr<std::vector<keyTypes> >(new std::vector<keyTypes>());
-	string vn = string (modelName);
-	string hostname = mongoDBHost;
-
-	modelPtr = boost::shared_ptr<Model>(new Model(vn, hostname));
+	hostname = mongoDBHost;
 }
 
 ModelWriter::~ModelWriter()
@@ -64,12 +61,7 @@ ModelWriter::~ModelWriter()
 
 void ModelWriter::prepareInterface() {
 	CLOG(LTRACE) << "ModelWriter::prepareInterface";
-	registerHandler("write_xyz", boost::bind(&ModelWriter::writeData<pc_xyz>, this));
-	registerHandler("write_xyzrgb", boost::bind(&ModelWriter::writeData<pc_xyzrgb>, this));
-	registerHandler("write_xyzsift", boost::bind(&ModelWriter::writeData<pc_xyzsift>, this));
-	registerHandler("write_xyzrgbsift", boost::bind(&ModelWriter::writeData<pc_xyzrgbsift>, this));
-	registerHandler("write_xyzshot", boost::bind(&ModelWriter::writeData<pc_xyzshot>, this));
-	registerHandler("write_xyzrgbnormal", boost::bind(&ModelWriter::writeData<pc_xyzrgbnormal>, this));	//4 floats
+	registerHandler("writeData", boost::bind(&ModelWriter::writeData, this));
 
 	registerStream("in_pc_xyz", &in_pc_xyz);
 	registerStream("in_pc_xyzrgb", &in_pc_xyzrgb);
@@ -79,18 +71,15 @@ void ModelWriter::prepareInterface() {
 	registerStream("in_pc_xyzrgnormal", &in_pc_xyzrgbnormal);
 
 	// adding dependency
-	addDependency("write_xyz", &in_pc_xyz);
-	addDependency("write_xyzrgb", &in_pc_xyzrgb);
-	addDependency("write_xyzsift", &in_pc_xyzsift);
-	addDependency("write_xyzrgbsift", &in_pc_xyzrgbsift);
-	addDependency("write_xyzshot", &in_pc_xyzshot);
-	addDependency("write_xyzrgbnormal", &in_pc_xyzrgbnormal);
+	addDependency("writeData", NULL);
 }
 
-template <keyTypes keyType>
 void ModelWriter::writeData()
 {
 	CLOG(LNOTICE) << "ModelWriter::writeData";
+	MongoProxy::MongoProxy::getSingleton(hostname);
+	string vn = string(modelName);
+	modelPtr = boost::shared_ptr<Model>(new Model(vn,hostname));
 
 	bool exist = modelPtr->checkIfExist();
 	if(!exist)
@@ -101,73 +90,193 @@ void ModelWriter::writeData()
 	else
 	{
 		CLOG(LERROR)<<"Model exist in data base!!!";
-		exit(-1);
+		return;
 	}
-	setInputFiles();
-	modelPtr->setRequiredKeyTypes(requiredTypes);
-
-	// read dataTypes from mongo when inserting add to readed from mongo
-	// and then check if such type exist in view
-	CLOG(LNOTICE)<<"bool fileExist = modelPtr>checkIfFileExist(keyType)";
-	bool fileExist = modelPtr->checkIfFileExist(keyType);
-	if(fileExist)
+	std::vector<fileTypes> providedFileTypes;
+	bool anyMarked = false;
+	bool cleanData = checkProvidedData(providedFileTypes, anyMarked);
+	if(anyMarked)
 	{
-		LOG(LERROR)<<"File exist in model. You can't write file. File type is: "<< keyType;
-		exit(-1);
+		if(cleanData)
+		{
+			CLOG(LNOTICE)<<"Clean all data";
+			for(std::vector<fileTypes>::iterator it = providedFileTypes.begin(); it != providedFileTypes.end(); ++it)
+			{
+				cleanInputData(*it);
+			}
+		}
+		else if(!cleanData)
+		{
+			CLOG(LNOTICE)<<"Save all data";
+
+			// save model in mongo
+			modelPtr->create();
+
+			// save all files from input to mongo
+			for(std::vector<fileTypes>::iterator it = providedFileTypes.begin(); it != providedFileTypes.end(); ++it)
+			{
+				saveFile(*it);
+			}
+		}
 	}
-
-
-	CLOG(LNOTICE)<<"keyType : "<< keyType;
-
-	// read data from input
-	string filename = (string)fileName;
-	switch(keyType)
+	else
 	{
-		case pc_xyz:
-		{
-			pcl::PointCloud<pcl::PointXYZ>::Ptr pc_xyz_Data = in_pc_xyz.read();
-			filename += ".pcd";
-			modelPtr->putPCxyzToFile(pc_xyz_Data, keyType, filename);
-			break;
-		}
-		case pc_xyzrgb:
-		{
-			pcl::PointCloud<pcl::PointXYZRGB>::Ptr pc_xyzrgb_Data = in_pc_xyzrgb.read();
-			filename += ".pcd";
-			modelPtr->putPCyxzrgbToFile(pc_xyzrgb_Data, keyType, filename);
-			break;
-		}
-		case pc_xyzsift:
-		{
-			pcl::PointCloud<PointXYZSIFT>::Ptr pc_xyzsift_Data = in_pc_xyzsift.read();
-			filename += ".pcd";
-			modelPtr->putPCxyzsiftToFile(pc_xyzsift_Data, keyType, filename);
-			break;
-		}
-		case pc_xyzrgbsift:
-		{
-			pcl::PointCloud<PointXYZRGBSIFT>::Ptr pc_xyzrgbsift_Data = in_pc_xyzrgbsift.read();
-			filename += ".pcd";
-			modelPtr->putPCxyzrgbsiftToFile(pc_xyzrgbsift_Data, keyType, filename);
-			break;
-		}
-		case pc_xyzshot:
-		{
-			pcl::PointCloud<PointXYZSHOT>::Ptr pc_xyzshot_Data = in_pc_xyzshot.read();
-			filename += ".pcd";
-			modelPtr->putPCxyzshotToFile(pc_xyzshot_Data, keyType, filename);
-			break;
-		}
-		case pc_xyzrgbnormal:
-		{
-			pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr pc_xyzrgbnormal_Data = in_pc_xyzrgbnormal.read();
-			filename += ".pcd";
-			modelPtr->putPCxyzrgbNormalToFile(pc_xyzrgbnormal_Data, keyType, filename);
-			break;
-		}
+		CLOG(LERROR)<<"Please mark any checkbox";
 	}
 }
 
+void ModelWriter::cleanInputData(fileTypes & type)
+{
+	CLOG(LNOTICE)<<"ViewWriter::cleanInputData";
+	switch(type)
+	{
+		case PCXyz:
+		{
+			in_pc_xyz.read();
+			break;
+		}
+		case PCXyzRgb:
+		{
+			in_pc_xyzrgb.read();
+			break;
+		}
+		case PCXyzSift:
+		{
+			in_pc_xyzsift.read();
+			break;
+		}
+		case PCXyzRgbSift:
+		{
+			in_pc_xyzrgbsift.read();
+			break;
+		}
+		case PCXyzShot:
+		{
+			in_pc_xyzshot.read();
+			break;
+		}
+		case PCXyzRgbNormal:
+		{
+			in_pc_xyzrgbnormal.read();
+			break;
+		}
+		default:
+			break;
+	}
+	return;
+}
+
+void ModelWriter::saveFile(fileTypes & fileType)
+{
+	CLOG(LNOTICE)<<"ViewWriter::saveFile";
+
+	string filename = (string)fileName;
+	string ModelName = modelName;
+	switch(fileType)
+	{
+		case PCXyz:
+		{
+			filename += ".pcd";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyz.read(), fileType, filename, ModelName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case PCXyzRgb:
+		{
+			filename += ".pcd";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgb.read(), fileType, filename, ModelName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case PCXyzSift:
+		{
+			filename += ".pcd";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzsift.read(), fileType, filename, ModelName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case PCXyzRgbSift:
+		{
+			filename += ".pcd";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgbsift.read(), fileType, filename, ModelName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case PCXyzShot:
+		{
+			filename += ".pcd";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzshot.read(), fileType, filename, ModelName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case PCXyzRgbNormal:
+		{
+			filename += ".pcd";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgbnormal.read(), fileType, filename, ModelName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		default:
+			break;
+	}
+}
+
+bool ModelWriter::checkProvidedData(std::vector<fileTypes> & requiredFileTypes, bool& anyMarked)
+{
+	CLOG(LNOTICE)<<"ModelWriter::checkProvidedData";
+	bool cleanBuffers = false;
+
+	if(pc_xyzProp==true)
+	{
+		anyMarked=true;
+		if(in_pc_xyz.fresh())
+			requiredFileTypes.push_back(PCXyz);
+		else
+			cleanBuffers = true;
+	}
+	if(pc_xyzrgbProp==true)
+	{
+		anyMarked=true;
+		if(in_pc_xyzrgb.fresh())
+			requiredFileTypes.push_back(PCXyzRgb);
+		else
+			cleanBuffers = true;
+	}
+	if(pc_xyzsiftProp==true)
+	{
+		anyMarked=true;
+		if(in_pc_xyzsift.fresh())
+			requiredFileTypes.push_back(PCXyzSift);
+		else
+			cleanBuffers = true;
+	}
+	if(pc_xyzrgbsiftProp==true)
+	{
+		anyMarked=true;
+		if(in_pc_xyzrgbsift.fresh())
+			requiredFileTypes.push_back(PCXyzRgbSift);
+		else
+			cleanBuffers = true;
+	}
+	if(pc_xyzshotProp==true)
+	{
+		anyMarked=true;
+		if(in_pc_xyzshot.fresh())
+			requiredFileTypes.push_back(PCXyzShot);
+		else
+			cleanBuffers = true;
+	}
+	if(pc_xyzrgbnormalProp==true)
+	{
+		anyMarked=true;
+		if(in_pc_xyzrgbnormal.fresh())
+			requiredFileTypes.push_back(PCXyzRgbNormal);
+		else
+			cleanBuffers = true;
+	}
+	CLOG(LNOTICE)<<"Size of required file types: "<<requiredFileTypes.size();
+	return cleanBuffers;
+}
 bool ModelWriter::onInit()
 {
 	CLOG(LTRACE) << "ModelWriter::initialize";
@@ -197,23 +306,5 @@ bool ModelWriter::onStart()
         return true;
 }
 
-void ModelWriter::setInputFiles()
-{
-	requiredTypes->clear();
-	if(pc_xyzProp==true)
-		requiredTypes->push_back(pc_xyz);
-	if(pc_xyzrgbProp==true)
-		requiredTypes->push_back(pc_xyzrgb);
-	if(pc_xyzsiftProp==true)
-		requiredTypes->push_back(pc_xyzsift);
-	if(pc_xyzrgbsiftProp==true)
-		requiredTypes->push_back(density);
-	if(pc_xyzshotProp==true)
-		requiredTypes->push_back(pc_xyzrgbsift);
-	if(pc_xyzrgbnormalProp==true)
-		requiredTypes->push_back(pc_xyzrgbnormal);
-
-	LOG(LNOTICE)<<"Required nr: "<<requiredTypes->size();
-}
 } //: namespace ModelWriter
 } //: namespace Processors

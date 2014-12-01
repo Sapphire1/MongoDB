@@ -40,7 +40,7 @@
 #include <Types/PointXYZSIFT.hpp>
 #include <Types/PointXYZRGBSIFT.hpp>
 #include <Types/SIFTObjectModelFactory.hpp>
-#include <Types/MongoBase.hpp>
+#include <Types/MongoProxy.hpp>
 #include <Types/PrimitiveFile.hpp>
 
 #include <vector>
@@ -56,32 +56,30 @@ using namespace mongo;
 using namespace std;
 using namespace boost;
 
-class Model //: public MongoBase::MongoBase
+class Model
 {
 private:
 	std::string ModelName;					// model1
 	std::vector<shared_ptr<PrimitiveFile::PrimitiveFile> > files;
 	//std::vector<AbstractObject*>& models;
 	string dateOfInsert;					// 02042013
-	std::vector<string>	fileTypes;			// [MASK, IMAGE, …, IMAGE3D]
+	std::vector<string>	allFileTypes;			// [MASK, IMAGE, …, IMAGE3D]
 	std::string description;
 	string hostname;
 	string objectName;
 
 	// all required types to store
-	boost::shared_ptr<std::vector<keyTypes> > requiredKeyTypes;
+	boost::shared_ptr<std::vector<fileTypes> > requiredKeyTypes;
+
 
 	// inserted file types of file
-	std::vector<keyTypes> insertedKeyTypes;
-	boost::shared_ptr<MongoBase> basePtr;
-
+	std::vector<fileTypes> insertedKeyTypes;
 
 public:
 	Model(string& modelName, string& host) : ModelName(modelName), hostname(host)
 	{
-		basePtr = boost::shared_ptr<MongoBase>(new MongoBase(hostname));
 	};
-	void setRequiredKeyTypes(boost::shared_ptr<std::vector<keyTypes> > &requiredKeyTypes)
+	void setRequiredKeyTypes(boost::shared_ptr<std::vector<fileTypes> > &requiredKeyTypes)
 	{
 		this->requiredKeyTypes = requiredKeyTypes;
 	};
@@ -94,18 +92,18 @@ public:
 	void create();
 
 	// check if exist this same kind of file
-	bool checkIfFileExist(keyTypes key);
-	void pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>&, keyTypes);
+	bool checkIfFileExist(fileTypes key);
+	void pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>&, fileTypes);
 
 	bool checkIfAllFiles();
-	void putStringToFile(const std::string& str, keyTypes key, string& fileName);
-	void putMatToFile(const cv::Mat& image, keyTypes key, string& fileName);
-	void putPCxyzToFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr&, keyTypes key, string& fileName);
-	void putPCyxzrgbToFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&, keyTypes key, string& fileName);
-	void putPCxyzsiftToFile(const pcl::PointCloud<PointXYZSIFT>::Ptr&, keyTypes key, string& fileName);
-	void putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr&, keyTypes key, string& fileName);
-	void putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr&, keyTypes key, string& fileName);
-	void putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr&, keyTypes key, string& fileName);
+	void putStringToFile(const std::string& str, fileTypes key, string& fileName);
+	void putMatToFile(const cv::Mat& image, fileTypes key, string& fileName);
+	void putPCxyzToFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr&, fileTypes key, string& fileName);
+	void putPCyxzrgbToFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr&, fileTypes key, string& fileName);
+	void putPCxyzsiftToFile(const pcl::PointCloud<PointXYZSIFT>::Ptr&, fileTypes key, string& fileName);
+	void putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr&, fileTypes key, string& fileName);
+	void putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr&, fileTypes key, string& fileName);
+	void putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr&, fileTypes key, string& fileName);
 
 	void addFile();
 	void getAllFiles();
@@ -131,7 +129,7 @@ void Model::saveAllFiles()
 	}
 	return ;
 }
-void Model::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, keyTypes key)
+void Model::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, fileTypes key)
 {
 	file->setModelName(ModelName);
 	// add file to vector
@@ -163,10 +161,10 @@ bool Model::checkIfAllFiles()
 	LOG(LNOTICE)<<"checkIfAllFiles";
 	bool present = false;
 
-	for(std::vector<keyTypes>::iterator reqTypes = requiredKeyTypes->begin(); reqTypes != requiredKeyTypes->end(); ++reqTypes)
+	for(std::vector<fileTypes>::iterator reqTypes = requiredKeyTypes->begin(); reqTypes != requiredKeyTypes->end(); ++reqTypes)
 	{
 		LOG(LNOTICE)<<"requiredKeyTypes loop: ";
-		for(std::vector<keyTypes>::iterator insTypes = insertedKeyTypes.begin(); insTypes != insertedKeyTypes.end(); ++insTypes)
+		for(std::vector<fileTypes>::iterator insTypes = insertedKeyTypes.begin(); insTypes != insertedKeyTypes.end(); ++insTypes)
 		{
 			LOG(LNOTICE)<<"insertedKeyTypes loop: ";
 			if(*reqTypes==*insTypes)
@@ -193,7 +191,7 @@ bool Model::checkIfExist()
 	int limit=0;
 	int skip=0;
 	BSONObj b = BSON("ModelName"<<ModelName<<"DocumentType"<<"Model");
-	int items = basePtr->count(b);
+	int items = MongoProxy::MongoProxy::getSingleton(hostname).count(b);
 	LOG(LNOTICE)<<"items: "<<items<<"\n";
 	if(items==0)
 		return false;
@@ -201,7 +199,7 @@ bool Model::checkIfExist()
 	return true;
 }
 // check if in model exist this same kind of file
-bool Model::checkIfFileExist(keyTypes key)
+bool Model::checkIfFileExist(fileTypes key)
 {
 	LOG(LNOTICE)<<"checkIfFileExist, key: "<<key<<", insertedSize: "<<files.size() ;
 	for(std::vector<boost::shared_ptr<PrimitiveFile::PrimitiveFile> >::iterator it = files.begin(); it != files.end(); ++it)
@@ -225,27 +223,27 @@ void Model::create()
 	model.getObjectID(bsonElement);
 	OID modelOID;
 	modelOID=bsonElement.__oid();
-	basePtr->insert(model);
+	MongoProxy::MongoProxy::getSingleton(hostname).insert(model);
 	// thesis: model doesn't exist so doesn't contain any object
 
 	// check if object exist
 	BSONObj b = BSON("ObjectName"<<objectName<<"DocumentType"<<"Object");
-	int items = basePtr->count(b);
+	int items = MongoProxy::MongoProxy::getSingleton(hostname).count(b);
 	// document of object doesn't exist
 	if(items==0)
 	{
 		BSONObj object = BSONObjBuilder().genOID().append("ObjectName", objectName).append("DocumentType","Object").obj();
-		basePtr->insert(object);
+		MongoProxy::MongoProxy::getSingleton(hostname).insert(object);
 	}
 	BSONObj query = BSON("ObjectName"<<objectName<<"DocumentType"<<"Object");
 	BSONObj update = BSON("$addToSet"<<BSON("ModelsList"<<BSON("modelOID"<<modelOID.toString())));
 	// insert model oid to object document
-	basePtr->update(query, update);
+	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 
 	// insert object oid to model document
 	BSONObj object;
 	query = BSON("ObjectName"<<objectName<<"DocumentType"<<"Object");
-	auto_ptr<DBClientCursor> cursorCollection =basePtr->query(query);
+	auto_ptr<DBClientCursor> cursorCollection =MongoProxy::MongoProxy::getSingleton(hostname).query(query);
 	while(cursorCollection->more())
 	{
 		object = cursorCollection->next();
@@ -255,70 +253,8 @@ void Model::create()
 	objectOID=bsonElement.__oid();
 	query = BSON("ModelName"<<ModelName<<"DocumentType"<<"Model");
 	update = BSON("$addToSet"<<BSON("ObjectsList"<<BSON("objectOID"<<objectOID.toString())));
-	basePtr->update(query, update);
+	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 	return;
-}
-
-void Model::putMatToFile(const cv::Mat& img, keyTypes key, string& fileName)
-{
-	LOG(LNOTICE)<< "Model::putMatToFile";
-	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(img, key, fileName, hostname));
-	pushFile(file, key);
-}
-
-void Model::putStringToFile(const std::string& str, keyTypes key, string& fileName)
-{
-	LOG(LNOTICE)<< "Model::putStringToFile";
-	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(str, key, fileName, hostname));
-	pushFile(file, key);
-}
-
-void Model::putPCxyzToFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudXYZ, keyTypes key, string& fileName)
-{
-	LOG(LNOTICE)<< "Model::putPCxyzToFile";
-	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZ, key, fileName, hostname));
-	pushFile(file, key);
-}
-void Model::putPCyxzrgbToFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloudXYZRGB, keyTypes key, string& fileName)
-{
-	LOG(LNOTICE)<< "Model::putPCyxzrgbToFile";
-	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGB, key, fileName, hostname));
-	pushFile(file, key);
-}
-void Model::putPCxyzsiftToFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloudXYZSIFT, keyTypes key, string& fileName)
-{
-	LOG(LNOTICE)<< "Model::putPCxyzsiftToFile";
-	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSIFT, key, fileName, hostname));
-	pushFile(file, key);
-}
-
-void Model::putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloudXYZRGBSIFT, keyTypes key, string& fileName)
-{
-	LOG(LNOTICE)<< "Model::putPCxyzrgbsiftToFile";
-	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBSIFT, key, fileName, hostname));
-	pushFile(file, key);
-}
-
-void Model::putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloudXYZSHOT, keyTypes key, string& fileName)
-{
-	LOG(LNOTICE)<< "Model::putPCxyzshotToFile";
-	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZSHOT, key, fileName, hostname));
-	pushFile(file, key);
-}
-
-void Model::putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloudXYZRGBNormal, keyTypes key, string& fileName)
-{
-	LOG(LNOTICE)<< "Model::putPCxyzrgbNormalToFile";
-	LOG(LNOTICE)<< "key: "<<key;
-	shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cloudXYZRGBNormal, key, fileName, hostname));
-	pushFile(file, key);
 }
 
 }//namespace MongoBase
