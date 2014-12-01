@@ -40,7 +40,7 @@
 #include <Types/PointXYZSIFT.hpp>
 #include <Types/PointXYZRGBSIFT.hpp>
 #include <Types/SIFTObjectModelFactory.hpp>
-#include <Types/MongoBase.hpp>
+#include <Types/MongoProxy.hpp>
 
 #include <vector>
 #include <list>
@@ -48,7 +48,18 @@
 #include <boost/variant.hpp>
 #include <boost/lexical_cast.hpp>
 
-namespace MongoBase{
+#define siftPointSize 133
+#define xyzPointSize 3
+#define xyzrgbPointSize 4
+
+enum fileTypes {ImageRgb, FileCameraInfo, ImageXyz,  ImageDepth, ImageIntensity, ImageMask, StereoLeft, StereoRight, StereoLeftTextured, StereoRightTextured,
+PCXyz, PCXyzRgb, PCXyzSift, PCXyzRgbSift, PCXyzShot, PCXyzRgbNormal, Stereo, StereoTextured};
+
+const char* FTypes[] = {"ImageRgb", "FileCameraInfo", "ImageXyz",  "ImageDepth", "ImageIntensity", "ImageMask", "StereoLeft", "StereoRight", "StereoLeftTextured", "StereoRightTextured",
+"PCXyz", "PCXyzRgb", "PCXyzSift", "PCXyzRgbSift", "PCXyzShot", "PCXyzRgbNormal", "Stereo", "StereoTextured"};
+
+
+namespace MongoDB{
 namespace PrimitiveFile{
 using namespace cv;
 using namespace mongo;
@@ -136,7 +147,7 @@ public:
     }
 };
 
-class PrimitiveFile //: public MongoBase
+class PrimitiveFile
 {
 private:
 	//string mongoFileName;	// file name in mongo base
@@ -145,7 +156,7 @@ private:
 	string place;			// {grid, document}
 	float sizeBytes;
 	float sizeMBytes;
-	keyTypes fileType; 		// mask, rgb, depth, I, XYZ, cameraInfo, PCL
+	fileTypes fileType; 		// mask, rgb, depth, I, XYZ, cameraInfo, PCL
 	string PCLType;			// SIFT, SHOT, XYZ, ORB, NORMALS
 	string viewName;
 	string modelName;
@@ -161,56 +172,50 @@ private:
 	pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr,
 	pcl::PointCloud<PointXYZSHOT>::Ptr
 	> data;
+	string hostname;
 
-	boost::shared_ptr<MongoBase> basePtr;
+//	boost::shared_ptr<MongoBase> basePtr;
 
 public:
-	PrimitiveFile(const cv::Mat& img, keyTypes& key, string& name, string& hostname) : data(img), fileType(key), fileName(name), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const cv::Mat& img, fileTypes& type, string& name, string& viewName, string& hostname) : data(img), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor cv::Mat";
-		basePtr = boost::shared_ptr<MongoBase>(new MongoBase(hostname));
+		LOG(LNOTICE)<<"fileType :" <<fileType;
 		this->setSize();
 	};
-	PrimitiveFile(const std::string& str, keyTypes& key, string& name, string& hostname) : data(str), fileType(key), fileName(name), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const std::string& str, fileTypes& type, string& name, string& viewName, string& hostname) : data(str), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor std::string";
-		basePtr = boost::shared_ptr<MongoBase>(new MongoBase(hostname));
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,  keyTypes& key, string& name, string& hostname) : data(cloud), fileType(key), fileName(name), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,  fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <pcl::PointXYZ>";
-		basePtr = boost::shared_ptr<MongoBase>(new MongoBase(hostname));
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud, keyTypes& key, string& name, string& hostname) : data(cloud), fileType(key), fileName(name), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <pcl::PointXYZRGB>";
-		basePtr = boost::shared_ptr<MongoBase>(new MongoBase(hostname));
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloud, keyTypes& key, string& name, string& hostname) : data(cloud), fileType(key), fileName(name), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <PointXYZSIFT>";
-		basePtr = boost::shared_ptr<MongoBase>(new MongoBase(hostname));
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloud, keyTypes& key, string& name, string& hostname) : data(cloud), fileType(key), fileName(name), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <PointXYZRGBSIFT>";
-		basePtr = boost::shared_ptr<MongoBase>(new MongoBase(hostname));
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloud, keyTypes& key, string& name, string& hostname) : data(cloud), fileType(key), fileName(name), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <PointXYZSHOT>";
-		basePtr = boost::shared_ptr<MongoBase>(new MongoBase(hostname));
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, keyTypes& key, string& name, string& hostname) : data(cloud), fileType(key), fileName(name), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <pcl::PointXYZRGBNormal>";
-		basePtr = boost::shared_ptr<MongoBase>(new MongoBase(hostname));
 		this->setSize();
 	};
 	string getFileName(){return fileName;}
@@ -219,7 +224,6 @@ public:
 	void insertFileIntoGrid(OID& oid);
 	void insertFileIntoDocument(OID& oid);
 	void convertToBuffer();
-	//void setMime();
 	void getMime();
 	void readFromMongoDB();
 	void readFromGrid();
@@ -238,6 +242,7 @@ public:
 	void savePCxyzSIFTFileToDisc(bool suffix, bool binary, std::string& fn);
 	void savePCxyzRGBNormalFileToDisc(bool suffix, bool binary, std::string& fn);
 	void savePCxyzSHOTFileToDisc(bool suffix, bool binary, std::string& fn);
+	void setMime(const fileTypes type,  string& mime);
 
 	void setViewName(string& ViewName)
 	{
@@ -249,12 +254,12 @@ public:
 		this->modelName = ModelName;
 	};
 
-	void setType(keyTypes key)
+	void setType(fileTypes type)
 	{
-		fileType = key;
+		fileType = type;
 	};
 
-	keyTypes getType()
+	fileTypes getType()
 	{
 		return fileType;
 	};
@@ -277,9 +282,9 @@ public:
 void PrimitiveFile::saveIntoMongoBase()
 {
 	OID oid;
-	//if(sizeMBytes<15)
+//	if(sizeMBytes<15)
 		insertFileIntoDocument(oid);
-	//else if(sizeMBytes>=15)
+//	else if(sizeMBytes>=15)
 	//	insertFileIntoGrid(oid);
 
 	BSONObj query;
@@ -297,10 +302,27 @@ void PrimitiveFile::saveIntoMongoBase()
 		LOG(LERROR)<<"NO VIEW OR MODEL NAME!!!";
 	}
 	BSONObj update = BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString())));
-	basePtr->update(query, update);
+	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 
-	update = BSON("$addToSet"<<BSON("FileTypes"<<BSON("Type"<<fileType)));
-	basePtr->update(query, update);
+	update = BSON("$addToSet"<<BSON("FileTypes"<<BSON("Type"<<FTypes[fileType])));
+	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
+}
+
+void PrimitiveFile::setMime( const fileTypes fileType,  string& mime)
+{
+	LOG(LNOTICE)<<"fileType : "<<fileType<<std::endl;
+
+	if (fileType==ImageRgb || fileType==ImageDepth || fileType==ImageIntensity || fileType==ImageMask || fileType==StereoLeft || fileType==StereoRight || fileType==StereoLeftTextured || fileType==StereoRightTextured)
+		mime="image/png";
+	else if(fileType==FileCameraInfo || fileType==PCXyz || fileType==PCXyzRgb || fileType==PCXyzSift || fileType==PCXyzRgbSift || fileType==PCXyzShot ||fileType==PCXyzRgbNormal)
+		mime="text/plain";
+	else if(fileType==ImageXyz )
+			mime="text/plain";
+	else
+	{
+		LOG(LNOTICE) <<"I don't know such typeFile! Please add extension to the `if` statement from http://www.sitepoint.com/web-foundations/mime-types-complete-list/";
+		return;
+	}
 }
 void PrimitiveFile::saveImage(OID& oid)
 {
@@ -311,11 +333,11 @@ void PrimitiveFile::saveImage(OID& oid)
 	params[0] = CV_IMWRITE_JPEG_QUALITY;
 	params[1] = 95;
 	cv::imencode(".jpg", *img, buf, params);
-	BSONObj b=BSONObjBuilder().genOID().appendBinData(fileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
+	BSONObj b=BSONObjBuilder().genOID().appendBinData(fileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 	BSONElement bsonElement;
 	b.getObjectID(bsonElement);
 	oid=bsonElement.__oid();
-	basePtr->insert(b);
+	MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
 }
 void PrimitiveFile::copyXYZPointToFloatArray (const pcl::PointXYZ &p, float * out) const
 {
@@ -381,9 +403,10 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 	BSONObj b;
 	BSONElement bsonElement;
 
+
 	switch(fileType)
 	{
-		case xml:
+		case FileCameraInfo:
 		{
 			LOG(LNOTICE)<<"PrimitiveFile::insertFileIntoCollection, xml file";
 			string* input =  boost::get<std::string>(&data);
@@ -392,56 +415,56 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 			char const *cipCharTable = input->c_str();
 			LOG(LNOTICE)<<string(cipCharTable);
 			// create bson object
-			b = BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, BinDataGeneral,  cipCharTable).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
+			b = BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, BinDataGeneral,  cipCharTable).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 
 			// insert object into collection
-			basePtr->insert(b);
+			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
 
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			break;
 		}
-		case rgb:
+		case ImageRgb:
 		{
 			saveImage(oid);
 			break;
 		}
-		case density:
+		case ImageDepth:
 		{
 			saveImage(oid);
 			break;
 		}
-		case intensity:
+		case ImageIntensity:
 		{
 			saveImage(oid);
 			break;
 		}
-		case mask:
+		case ImageMask:
 		{
 			saveImage(oid);
 			break;
 		}
-		case stereoL:
+		case StereoLeft:
 		{
 			saveImage(oid);
 			break;
 		}
-		case stereoR:
+		case StereoRight:
 		{
 			saveImage(oid);
 			break;
 		}
-		case stereoLTextured:
+		case StereoLeftTextured:
 		{
 			saveImage(oid);
 			break;
 		}
-		case stereoRTextured:
+		case StereoRightTextured:
 		{
 			saveImage(oid);
 			break;
 		}
-		case pc_xyz:
+		case PCXyz:
 		{
 			pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ =  boost::get<pcl::PointCloud<pcl::PointXYZ>::Ptr >(data);
 			int cloudSize = cloudXYZ->size();
@@ -455,13 +478,13 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 				const pcl::PointXYZ p = cloudXYZ->points[iter];
 				copyXYZPointToFloatArray (p, &buff[xyzPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
-			basePtr->insert(b);
+			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
 			break;
 		}
-		case pc_xyzrgb:
+		case PCXyzRgb:
 		{
 			pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB =  boost::get<pcl::PointCloud<pcl::PointXYZRGB>::Ptr>(data);
 			int cloudSize = cloudXYZRGB->size();
@@ -475,13 +498,13 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 				const pcl::PointXYZRGB p = cloudXYZRGB->points[iter];
 				copyXYZRGBPointToFloatArray (p, &buff[xyzrgbPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
-			basePtr->insert(b);
+			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
 			break;
 		}
-		case pc_xyzsift:
+		case PCXyzSift:
 		{
 			pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT = boost::get<pcl::PointCloud<PointXYZSIFT>::Ptr>(data);
 
@@ -496,29 +519,29 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 				const PointXYZSIFT p = cloudXYZSIFT->points[iter];
 				copyXYZSiftPointToFloatArray (p, &buff[siftPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", fileType).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
-			basePtr->insert(b);
+			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
 			break;
 		}
-		case pc_xyzrgbsift:
+		case PCXyzRgbSift:
 		{
 			LOG(LNOTICE)<<"ERROR: I don't know what to do with pc_xyzrgbsift";
 			pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT = boost::get<pcl::PointCloud<PointXYZRGBSIFT>::Ptr>(data);;
 			break;
 		}
-		case pc_xyzshot:
+		case PCXyzShot:
 		{
 			LOG(LNOTICE)<<"ERROR: I don't know what to do with pc_xyzshot";
 			break;
 		}
-		case pc_xyzrgbnormal:
+		case PCXyzRgbNormal:
 		{
 			LOG(LNOTICE)<<"ERROR: I don't know what to do with pc_xyzrgbnormal";
 			break;
 		}
-		case xyz:
+		case ImageXyz:
 		{
 			cv::Mat* xyzimage = boost::get<cv::Mat>(&data);
 			//int bufSize = xyzimage.total()*xyzimage.channels()*4;
@@ -528,11 +551,11 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 			float* buf;
 			buf = (float*)xyzimage->data;
 			LOG(LNOTICE)<<"Set buffer YAML";
-			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", fileType).append("width", width).append("height", height).append("channels", channels).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, sizeBytes, mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append("DocumentType", "file").append("size", sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).append("width", width).append("height", height).append("channels", channels).obj();
 			LOG(LNOTICE)<<"YAML inserted";
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
-			basePtr->insert(b);
+			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
 			break;
 		}
 	}
@@ -630,7 +653,7 @@ void PrimitiveFile::saveToDisc(bool suffix, bool binary)
 {
 	switch(fileType)
 	{
-		case xml:
+		case FileCameraInfo:
 		{
 			std::string* cameraMatrix = boost::get<std::string>(&data);
 			char const* ca = fileName.c_str();
@@ -639,79 +662,79 @@ void PrimitiveFile::saveToDisc(bool suffix, bool binary)
 			out.close();
 			break;
 		}
-		case rgb:
+		case ImageRgb:
 		{
 			LOG(LTRACE)<<"RGB";
 			saveImageOnDisc();
 			break;
 		}
-		case density:
+		case ImageDepth:
 		{
 			saveImageOnDisc();
 			break;
 		}
-		case intensity:
+		case ImageIntensity:
 		{
 			saveImageOnDisc();
 			break;
 		}
-		case mask:
+		case ImageMask:
 		{
 			saveImageOnDisc();
 			break;
 		}
-		case stereoL:
+		case StereoLeft:
 		{
 			saveImageOnDisc();
 			break;
 		}
-		case stereoR:
+		case StereoRight:
 		{
 			saveImageOnDisc();
 			break;
 		}
-		case stereoLTextured:
+		case StereoLeftTextured:
 		{
 			saveImageOnDisc();
 			break;
 		}
-		case stereoRTextured:
+		case StereoRightTextured:
 		{
 			saveImageOnDisc();
 			break;
 		}
-		case pc_xyz:
+		case PCXyz:
 		{
 			savePCxyzFileToDisc(suffix, binary, fileName);
 			break;
 		}
-		case pc_xyzrgb:
+		case PCXyzRgb:
 		{
 			savePCxyzRGBFileToDisc(suffix, binary, fileName);
 			break;
 		}
-		case pc_xyzsift:
+		case PCXyzSift:
 		{
 			savePCxyzSIFTFileToDisc(suffix, binary, fileName);
 			break;
 		}
-		case pc_xyzrgbsift:
+		case PCXyzRgbSift:
 		{
 			//TODO add method !!!
 			//savePCxyzRGBSIFTFileToDisc(suffix, binary, fileName);
 			break;
 		}
-		case pc_xyzshot:
+		case PCXyzShot:
 		{
 			savePCxyzSHOTFileToDisc(suffix, binary, fileName);
 			break;
 		}
-		case pc_xyzrgbnormal:
+		case PCXyzRgbNormal:
 		{
 			savePCxyzRGBNormalFileToDisc(suffix, binary, fileName);
 			break;
 		}
-		case xyz:
+		case ImageXyz:
 		{
 			cv::Mat* xyzimage = boost::get<cv::Mat>(&data);
 			cv::FileStorage fs(fileName, cv::FileStorage::WRITE);
@@ -734,15 +757,15 @@ void PrimitiveFile::insertFileIntoGrid(OID& oid)
 		BSONObj object;
 		BSONElement bsonElement;
 		string mime="";
-		basePtr->setMime(fileType, mime);
+		setMime(fileType, mime);
 		std::stringstream time;
 		bool suffix = true;
 		bool binary = false;
 		saveToDisc(suffix, binary);
 
-		boost::shared_ptr<DBClientConnection>  c = basePtr->getClient();
+		boost::shared_ptr<DBClientConnection>  c = MongoProxy::MongoProxy::getSingleton(hostname).getClient();
 		// create GridFS client
-		GridFS fs(*c, basePtr->collectionName);
+		GridFS fs(*c, MongoProxy::MongoProxy::getSingleton(hostname).collectionName);
 
 		// save in grid
 		object = fs.storeFile(fileName, fileName, mime);
@@ -752,16 +775,17 @@ void PrimitiveFile::insertFileIntoGrid(OID& oid)
 		//	else
 		//		b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").obj();
 		BSONObj b;
+		LOG(LNOTICE)<<"fileType: "<<fileType;
 		if(viewName!="")
-			b = BSONObjBuilder().appendElements(object).append("ViewName", viewName).append("FileType", fileType).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
+			b = BSONObjBuilder().appendElements(object).append("ViewName", viewName).append("fileType", FTypes[fileType]).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
 		else if(modelName!="")
-			b = BSONObjBuilder().appendElements(object).append("modelName", modelName).append("FileType", fileType).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
+			b = BSONObjBuilder().appendElements(object).append("ModelName", modelName).append("fileType", FTypes[fileType]).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
 
-		basePtr->insert(b);
+		MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
 		string field = "filename";
-		basePtr->index(field);
+		MongoProxy::MongoProxy::getSingleton(hostname).index(field);
 	}catch(DBException &e)
 	{
 		LOG(LNOTICE) <<"Something goes wrong... :<\nBye!";

@@ -18,12 +18,6 @@
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/assume_abstract.hpp>
 
-
-
-#define siftPointSize 133
-#define xyzPointSize 3
-#define xyzrgbPointSize 4
-
 namespace Processors {
 namespace ViewWriter  {
 using namespace cv;
@@ -32,7 +26,9 @@ using namespace std;
 using namespace boost;
 using namespace boost::posix_time;
 using namespace Eigen;
-using namespace MongoBase;
+using namespace MongoDB;
+using namespace MongoProxy;
+using namespace PrimitiveFile;
 
 ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	mongoDBHost("mongoDBHost", string("localhost")),
@@ -41,14 +37,14 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	fileName("fileName", string("tempFile")),
 	SensorType("SensorType", string("Stereo")),
 	objects("objects", string("object1;object2;object3")),
-	xmlProp("files.xml", false),
-	xyzProp("files.xyz", false),
-	rgbProp("files.rgb", false),
-	densityProp("files.density", false),
-	intensityProp("files.intensity", false),
-	maskProp("files.mask", false),
-	stereoProp("files.stereo", false),
-	stereoTexturedProp("files.stereoTextured", false),
+	cameraInfoProp("file.cameraInfo.xml", false),
+	xyzProp("image.xyz", false),
+	rgbProp("image.rgb", false),
+	depthProp("image.density", false),
+	intensityProp("image.intensity", false),
+	maskProp("image.mask", false),
+	stereoProp("image.stereo", false),
+	stereoTexturedProp("image.stereoTextured", false),
 	pc_xyzProp("PC.xyz", false),
 	pc_xyzrgbProp("PC.xyzrgb", false),
 	pc_xyzsiftProp("PC.xyzsift", false),
@@ -66,11 +62,10 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	registerProperty(objects);
 	registerProperty(SensorType);
 
-
-	registerProperty(xmlProp);
+	registerProperty(cameraInfoProp);
 	registerProperty(xyzProp);
 	registerProperty(rgbProp);
-	registerProperty(densityProp);
+	registerProperty(depthProp);
 	registerProperty(intensityProp);
 	registerProperty(maskProp);
 	registerProperty(stereoTexturedProp);
@@ -86,11 +81,10 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	//registerProperty(mean_viewpoint_features_number);
 
 	CLOG(LTRACE) << "Hello ViewWriter";
-	//std::vector<keyTypes>* key_ptr = ;
-	requiredTypes = boost::shared_ptr<std::vector<keyTypes> >(new std::vector<keyTypes>());
-	string vn = string(viewName);
-	string hostname = mongoDBHost;
-	viewPtr = boost::shared_ptr<View>(new View(vn, hostname));
+//	requiredTypes = boost::shared_ptr<std::vector<keyTypes> >(new std::vector<keyTypes>());
+
+	hostname = mongoDBHost;
+
 }
 
 ViewWriter::~ViewWriter()
@@ -100,30 +94,13 @@ ViewWriter::~ViewWriter()
 
 void ViewWriter::prepareInterface() {
 	CLOG(LTRACE) << "ViewWriter::prepareInterface";
-	registerHandler("writeXML2DB", boost::bind(&ViewWriter::writeData<xml>, this));
-	registerHandler("writeXYZ2DB", boost::bind(&ViewWriter::writeData<xyz>, this));
-	registerHandler("writeRGB2DB", boost::bind(&ViewWriter::writeData<rgb>, this));
-	registerHandler("writeD2DB", boost::bind(&ViewWriter::writeData<density>, this));
-	registerHandler("writeI2DB", boost::bind(&ViewWriter::writeData<intensity>, this));
-	registerHandler("writeMask2DB", boost::bind(&ViewWriter::writeData<mask>, this));
-	registerHandler("writeStereoL2DB", boost::bind(&ViewWriter::writeData<stereoL>, this));
-	registerHandler("writeStereoR2DB", boost::bind(&ViewWriter::writeData<stereoR>, this));
-	registerHandler("writeStereoLTextured2DB", boost::bind(&ViewWriter::writeData<stereoLTextured>, this));
-	registerHandler("writeStereoRTextured2DB", boost::bind(&ViewWriter::writeData<stereoRTextured>, this));
-
-	// PCL
-	registerHandler("write_xyz", boost::bind(&ViewWriter::writeData<pc_xyz>, this));
-	registerHandler("write_xyzrgb", boost::bind(&ViewWriter::writeData<pc_xyzrgb>, this));
-	registerHandler("write_xyzsift", boost::bind(&ViewWriter::writeData<pc_xyzsift>, this));
-	registerHandler("write_xyzrgbsift", boost::bind(&ViewWriter::writeData<pc_xyzrgbsift>, this));
-	registerHandler("write_xyzshot", boost::bind(&ViewWriter::writeData<pc_xyzshot>, this));
-	registerHandler("write_xyzrgbnormal", boost::bind(&ViewWriter::writeData<pc_xyzrgbnormal>, this));	//4 floats
+	registerHandler("writeData", boost::bind(&ViewWriter::writeData, this));
 
 	// streams registration
-	registerStream("in_xml", &in_xml);
+	registerStream("in_camera_info", &in_camera_info);
 	registerStream("in_xyz", &in_xyz);
 	registerStream("in_rgb", &in_rgb);
-	registerStream("in_density", &in_density);
+	registerStream("in_density", &in_depth);
 	registerStream("in_intensity", &in_intensity);
 	registerStream("in_mask", &in_mask);
 	registerStream("in_stereoL", &in_stereoL);
@@ -140,29 +117,15 @@ void ViewWriter::prepareInterface() {
 	registerStream("in_pc_xyzrgnormal", &in_pc_xyzrgbnormal);
 
 	// adding dependency
-	addDependency("writeXML2DB", &in_xml);
-	addDependency("writeRGB2DB", &in_rgb);
-	addDependency("writeXYZ2DB", &in_xyz);
-	addDependency("writeXYZ2DB", &in_density);
-	addDependency("writeD2DB", &in_density);
-	addDependency("writeI2DB", &in_intensity);
-	addDependency("writeMask2DB", &in_mask);
-	addDependency("writeStereoL2DB", &in_stereoL);
-	addDependency("writeStereoR2DB", &in_stereoR);
-	addDependency("writeStereoLTextured2DB", &in_stereoLTextured);
-	addDependency("writeStereoRTextured2DB", &in_stereoRTextured);
-	addDependency("write_xyz", &in_pc_xyz);
-	addDependency("write_xyzrgb", &in_pc_xyzrgb);
-	addDependency("write_xyzsift", &in_pc_xyzsift);
-	addDependency("write_xyzrgbsift", &in_pc_xyzrgbsift);
-	addDependency("write_xyzshot", &in_pc_xyzshot);
-	addDependency("write_xyzrgbnormal", &in_pc_xyzrgbnormal);
+	addDependency("writeData", NULL);
 }
 
-template <keyTypes keyType>
 void ViewWriter::writeData()
 {
 	CLOG(LNOTICE) << "ViewWriter::writeData";
+	MongoProxy::MongoProxy::getSingleton(hostname);
+	string vn = string(viewName);
+	viewPtr = boost::shared_ptr<View>(new View(vn,hostname));
 
 	bool exist = viewPtr->checkIfExist();
 	if(!exist)
@@ -177,133 +140,42 @@ void ViewWriter::writeData()
 	else
 	{
 		CLOG(LERROR)<<"View exist in data base!!!";
-		exit(-1);
-	}
-	setInputFiles();
-	viewPtr->setRequiredKeyTypes(requiredTypes);
-
-	// read dataTypes from mongo when inserting add to readed from mongo
-	// and then check if such type exist in view
-	bool fileExist = viewPtr->checkIfFileExist(keyType);
-	if(fileExist)
-	{
-		LOG(LERROR)<<"File exist in view. You can't write file. File type is: "<< keyType;
-		exit(-1);
+		return;
 	}
 
-
-	CLOG(LNOTICE)<<"keyType : "<< keyType;
-
-	// read data from input
-	string filename = (string)fileName;
-	switch(keyType)
+	std::vector<fileTypes> providedFileTypes;
+	bool anyMarked = false;
+	bool cleanData = checkProvidedData(providedFileTypes, anyMarked);
+	if(anyMarked)
 	{
-		case xml:
+		if(cleanData)
 		{
-			string xmlData = in_xml.read();
-			filename += ".xml";
-			viewPtr->putStringToFile(xmlData, keyType, filename);
-			break;
+			CLOG(LNOTICE)<<"Clean all data";
+			for(std::vector<fileTypes>::iterator it = providedFileTypes.begin(); it != providedFileTypes.end(); ++it)
+			{
+				cleanInputData(*it);
+			}
 		}
-		case rgb:
+		else if(!cleanData)
 		{
-			cv::Mat rgbData = in_rgb.read();
-			filename += ".png";
-			viewPtr->putMatToFile(rgbData, keyType, filename);
-			break;
+			CLOG(LNOTICE)<<"Save all data";
+
+			// save view in mongo
+			viewPtr->create();
+
+			// save all files from input to mongo
+			for(std::vector<fileTypes>::iterator it = providedFileTypes.begin(); it != providedFileTypes.end(); ++it)
+			{
+				saveFile(*it);
+			}
 		}
-		case density:
-		{
-			cv::Mat densityData = in_density.read();
-			filename += ".png";
-			viewPtr->putMatToFile(densityData, keyType, filename);
-			break;
-		}
-		case intensity:
-		{
-			cv::Mat intensityData = in_intensity.read();
-			viewPtr->putMatToFile(intensityData, keyType, filename);
-			break;
-		}
-		case mask:
-		{
-			cv::Mat maskData = in_mask.read();
-			filename += ".png";
-			viewPtr->putMatToFile(maskData, keyType, filename);
-			break;
-		}
-		case stereoL:
-		{
-			cv::Mat stereoLData = in_stereoL.read();
-			filename += ".png";
-			viewPtr->putMatToFile(stereoLData, keyType, filename);
-			break;
-		}
-		case stereoR:
-		{
-			cv::Mat stereoRData = in_stereoR.read();
-			filename += ".png";
-			viewPtr->putMatToFile(stereoRData, keyType, filename);
-			break;
-		}
-		case stereoLTextured:
-		{
-			cv::Mat stereoLTexturedData = in_stereoLTextured.read();
-			filename += ".png";
-			viewPtr->putMatToFile(stereoLTexturedData, keyType, filename);
-			break;
-		}
-		case stereoRTextured:
-		{
-			cv::Mat stereoRTexturedData = in_stereoRTextured.read();
-			filename += ".png";
-			viewPtr->putMatToFile(stereoRTexturedData, keyType, filename);
-			break;
-		}
-		case pc_xyz:
-		{
-			pcl::PointCloud<pcl::PointXYZ>::Ptr pc_xyz_Data = in_pc_xyz.read();
-			filename += ".pcd";
-			viewPtr->putPCxyzToFile(pc_xyz_Data, keyType, filename);
-			break;
-		}
-		case pc_xyzrgb:
-		{
-			pcl::PointCloud<pcl::PointXYZRGB>::Ptr pc_xyzrgb_Data = in_pc_xyzrgb.read();
-			filename += ".pcd";
-			viewPtr->putPCyxzrgbToFile(pc_xyzrgb_Data, keyType, filename);
-			break;
-		}
-		case pc_xyzsift:
-		{
-			pcl::PointCloud<PointXYZSIFT>::Ptr pc_xyzsift_Data = in_pc_xyzsift.read();
-			filename += ".pcd";
-			viewPtr->putPCxyzsiftToFile(pc_xyzsift_Data, keyType, filename);
-			break;
-		}
-		case pc_xyzrgbsift:
-		{
-			pcl::PointCloud<PointXYZRGBSIFT>::Ptr pc_xyzrgbsift_Data = in_pc_xyzrgbsift.read();
-			filename += ".pcd";
-			viewPtr->putPCxyzrgbsiftToFile(pc_xyzrgbsift_Data, keyType, filename);
-			break;
-		}
-		case pc_xyzshot:
-		{
-			pcl::PointCloud<PointXYZSHOT>::Ptr pc_xyzshot_Data = in_pc_xyzshot.read();
-			filename += ".pcd";
-			viewPtr->putPCxyzshotToFile(pc_xyzshot_Data, keyType, filename);
-			break;
-		}
-		case pc_xyzrgbnormal:
-		{
-			pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr pc_xyzrgbnormal_Data = in_pc_xyzrgbnormal.read();
-			filename += ".pcd";
-			viewPtr->putPCxyzrgbNormalToFile(pc_xyzrgbnormal_Data, keyType, filename);
-			break;
-		}
+	}
+	else
+	{
+		CLOG(LERROR)<<"Please mark any checkbox";
 	}
 }
+
 bool ViewWriter::onInit()
 {
 	CLOG(LTRACE) << "ViewWriter::initialize";
@@ -334,39 +206,374 @@ bool ViewWriter::onStart()
 	return true;
 }
 
-void ViewWriter::setInputFiles()
+void ViewWriter::cleanInputData(fileTypes & type)
 {
-	requiredTypes->clear();
-	if(xmlProp==true)
-		requiredTypes->push_back(xml);
-	if(xyzProp==true)
-		requiredTypes->push_back(xyz);
-	if(rgbProp==true)
-		requiredTypes->push_back(rgb);
-	if(densityProp==true)
-		requiredTypes->push_back(density);
-	if(intensityProp==true)
-		requiredTypes->push_back(intensity);
-	if(maskProp==true)
-		requiredTypes->push_back(mask);
-	if(stereoProp==true)
-		requiredTypes->push_back(stereo);
-	if(stereoTexturedProp==true)
-		requiredTypes->push_back(stereoTextured);
-	if(pc_xyzProp==true)
-		requiredTypes->push_back(pc_xyz);
-	if(pc_xyzrgbProp==true)
-		requiredTypes->push_back(pc_xyzrgb);
-	if(pc_xyzsiftProp==true)
-		requiredTypes->push_back(pc_xyzsift);
-	if(pc_xyzrgbsiftProp==true)
-		requiredTypes->push_back(density);
-	if(pc_xyzshotProp==true)
-		requiredTypes->push_back(pc_xyzrgbsift);
-	if(pc_xyzrgbnormalProp==true)
-		requiredTypes->push_back(pc_xyzrgbnormal);
+	CLOG(LNOTICE)<<"ViewWriter::cleanInputData";
+	switch(type)
+	{
+		case FileCameraInfo:
+		{
+			in_camera_info.read();
+			break;
+		}
+		case ImageRgb:
+		{
+			CLOG(LNOTICE)<<"Clean from in_rgb";
+			in_rgb.read();
+			break;
+		}
+		case ImageXyz:
+		{
+			in_xyz.read();
+			break;
+		}
+		case ImageDepth:
+		{
+			in_depth.read();
+			break;
+		}
+		case ImageIntensity:
+		{
+			CLOG(LNOTICE)<<"Clean from in_intensity";
+			in_intensity.read();
+			break;
+		}
+		case ImageMask:
+		{
+			in_mask.read();
+			break;
+		}
+		case StereoLeft:
+		{
+			in_stereoL.read();
+			break;
+		}
+		case StereoRight:
+		{
+			in_stereoR.read();
+			break;
+		}
+		case StereoLeftTextured:
+		{
+			in_stereoLTextured.read();
+			break;
+		}
+		case StereoRightTextured:
+		{
+			in_stereoRTextured.read();
+			break;
+		}
+		case PCXyz:
+		{
+			in_pc_xyz.read();
+			break;
+		}
+		case PCXyzRgb:
+		{
+			in_pc_xyzrgb.read();
+			break;
+		}
+		case PCXyzSift:
+		{
+			in_pc_xyzsift.read();
+			break;
+		}
+		case PCXyzRgbSift:
+		{
+			in_pc_xyzrgbsift.read();
+			break;
+		}
+		case PCXyzShot:
+		{
+			in_pc_xyzshot.read();
+			break;
+		}
+		case PCXyzRgbNormal:
+		{
+			in_pc_xyzrgbnormal.read();
+			break;
+		}
+		default:
+			break;
+	}
+	return;
+}
 
-	LOG(LNOTICE)<<"Required nr: "<<requiredTypes->size();
+void ViewWriter::saveFile(fileTypes & fileType)
+{
+	CLOG(LNOTICE)<<"ViewWriter::saveFile";
+
+	string filename = (string)fileName;
+	string ViewName = viewName;
+	switch(fileType)
+	{
+		case FileCameraInfo:
+		{
+			filename += ".xml";
+			string cameraInfo = in_camera_info.read();
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cameraInfo, fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case ImageRgb:
+		{
+			CLOG(LNOTICE)<<"Read ImageRGB!";
+			filename += ".png";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_rgb.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case ImageXyz:
+		{
+			filename += ".png";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_xyz.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case ImageDepth:
+		{
+			filename += ".png";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_depth.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case ImageIntensity:
+		{
+			filename += ".png";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_intensity.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case ImageMask:
+		{
+			filename += ".png";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_mask.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case StereoLeft:
+		{
+			filename += ".png";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_stereoL.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case StereoRight:
+		{
+			filename += ".png";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_stereoR.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case StereoLeftTextured:
+		{
+			filename += ".png";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_stereoLTextured.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case StereoRightTextured:
+		{
+			filename += ".png";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_stereoRTextured.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case PCXyz:
+		{
+			filename += ".pcd";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyz.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case PCXyzRgb:
+		{
+			filename += ".pcd";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgb.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case PCXyzSift:
+		{
+			filename += ".pcd";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzsift.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case PCXyzRgbSift:
+		{
+			filename += ".pcd";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgbsift.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case PCXyzShot:
+		{
+			filename += ".pcd";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzshot.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		case PCXyzRgbNormal:
+		{
+			filename += ".pcd";
+			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgbnormal.read(), fileType, filename, ViewName, hostname));
+			file->saveIntoMongoBase();
+			break;
+		}
+		default:
+			break;
+	}
+}
+bool ViewWriter::checkProvidedData(std::vector<fileTypes> & requiredFileTypes, bool& anyMarked)
+{
+	CLOG(LNOTICE)<<"ViewWriter::checkProvidedData";
+	bool cleanBuffers = false;
+
+	if(cameraInfoProp==true)
+	{
+		anyMarked=true;
+		if(in_camera_info.fresh())
+			requiredFileTypes.push_back(FileCameraInfo);
+		else
+			cleanBuffers = true;
+	}
+	if(xyzProp==true)
+	{
+		anyMarked=true;
+		if(in_xyz.fresh())
+			requiredFileTypes.push_back(ImageXyz);
+		else
+			cleanBuffers = true;
+	}
+	if(rgbProp==true)
+	{
+		CLOG(LNOTICE)<<"ViewWriter::checkProvidedData::RGB";
+		anyMarked=true;
+		if(in_rgb.fresh())
+			requiredFileTypes.push_back(ImageRgb);
+		else
+			cleanBuffers = true;
+	}
+	if(depthProp==true)
+	{
+		anyMarked=true;
+		if(in_depth.fresh())
+			requiredFileTypes.push_back(ImageDepth);
+		else
+			cleanBuffers = true;
+	}
+	if(intensityProp==true)
+	{
+		anyMarked=true;
+		if(in_intensity.fresh())
+			requiredFileTypes.push_back(ImageIntensity);
+		else
+			cleanBuffers = true;
+	}
+	if(maskProp==true)
+	{
+		anyMarked=true;
+		if(in_mask.fresh())
+			requiredFileTypes.push_back(ImageMask);
+		else
+			cleanBuffers = true;
+	}
+	if(stereoProp==true)
+	{
+		anyMarked=true;
+		if(in_stereoL.fresh() )
+		{
+			requiredFileTypes.push_back(StereoLeft);
+		}
+		else
+			cleanBuffers = true;
+		if(in_stereoR.fresh())
+		{
+			requiredFileTypes.push_back(StereoRight);
+		}
+		else
+			cleanBuffers = true;
+	}
+	if(stereoTexturedProp==true)
+	{
+		anyMarked=true;
+		if(in_stereoL.fresh() )
+		{
+			requiredFileTypes.push_back(StereoLeft);
+		}
+		else
+			cleanBuffers = true;
+		if(in_stereoR.fresh())
+		{
+			requiredFileTypes.push_back(StereoRight);
+		}
+		else
+			cleanBuffers = true;
+		if(in_stereoLTextured.fresh())
+		{
+			requiredFileTypes.push_back(StereoLeftTextured);
+		}
+		else
+			cleanBuffers = true;
+
+		if(in_stereoRTextured.fresh())
+		{
+			requiredFileTypes.push_back(StereoRightTextured);
+		}
+		else
+			cleanBuffers = true;
+	}
+	if(pc_xyzProp==true)
+	{
+		anyMarked=true;
+		if(in_pc_xyz.fresh())
+			requiredFileTypes.push_back(PCXyz);
+		else
+			cleanBuffers = true;
+	}
+	if(pc_xyzrgbProp==true)
+	{
+		anyMarked=true;
+		if(in_pc_xyzrgb.fresh())
+			requiredFileTypes.push_back(PCXyzRgb);
+		else
+			cleanBuffers = true;
+	}
+	if(pc_xyzsiftProp==true)
+	{
+		anyMarked=true;
+		if(in_pc_xyzsift.fresh())
+			requiredFileTypes.push_back(PCXyzSift);
+		else
+			cleanBuffers = true;
+	}
+	if(pc_xyzrgbsiftProp==true)
+	{
+		anyMarked=true;
+		if(in_pc_xyzrgbsift.fresh())
+			requiredFileTypes.push_back(PCXyzRgbSift);
+		else
+			cleanBuffers = true;
+	}
+	if(pc_xyzshotProp==true)
+	{
+		anyMarked=true;
+		if(in_pc_xyzshot.fresh())
+			requiredFileTypes.push_back(PCXyzShot);
+		else
+			cleanBuffers = true;
+	}
+	if(pc_xyzrgbnormalProp==true)
+	{
+		anyMarked=true;
+		if(in_pc_xyzrgbnormal.fresh())
+			requiredFileTypes.push_back(PCXyzRgbNormal);
+		else
+			cleanBuffers = true;
+	}
+	CLOG(LNOTICE)<<"Size of required file types: "<<requiredFileTypes.size();
+	return cleanBuffers;
 }
 
 } //: namespace ViewWriter

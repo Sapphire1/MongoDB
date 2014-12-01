@@ -29,7 +29,7 @@
 #include "DataStream.hpp"
 #include "Property.hpp"
 #include <dirent.h>
-#include <Types/MongoBase.hpp>
+#include <Types/MongoProxy.hpp>
 #include <Types/PointXYZSIFT.hpp>
 #include <Types/PointXYZRGBSIFT.hpp>
 #include <Types/PointXYZSHOT.hpp>
@@ -41,7 +41,8 @@ namespace ViewWriter {
 using namespace cv;
 using namespace mongo;
 using namespace std;
-using namespace MongoBase;
+using namespace MongoProxy;
+using namespace MongoDB;
 
 
 class ViewWriter: public Base::Component
@@ -63,56 +64,55 @@ public:
 	virtual void prepareInterface();
 
    	 /// Input camera_info
-   	Base::DataStreamIn <cv::string> in_xml;
+   	Base::DataStreamIn <cv::string, Base::DataStreamBuffer::Newest> in_camera_info;
 
    	/// Input data stream -XYZ image
-   	Base::DataStreamIn <cv::Mat> in_xyz;
+   	Base::DataStreamIn <cv::Mat, Base::DataStreamBuffer::Newest> in_xyz;
 
    	/// Input RGB image
-   	Base::DataStreamIn <cv::Mat> in_rgb;
+   	Base::DataStreamIn <cv::Mat, Base::DataStreamBuffer::Newest> in_rgb;
 
   	/// Input density image
-  	Base::DataStreamIn <cv::Mat> in_density;
+  	Base::DataStreamIn <cv::Mat, Base::DataStreamBuffer::Newest> in_depth;
 
   	/// Input intensity image
-  	Base::DataStreamIn <cv::Mat> in_intensity;
+  	Base::DataStreamIn <cv::Mat, Base::DataStreamBuffer::Newest> in_intensity;
 
    	/// Input mask image
-   	Base::DataStreamIn <cv::Mat> in_mask;
+   	Base::DataStreamIn <cv::Mat, Base::DataStreamBuffer::Newest> in_mask;
 
   	/// Input density image
-  	Base::DataStreamIn <cv::Mat> in_stereoL;
+  	Base::DataStreamIn <cv::Mat, Base::DataStreamBuffer::Newest> in_stereoL;
 
   	/// Input intensity image
-  	Base::DataStreamIn <cv::Mat> in_stereoR;
+  	Base::DataStreamIn <cv::Mat, Base::DataStreamBuffer::Newest> in_stereoR;
 
   	/// Input density image
-  	Base::DataStreamIn <cv::Mat> in_stereoLTextured;
+  	Base::DataStreamIn <cv::Mat, Base::DataStreamBuffer::Newest> in_stereoLTextured;
 
   	/// Input intensity image
-  	Base::DataStreamIn <cv::Mat> in_stereoRTextured;
+  	Base::DataStreamIn <cv::Mat, Base::DataStreamBuffer::Newest> in_stereoRTextured;
 
   	//PCL - Point Clouds
    	/// Cloud containing points with Cartesian coordinates (XYZ).
-   	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZ>::Ptr > in_pc_xyz;
+   	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZ>::Ptr, Base::DataStreamBuffer::Newest>  in_pc_xyz;
 
    	/// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
-   	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGB>::Ptr > in_pc_xyzrgb;
+   	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGB>::Ptr, Base::DataStreamBuffer::Newest > in_pc_xyzrgb;
 
    	/// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
-   	Base::DataStreamIn<pcl::PointCloud<PointXYZSIFT>::Ptr > in_pc_xyzsift;
+   	Base::DataStreamIn<pcl::PointCloud<PointXYZSIFT>::Ptr, Base::DataStreamBuffer::Newest > in_pc_xyzsift;
 
    	/// Cloud containing points with Cartesian coordinates,  SIFT descriptor and color (XYZ + RGB + 128)
-   	Base::DataStreamIn<pcl::PointCloud<PointXYZRGBSIFT>::Ptr > in_pc_xyzrgbsift;
+   	Base::DataStreamIn<pcl::PointCloud<PointXYZRGBSIFT>::Ptr, Base::DataStreamBuffer::Newest > in_pc_xyzrgbsift;
 
    	/// Cloud containing points with Cartesian coordinates and SHOT descriptor  (XYZ + SHOT).
-   	Base::DataStreamIn<pcl::PointCloud<PointXYZSHOT>::Ptr > in_pc_xyzshot;
+   	Base::DataStreamIn<pcl::PointCloud<PointXYZSHOT>::Ptr, Base::DataStreamBuffer::Newest > in_pc_xyzshot;
 
    	/// Cloud containing points with Cartesian coordinates, colors and normals (XYZ + RGB + NORMAL).
-   	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr> in_pc_xyzrgbnormal;
-
-	shared_ptr<View> viewPtr;
-
+   	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr, Base::DataStreamBuffer::Newest> in_pc_xyzrgbnormal;
+	shared_ptr<MongoDB::View> viewPtr;
+	string hostname;
 protected:
 
 	/*!
@@ -155,10 +155,10 @@ private:
 	Base::Property<string> fileName;
 	Base::Property<string> SensorType;
 	Base::Property<string> objects;
-	Base::Property<bool> xmlProp;
+	Base::Property<bool> cameraInfoProp;
 	Base::Property<bool> xyzProp;
 	Base::Property<bool> rgbProp;
-	Base::Property<bool> densityProp;
+	Base::Property<bool> depthProp;
 	Base::Property<bool> intensityProp;
 	Base::Property<bool> maskProp;
 	Base::Property<bool> stereoProp;
@@ -170,25 +170,29 @@ private:
 	Base::Property<bool> pc_xyzshotProp;
 	Base::Property<bool> pc_xyzrgbnormalProp;
 
-	boost::shared_ptr<std::vector<keyTypes> >requiredTypes;
+//	boost::shared_ptr<std::vector<fileTypes> >requiredTypes;
 
 	//Base::Property<int> mean_viewpoint_features_number;
 
-	template <keyTypes key>
 	void writeData();
 
 	void Write_xyz();
 	void Write_xyzrgb();
 	void Write_xyzsift();
 
+	void test();
+
 	void initObject();
-	void setInputFiles();
+	void cleanInputData(fileTypes & type);
+	bool checkProvidedData(std::vector<fileTypes> & requiredFileTypes, bool& anyMarked);
 	void writeNode2MongoDB(const string &destination, const string &option, string,  const string& fileType);
 	void insert2MongoDB(const string &destination,  const string&,  const string&,  const string& fileType );
 	void writeTXT2DB();
 	void writeImage2DB();
 	void writePCD2DB();
 	void writeYAML2DB();
+
+	void saveFile(fileTypes & fileType);
 	float getFileSize(const string& fileType);
 	void insertToModelOrView(const string &,const string &);
 	void insertFileIntoGrid(OID&, const string&, int);

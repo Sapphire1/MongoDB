@@ -1,12 +1,12 @@
 /*
- * MongoBase.hpp
+ * MongoProxy.hpp
  *
  *  Created on: Sep 23, 2014
  *      Author: lzmuda
  */
 
-#ifndef MONGOBASE_HPP_
-#define MONGOBASE_HPP_
+#ifndef MONGOPROXY_HPP_
+#define MONGOPROXY_HPP_
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -46,26 +46,49 @@
 #include <iostream>
 #include <boost/variant.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/bind.hpp>
+#include <iostream>
 
 #define siftPointSize 133
 #define xyzPointSize 3
 #define xyzrgbPointSize 4
 
-namespace MongoBase {
+namespace MongoProxy {
 using namespace cv;
 using namespace mongo;
 using namespace std;
 using namespace boost;
 
-enum keyTypes {	xml, xyz, rgb, density, intensity, mask, stereoL, stereoR, stereoLTextured, stereoRTextured,
-pc_xyz, pc_xyzrgb, pc_xyzsift, pc_xyzrgbsift, pc_xyzshot, pc_xyzrgbnormal, stereo, stereoTextured};
+boost::mutex io_mutex;
 
-class MongoBase {
+class MongoProxy {
 private:
 	string dbCollectionPath;
 	string hostname;
     boost::shared_ptr<DBClientConnection> c;
+    MongoProxy(string& hostname) : hostname(hostname)
+    {
+    	LOG(LNOTICE)<<"Connect :)";
+    	LOG(LNOTICE)<<"hostname: "<<hostname;
+    	c = boost::shared_ptr<DBClientConnection>(new DBClientConnection());
+    	mongo::client::initialize();
+    	connectToMongoDB();
+    	sizeOfCloud=0;
+    	tempFileOnDisc="tempFile";
+    	fileOID = OID("000000000000000000000000");
+    	dbCollectionPath="images.containers";
+    	collectionName = "containers";
+    }
+    MongoProxy(const MongoProxy & );
 public:
+   static MongoProxy & getSingleton(string& hostname)
+   {
+	   boost::mutex::scoped_lock lock(io_mutex);
+	   static MongoProxy singleton(hostname);
+	   return singleton;
+   }
     string collectionName;
 	vector<string>  docViewsNames;
 	vector<string>  docModelsNames;
@@ -78,7 +101,7 @@ public:
 	OID fileOID;
 	string tempFileName;
 
-	MongoBase(string& hostname);
+
 	vector<string> getAllFiles(const string& pattern);
 	vector<string> getAllFolders(const string& pattern);
 	int getChildOIDS(BSONObj &obj, const string&,  const string&, vector<OID>&);
@@ -88,7 +111,6 @@ public:
 	void initViewNames();
 	void initModelNames();
 
-	void setMime(const keyTypes key,  string& mime);
 	void connectToMongoDB();
 	void setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName);
     void getFileFromGrid(const GridFile &);
@@ -112,19 +134,7 @@ public:
     void index(string& field);
 };
 
-MongoBase::MongoBase(string& hostname) : hostname(hostname)
-{
-	c = boost::shared_ptr<DBClientConnection>(new DBClientConnection());
-	mongo::client::initialize();
-	connectToMongoDB();
-	sizeOfCloud=0;
-	tempFileOnDisc="tempFile";
-	fileOID = OID("000000000000000000000000");
-	dbCollectionPath="images.containers";
-	collectionName = "containers";
-}
-
-void MongoBase::readTextFileFromDocument(mongo::OID& fileOID, int size)
+void MongoProxy::readTextFileFromDocument(mongo::OID& fileOID, int size)
 {
 	LOG(LERROR)<<"Read text\n";
 	const BSONObj *fieldsToReturn = 0;
@@ -144,13 +154,13 @@ void MongoBase::readTextFileFromDocument(mongo::OID& fileOID, int size)
 	//cipFileOut.write(fromDB);
 }
 
-boost::shared_ptr<DBClientConnection>  MongoBase::getClient()
+boost::shared_ptr<DBClientConnection>  MongoProxy::getClient()
 {
 	boost::shared_ptr<DBClientConnection> c2 = c;
 	return c2;
 }
 
-void MongoBase::readXYZMatFromDocument(mongo::OID& fileOID, int size)
+void MongoProxy::readXYZMatFromDocument(mongo::OID& fileOID, int size)
 {
 	LOG(LERROR)<<"Read XYZ Mat\n";
 	const BSONObj *fieldsToReturn = 0;
@@ -189,12 +199,12 @@ void MongoBase::readXYZMatFromDocument(mongo::OID& fileOID, int size)
 	//out_yaml.write(imageXYZRGB);
 }
 
-void MongoBase::insert(BSONObj & object)
+void MongoProxy::insert(BSONObj & object)
 {
 	c->insert(dbCollectionPath, object);
 }
 
-int MongoBase::count(BSONObj & object)
+int MongoProxy::count(BSONObj & object)
 {
 	int options=0;
 	int limit=0;
@@ -202,24 +212,24 @@ int MongoBase::count(BSONObj & object)
 	return c->count(dbCollectionPath, object, options, limit, skip);
 }
 
-void MongoBase::update(BSONObj& query, BSONObj& update)
+void MongoProxy::update(BSONObj& query, BSONObj& update)
 {
 	c->update(dbCollectionPath, Query(query), update, false, true);
 }
 
-auto_ptr<DBClientCursor> MongoBase::query(BSONObj& query)
+auto_ptr<DBClientCursor> MongoProxy::query(BSONObj& query)
 {
 	return c->query(dbCollectionPath, (Query(query)));
 }
 
-void MongoBase::index(string& field)
+void MongoProxy::index(string& field)
 {
 	c->createIndex(dbCollectionPath, BSON(field<<1));
 }
 
-void MongoBase::readFile()
+void MongoProxy::readFile()
 {
-	LOG(LTRACE)<<"MongoBase::readFile";
+	LOG(LTRACE)<<"MongoProxy::readFile";
 	int queryOptions = 0;
 	const BSONObj *fieldsToReturn = 0;
 
@@ -277,7 +287,7 @@ void MongoBase::readFile()
 	}
 }
 
-void MongoBase::readImageFromDocument(mongo::OID& fileOID, int size)
+void MongoProxy::readImageFromDocument(mongo::OID& fileOID, int size)
 {
 	LOG(LERROR)<<"Read image\n";
 	const BSONObj *fieldsToReturn = 0;
@@ -294,7 +304,7 @@ void MongoBase::readImageFromDocument(mongo::OID& fileOID, int size)
 	imwrite( "Gray_Image.jpg", image );
 }
 
-void MongoBase::readPointCloudFromDocument(mongo::OID& fileOID, int size)
+void MongoProxy::readPointCloudFromDocument(mongo::OID& fileOID, int size)
 {
 	//TODO dodac pole cloudType i nie bawic sie w ify bo przy else sie moze wywalic teraz!!!
 	LOG(LERROR)<<"pcd ";
@@ -402,7 +412,7 @@ void MongoBase::readPointCloudFromDocument(mongo::OID& fileOID, int size)
 	}
 }
 
-void MongoBase::cloudEncoding(OID& oid, string& tempFileName, string & cloudType)
+void MongoProxy::cloudEncoding(OID& oid, string& tempFileName, string & cloudType)
 {
 	try{
 		pcl::io::OctreePointCloudCompression<pcl::PointXYZ>* PointCloudDecoderXYZ;
@@ -447,7 +457,7 @@ void MongoBase::cloudEncoding(OID& oid, string& tempFileName, string & cloudType
 		LOG(LNOTICE)<<"ViewWriter::insertFileIntoCollection: END";
 	}catch(Exception &ex){LOG(LNOTICE)<<ex.what();}
 }
-void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Property<string>& nodeNameProp, Base::Property<string>& objectName, Base::Property<string>& description)
+void MongoProxy::initView(const string & viewName, bool addToObjectFlag, Base::Property<string>& nodeNameProp, Base::Property<string>& objectName, Base::Property<string>& description)
 {
 	BSONElement oi;
     OID o;
@@ -504,7 +514,7 @@ void MongoBase::initView(const string & viewName, bool addToObjectFlag, Base::Pr
     c->createIndex(dbCollectionPath, BSON("NodeName"<<1));
 }
 
-void MongoBase::addToObject(const Base::Property<string>& nodeNameProp,const string & name, Base::Property<string>& objectName, Base::Property<string>& description)
+void MongoProxy::addToObject(const Base::Property<string>& nodeNameProp,const string & name, Base::Property<string>& objectName, Base::Property<string>& description)
 {
 	LOG(LNOTICE)<<"Create View";
 	int options=0;
@@ -543,7 +553,7 @@ void MongoBase::addToObject(const Base::Property<string>& nodeNameProp,const str
 	c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"NodeName"<<"Object")), BSON("$addToSet"<<BSON("childOIDs"<<BSON("childOID"<<o.toString()))), false, true);
 }
 
-void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
+void MongoProxy::addScenes(BSONObj& object, Base::Property<string>& objectName)
 {
 	int items = 0;
 	bool objectInTheScene = false;
@@ -616,7 +626,7 @@ void MongoBase::addScenes(BSONObj& object, Base::Property<string>& objectName)
 }
 
 
-void MongoBase::initModel(const string & modelName, bool addToModelFlag,  Base::Property<string>& nodeNameProp, Base::Property<string>& objectName, Base::Property<string>& description)
+void MongoProxy::initModel(const string & modelName, bool addToModelFlag,  Base::Property<string>& nodeNameProp, Base::Property<string>& objectName, Base::Property<string>& description)
 {
 	LOG(LNOTICE)<<"initModel";
 	BSONElement oi;
@@ -657,9 +667,9 @@ void MongoBase::initModel(const string & modelName, bool addToModelFlag,  Base::
 	c->update(dbCollectionPath, Query(BSON("NodeName"<<"SOM"<<"ObjectName"<<objectName<<"ModelName"<<modelName)), BSON("$set"<<BSON("childOIDs"<<somArr)), false, true);
 	c->update(dbCollectionPath, Query(BSON("NodeName"<<"SSOM"<<"ObjectName"<<objectName<<"ModelName"<<modelName)), BSON("$set"<<BSON("childOIDs"<<ssomArr)), false, true);
 }
-void MongoBase::getFileFromGrid(const GridFile& file)
+void MongoProxy::getFileFromGrid(const GridFile& file)
 {
-	LOG(LTRACE)<<"MongoBase::getFileFromGrid";
+	LOG(LTRACE)<<"MongoProxy::getFileFromGrid";
 	stringstream ss;
 	string str = ss.str();
 	char *tempFilename = (char*)tempFileOnDisc.c_str();
@@ -676,30 +686,13 @@ void MongoBase::getFileFromGrid(const GridFile& file)
 	}
 }
 
-void MongoBase::setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName)
+void MongoProxy::setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName)
 {
 	string type = childNodeName;
 	newName = childObj.getField(type+"Name").str();
 }
 
-void MongoBase::setMime( const keyTypes fileType,  string& mime)
-{
-	LOG(LNOTICE)<<"fileType : "<<fileType<<std::endl;
-
-	if (fileType==rgb || fileType==density || fileType==intensity || fileType==mask || fileType==stereoL || fileType==stereoR || fileType==stereoLTextured || fileType==stereoRTextured)
-		mime="image/png";
-	else if(fileType==xml || fileType==pc_xyz || fileType==pc_xyzrgb || fileType==pc_xyzsift || fileType==pc_xyzrgbsift || fileType==pc_xyzshot ||fileType==pc_xyzrgbnormal)
-		mime="text/plain";
-	else if(fileType==xyz )
-			mime="text/plain";
-	else
-	{
-		LOG(LNOTICE) <<"I don't know such typeFile! Please add extension to the `if` statement from http://www.sitepoint.com/web-foundations/mime-types-complete-list/";
-		return;
-	}
-}
-
-void MongoBase::connectToMongoDB()
+void MongoProxy::connectToMongoDB()
 {
 	try{
 		//if(!c->isStillConnected())
@@ -717,7 +710,7 @@ void MongoBase::connectToMongoDB()
 	}
 }
 
-void MongoBase::initViewNames()
+void MongoProxy::initViewNames()
 {
 	docViewsNames.push_back("Stereo");
 	docViewsNames.push_back("Kinect");
@@ -745,7 +738,7 @@ void MongoBase::initViewNames()
 	docViewsNames.push_back("ToFRXM");
 }
 
-void MongoBase::initModelNames()
+void MongoProxy::initModelNames()
 {
 	docModelsNames.push_back("SomXYZRgb");
 	docModelsNames.push_back("SomXYZSift");
@@ -756,7 +749,7 @@ void MongoBase::initModelNames()
 	docModelsNames.push_back("SOM");
 }
 
-vector<string> MongoBase::getAllFiles(const string& pattern)
+vector<string> MongoProxy::getAllFiles(const string& pattern)
 {
 	glob_t glob_result;
 	glob(pattern.c_str(),GLOB_TILDE,NULL,&glob_result);
@@ -768,7 +761,7 @@ vector<string> MongoBase::getAllFiles(const string& pattern)
 	return files;
 }
 
-vector<string> MongoBase::getAllFolders(const string& directoryPath)
+vector<string> MongoProxy::getAllFolders(const string& directoryPath)
 {
 	vector<string> directories;
 	const char *cstr = directoryPath.c_str();
@@ -784,7 +777,7 @@ vector<string> MongoBase::getAllFolders(const string& directoryPath)
     return directories;
 }
 
-int MongoBase::getChildOIDS(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<OID>& oidsVector)
+int MongoProxy::getChildOIDS(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<OID>& oidsVector)
 {
 	string output = obj.getField(fieldName);
 	if(output!="EOO")
@@ -802,12 +795,12 @@ int MongoBase::getChildOIDS(BSONObj &obj, const string & fieldName, const string
 		return 0;
 }
 
-void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbCollectionPath, Base::Property<string>& objectName, const string &nodeName, auto_ptr<DBClientCursor> & cursorCollection, const string & modelOrViewName, const string & type, int& items)
+void  MongoProxy::findDocumentInCollection(DBClientConnection& c, string& dbCollectionPath, Base::Property<string>& objectName, const string &nodeName, auto_ptr<DBClientCursor> & cursorCollection, const string & modelOrViewName, const string & type, int& items)
 {
 	int options=0;
 	int limit=0;
 	int skip=0;
-	LOG(LNOTICE)<<"\nMongoBase::findDocumentInCollection\n";
+	LOG(LNOTICE)<<"\nMongoProxy::findDocumentInCollection\n";
 
       try{
     	  if(type!="")
@@ -853,7 +846,7 @@ void  MongoBase::findDocumentInCollection(DBClientConnection& c, string& dbColle
 
       return;
 }
-bool MongoBase::isViewLastLeaf(const string& nodeName)
+bool MongoProxy::isViewLastLeaf(const string& nodeName)
 {
 	if(nodeName=="StereoPCXYZRGB" || nodeName=="StereoPCXYZSIFT" || nodeName=="StereoPCXYZSHOT" || nodeName=="ToFPCXYZSIFT" || nodeName=="ToFPCXYZRGB" || nodeName=="ToFPCXYZRGB"  || nodeName=="ToFPCXYZSHOT" || nodeName=="KinectPCXYZSHOT"  || nodeName=="KinectPCXYZSIFT" || nodeName=="KinectPCXYZRGB" || nodeName=="StereoLR" || nodeName=="KinectRGBD" || nodeName=="ToFRGBD" || nodeName=="StereoRX" || nodeName=="KinectRX" ||  nodeName=="ToFRX" || nodeName=="StereoRXM" || nodeName=="KinectRXM" || nodeName=="ToFRXM")
 		return true;
@@ -861,7 +854,7 @@ bool MongoBase::isViewLastLeaf(const string& nodeName)
 		return false;
 }
 
-bool MongoBase::isModelLastLeaf(const string& nodeName)
+bool MongoProxy::isModelLastLeaf(const string& nodeName)
 {
 	if(nodeName=="SomXYZRgb" || nodeName=="SomXYZSift" ||  nodeName=="SsomXYZRgb" || nodeName=="SsomXYZSift" || nodeName=="SsomXYZShot")
 		return true;
@@ -869,7 +862,7 @@ bool MongoBase::isModelLastLeaf(const string& nodeName)
 		return false;
 }
 
-void MongoBase::ReadPCDCloud(const string& filename)
+void MongoProxy::ReadPCDCloud(const string& filename)
 {
 	LOG(LTRACE) << "ViewReader::ReadPCDCloud";
 	// Try to read the cloud of XYZRGB points.
@@ -910,9 +903,9 @@ void MongoBase::ReadPCDCloud(const string& filename)
 	}
 }
 
-void MongoBase::writeToSinkFromFile(string& mime, string& fileName)
+void MongoProxy::writeToSinkFromFile(string& mime, string& fileName)
 {
-	LOG(LNOTICE)<<"MongoBase::writeToSink";
+	LOG(LNOTICE)<<"MongoProxy::writeToSink";
 	if(mime=="image/png" || mime=="image/jpeg")
 	{
 		cv::Mat image = imread(tempFileOnDisc, CV_LOAD_IMAGE_UNCHANGED);
@@ -943,5 +936,5 @@ void MongoBase::writeToSinkFromFile(string& mime, string& fileName)
 			LOG(LERROR)<<"Nie wiem co to za plik :/";
 	}
 }
-} /* namespace MongoBase */
-#endif /* MONGOBASE_HPP_ */
+} /* namespace MongoProxy */
+#endif /* MONGOPROXY_HPP_ */

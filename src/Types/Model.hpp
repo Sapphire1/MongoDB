@@ -49,7 +49,7 @@
 #include <boost/variant.hpp>
 #include <boost/lexical_cast.hpp>
 
-namespace MongoBase {
+namespace MongoDB {
 using namespace PrimitiveFile;
 using namespace cv;
 using namespace mongo;
