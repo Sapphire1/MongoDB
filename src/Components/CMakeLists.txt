@@ -4,7 +4,7 @@
 #ADD_COMPONENT(MongoDBImporter)
 #ADD_COMPONENT(ModelReader)
 ADD_COMPONENT(ModelWriter)
-#ADD_COMPONENT(ViewReader)
+ADD_COMPONENT(ViewReader)
 ADD_COMPONENT(ViewWriter)
 #ADD_COMPONENT(SceneReader)
 #ADD_COMPONENT(SceneWriter)

@@ -68,7 +68,7 @@ private:
 	std::string description;
 	std::vector<std::string> splitedObjectNames;
 	string hostname;
-
+	BSONObj viewDocument;
 	// all required types to store
 	boost::shared_ptr<std::vector<fileTypes> > requiredKeyTypes;
 
@@ -93,6 +93,7 @@ public:
 	void removeAllFiles();
 	void setViewName();
 	void getViewName();
+	int getAllFilesOIDS(vector<OID>& oidsVector);
 	void setObjectNames(std::vector<std::string> & splitedObjectNames)
 	{
 		this->splitedObjectNames = splitedObjectNames;
@@ -110,7 +111,8 @@ public:
 	// check if exist this same kind of file
 	bool checkIfFileExist(fileTypes key);
 	void pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>&, fileTypes);
-
+	bool checkIfContain(std::vector<fileTypes> & requiredFileTypes);
+	void readViewDocument();
 	bool checkIfAllFiles();
 	void putStringToFile(const std::string& str, fileTypes typ, string& fileName);
 	void putMatToFile(const cv::Mat& image, fileTypes typ, string& fileName);
@@ -120,6 +122,8 @@ public:
 	void putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr&, fileTypes typ, string& fileName);
 	void putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr&, fileTypes typ, string& fileName);
 	void putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr&, fileTypes typ, string& fileName);
+	bool getViewTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& typesVector);
+	void readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFileTypes);
 
 };// class View
 
@@ -132,6 +136,18 @@ void View::saveAllFiles()
 	}
 	return ;
 }
+
+void View::readViewDocument()
+{
+	auto_ptr<DBClientCursor> cursorCollection;
+	BSONObj query = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");
+	cursorCollection =MongoProxy::MongoProxy::getSingleton(hostname).query(query);
+	while(cursorCollection->more())
+	{
+		viewDocument = cursorCollection->next();
+	}
+}
+
 void View::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, fileTypes typ)
 {
 	file->setViewName(ViewName);
@@ -230,6 +246,136 @@ bool View::checkIfFileExist(fileTypes typ)
 			return true;
 	}
 	return false;
+}
+
+bool View::getViewTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& fileTypesVector)
+{
+	string output = obj.getField(fieldName);
+	if(output!="EOO")
+	{
+		vector<BSONElement> v = obj.getField(fieldName).Array();
+		for (unsigned int i = 0; i<v.size(); i++)
+		{
+			// read to string
+			string viewFileType =v[i][childfieldName].str();
+
+			// map from string to enum
+			fileTypes ft;
+			for(int i=0; i<18;i++)
+			{
+				if(viewFileType == FTypes[i])
+				{
+					ft = (fileTypes)i;
+					break;
+				}
+			}
+			// insert enum to vector
+			fileTypesVector.push_back(ft);
+		}
+		return true;
+	}
+	else
+		return false;
+}
+
+void View::readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFileTypes)
+{
+	LOG(LNOTICE)<<"View::readFiles";
+	int fieldsToReturn=0, queryOptions=0;
+	for(std::vector<OID>::iterator fileOIDIter = fileOIDSVector.begin(); fileOIDIter != fileOIDSVector.end(); ++fileOIDIter)
+	{
+		BSONObj query = BSON("_id" << *fileOIDIter);
+		BSONObj file = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+		string fileType = file.getField("fileType").str();
+		LOG(LNOTICE)<<"fileType : " <<fileType;
+		// map from string to enum
+		fileTypes ft;
+		for(int i=0; i<18;i++)
+		{
+			if(fileType == FTypes[i])
+			{
+				ft = (fileTypes)i;
+				break;
+			}
+		}
+		LOG(LNOTICE)<<"test1";
+
+		for(std::vector<fileTypes>::iterator reqFileType = requiredFileTypes.begin(); reqFileType != requiredFileTypes.end(); ++reqFileType)
+		{
+			LOG(LNOTICE)<<"for(std::vector<fileTypes>::iterator reqFileType";
+			LOG(LNOTICE)<<"ft : " <<ft << "*reqFileType: " <<*reqFileType;
+			if(ft==*reqFileType)
+			{
+				LOG(LNOTICE)<<"READ FILE!!!";
+				//get methods to read from grid or document here!!!
+				// file->readData() !!!
+			}
+		}
+	}
+}
+
+bool View::checkIfContain(std::vector<fileTypes> & requiredFileTypes)
+{
+	//read fileTypes from view document
+	vector<fileTypes> fileTypesVector;
+	string fieldName = "FileTypes";
+	string childfieldName = "Type";
+	bool arrayNotEmpty = getViewTypes(viewDocument,fieldName, childfieldName, fileTypesVector);
+
+	if(!arrayNotEmpty)
+	{
+		LOG(LNOTICE)<<"Array is empty!!!";
+		return false;
+	}
+
+	bool present = false;
+
+	if(requiredFileTypes.size()>fileTypesVector.size())
+	{
+		LOG(LERROR)<<"You want to get more files then view has! "<< requiredFileTypes.size()<<" : "<<fileTypesVector.size();
+		return false;
+	}
+	for(std::vector<fileTypes>::iterator reqTypes = requiredFileTypes.begin(); reqTypes != requiredFileTypes.end(); ++reqTypes)
+	{
+		for(std::vector<fileTypes>::iterator viewTypes = fileTypesVector.begin(); viewTypes != fileTypesVector.end(); ++viewTypes)
+		{
+			LOG(LNOTICE)<<"reqTypes : "<<*reqTypes;
+			LOG(LNOTICE)<<"viewTypes : "<<*viewTypes;
+
+			if(*viewTypes==*reqTypes)
+			{
+				present = true;
+				break;
+			}
+		}
+		if(present)
+			present = false;
+		else
+			return false;
+
+	}
+	return true;
+}
+
+int View::getAllFilesOIDS(vector<OID>& oidsVector)
+{
+	string fieldName = "fileOIDs";
+	string childfieldName = "fileOID";
+	string output = viewDocument.getField(fieldName);
+	if(output!="EOO")
+	{
+		vector<BSONElement> v = viewDocument.getField(fieldName).Array();
+		for (unsigned int i = 0; i<v.size(); i++)
+		{
+			string readedOid =v[i][childfieldName].str();
+			OID o = OID(readedOid);
+			oidsVector.push_back(o);
+			LOG(LNOTICE)<<"FileOID : "<<o;
+		}
+		return 1;
+	}
+	else
+		return -1;
 }
 
 void View::create()

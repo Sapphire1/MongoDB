@@ -35,7 +35,11 @@
 #include "mongo/bson/bson.h"
 #include "Logger.hpp"
 #include <Types/AddVector.hpp>
-#include <Types/MongoBase.hpp>
+#include <Types/MongoProxy.hpp>
+#include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZRGBSIFT.hpp>
+#include <Types/PointXYZSHOT.hpp>
+#include <Types/View.hpp>
 #include <Types/PointXYZSIFT.hpp>
 #include <Types/PointXYZRGBSIFT.hpp>
 
@@ -44,9 +48,11 @@ namespace ViewReader {
 
 using namespace cv;
 using namespace mongo;
+using namespace std;
+using namespace MongoProxy;
+using namespace MongoDB;
 
-
-class ViewReader: public Base::Component, MongoBase::MongoBase
+class ViewReader: public Base::Component
 {
 public:
         /*!
@@ -100,32 +106,91 @@ protected:
         Base::EventHandler <ViewReader> h_readfromDB;
 
 private:
-        Base::Property<string> mongoDBHost;
-        Base::Property<string> objectName;
-        Base::Property<string> collectionName;
-        Base::Property<string> nodeNameProp;
-        Base::Property<string> viewOrModelName;
-        string nodeType;
-        string dbCollectionPath;
-        auto_ptr<DBClientCursor> cursorCollection;
-        auto_ptr<DBClientCursor> childCursor;
-        Base::DataStreamIn<Base::UnitType> in_trigger;
+	 /// Output camera_info
+	Base::DataStreamOut <cv::string> out_camera_info;
 
-        // vector consisting all files OIDS
-		std::vector<OID> allChildsVector;
-        // position of allChildsVector
-        int position;
+	/// Output data stream -XYZ image
+	Base::DataStreamOut <cv::Mat> out_xyz;
 
-        void readFromMongoDB(const string&, const string&, const string&);
-        //void ReadPCDCloud(const string&, const string&);
-        void readfromDB();
-        void readAllFilesTriggered();
-        void addToAllChilds(std::vector<OID>&);
-        void cloudEncoding(OID& oid, string& tempFileName, string & cloudType);
-        unsigned long hex2int(char *a, unsigned int len);
+	/// Output RGB image
+	Base::DataStreamOut <cv::Mat> out_rgb;
+
+	/// Output depth image
+	Base::DataStreamOut <cv::Mat> out_depth;
+
+	/// Output intensity image
+	Base::DataStreamOut <cv::Mat> out_intensity;
+
+	/// Output mask image
+	Base::DataStreamOut <cv::Mat> out_mask;
+
+	/// Output density image
+	Base::DataStreamOut <cv::Mat> out_stereoL;
+
+	/// Output intensity image
+	Base::DataStreamIn <cv::Mat> out_stereoR;
+
+	/// Output density image
+	Base::DataStreamOut <cv::Mat> out_stereoLTextured;
+
+	/// Input intensity image
+	Base::DataStreamOut <cv::Mat> out_stereoRTextured;
+
+	//PCL - Point Clouds
+	/// Cloud containing points with Cartesian coordinates (XYZ).
+	Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZ>::Ptr>  out_pc_xyz;
+
+	/// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
+	Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZRGB>::Ptr> out_pc_xyzrgb;
+
+	/// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
+	Base::DataStreamOut<pcl::PointCloud<PointXYZSIFT>::Ptr> out_pc_xyzsift;
+
+	/// Cloud containing points with Cartesian coordinates,  SIFT descriptor and color (XYZ + RGB + 128)
+	Base::DataStreamOut<pcl::PointCloud<PointXYZRGBSIFT>::Ptr> out_pc_xyzrgbsift;
+
+	/// Cloud containing points with Cartesian coordinates and SHOT descriptor  (XYZ + SHOT).
+	Base::DataStreamOut<pcl::PointCloud<PointXYZSHOT>::Ptr> out_pc_xyzshot;
+
+	/// Cloud containing points with Cartesian coordinates, colors and normals (XYZ + RGB + NORMAL).
+	Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr> out_pc_xyzrgbnormal;
 
 
+	shared_ptr<MongoDB::View> viewPtr;
+   	string hostname;
+	Base::Property<string> mongoDBHost;
+	Base::Property<string> collectionName;
+	Base::Property<string> viewName;
+	Base::Property<bool> cameraInfoProp;
+	Base::Property<bool> xyzProp;
+	Base::Property<bool> rgbProp;
+	Base::Property<bool> depthProp;
+	Base::Property<bool> intensityProp;
+	Base::Property<bool> maskProp;
+	Base::Property<bool> stereoProp;
+	Base::Property<bool> stereoTexturedProp;
+	Base::Property<bool> pc_xyzProp;
+	Base::Property<bool> pc_xyzrgbProp;
+	Base::Property<bool> pc_xyzsiftProp;
+	Base::Property<bool> pc_xyzrgbsiftProp;
+	Base::Property<bool> pc_xyzshotProp;
+	Base::Property<bool> pc_xyzrgbnormalProp;
+	auto_ptr<DBClientCursor> childCursor;
+	Base::DataStreamIn<Base::UnitType> in_trigger;
 
+	// vector consisting all files OIDS
+	std::vector<OID> allChildsVector;
+	// position of allChildsVector
+	int position;
+
+	void readFromMongoDB(const string&, const string&, const string&);
+	//void ReadPCDCloud(const string&, const string&);
+	void readfromDB();
+	void readAllFilesTriggered();
+	void addToAllChilds(std::vector<OID>&);
+	void cloudEncoding(OID& oid, string& tempFileName, string & cloudType);
+	unsigned long hex2int(char *a, unsigned int len);
+	void readRequiredData(std::vector<fileTypes> & requiredFileTypes);
 };
 }//: namespace ViewReader
 }//: namespace Processors

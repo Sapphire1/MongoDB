@@ -132,6 +132,7 @@ public:
     auto_ptr<DBClientCursor> query(BSONObj& query);
     boost::shared_ptr<DBClientConnection>  getClient();
     void index(string& field);
+    BSONObj findOne(BSONObj& query);
 };
 
 void MongoProxy::readTextFileFromDocument(mongo::OID& fileOID, int size)
@@ -215,6 +216,11 @@ int MongoProxy::count(BSONObj & object)
 void MongoProxy::update(BSONObj& query, BSONObj& update)
 {
 	c->update(dbCollectionPath, Query(query), update, false, true);
+}
+
+BSONObj MongoProxy::findOne(BSONObj& query)
+{
+	return c->findOne(dbCollectionPath, Query(query));
 }
 
 auto_ptr<DBClientCursor> MongoProxy::query(BSONObj& query)

@@ -16,23 +16,45 @@ using namespace boost;
 using namespace boost::posix_time;
 
 ViewReader::ViewReader(const std::string & name) : Base::Component(name),
-		mongoDBHost("mongoDBHost", string("localhost")),
-		objectName("objectName", string("GreenCup")),
-		collectionName("collectionName", string("containers")),
-		nodeNameProp("nodeName", string("StereoLR")),
-		viewOrModelName("viewName", string("lab012"))
+	mongoDBHost("mongoDBHost", string("localhost")),
+	collectionName("collectionName", string("containers")),
+	viewName("viewName", string("lab012")),
+	cameraInfoProp("file.cameraInfo.xml", false),
+	xyzProp("image.xyz", false),
+	rgbProp("image.rgb", false),
+	depthProp("image.density", false),
+	intensityProp("image.intensity", false),
+	maskProp("image.mask", false),
+	stereoProp("image.stereo", false),
+	stereoTexturedProp("image.stereoTextured", false),
+	pc_xyzProp("PC.xyz", false),
+	pc_xyzrgbProp("PC.xyzrgb", false),
+	pc_xyzsiftProp("PC.xyzsift", false),
+	pc_xyzrgbsiftProp("PC.xyzrgbsift", false),
+	pc_xyzshotProp("PC.xyzshot", false),
+	pc_xyzrgbnormalProp("PC.xyzrgbnormal", false)
 {
-		registerProperty(mongoDBHost);
-		registerProperty(objectName);
-		registerProperty(collectionName);
-		registerProperty(nodeNameProp);
-		registerProperty(viewOrModelName);
-		this->position=0;
-		if(nodeNameProp=="Object")
-			nodeType="";
-		else
-			nodeType="View";
-        CLOG(LTRACE) << "Hello ViewReader";
+	registerProperty(mongoDBHost);
+	registerProperty(collectionName);
+	registerProperty(viewName);
+	registerProperty(cameraInfoProp);
+	registerProperty(xyzProp);
+	registerProperty(rgbProp);
+	registerProperty(depthProp);
+	registerProperty(intensityProp);
+	registerProperty(maskProp);
+	registerProperty(stereoProp);
+	registerProperty(stereoTexturedProp);
+	registerProperty(pc_xyzProp);
+	registerProperty(pc_xyzrgbProp);
+	registerProperty(pc_xyzsiftProp);
+	registerProperty(pc_xyzrgbsiftProp);
+	registerProperty(pc_xyzshotProp);
+	registerProperty(pc_xyzrgbnormalProp);
+
+	this->position=0;
+	hostname = mongoDBHost;
+	CLOG(LTRACE) << "Hello ViewReader";
 }
 
 ViewReader::~ViewReader()
@@ -40,32 +62,37 @@ ViewReader::~ViewReader()
         CLOG(LTRACE) << "Good bye ViewReader";
 }
 
-void ViewReader::readfromDB()
-{
-	CLOG(LNOTICE) << "ViewReader::readfromDB";
-	readFromMongoDB(nodeNameProp, viewOrModelName, nodeType);
-}
+
 void ViewReader::prepareInterface() {
-        CLOG(LTRACE) << "ViewReader::prepareInterface";
-        h_readfromDB.setup(this, &ViewReader::readfromDB);
-        registerHandler("Read", &h_readfromDB);
-        registerStream("out_cloud_xyz", &out_cloud_xyz);
-        registerStream("out_cloud_xyzrgb", &out_cloud_xyzrgb);
-        registerStream("out_cloud_xyzsift", &out_cloud_xyzsift);
-        registerStream("out_img", &out_img);
-        registerStream("in_trigger", &in_trigger);
-        registerStream("cipFileOut", &cipFileOut);
-		registerHandler("onTriggeredReadAllFiles", boost::bind(&ViewReader::readAllFilesTriggered, this));
-		addDependency("onTriggeredReadAllFiles", &in_trigger);
+	CLOG(LTRACE) << "ViewReader::prepareInterface";
+	h_readfromDB.setup(this, &ViewReader::readfromDB);
+	registerHandler("Read", &h_readfromDB);
+	registerStream("out_camera_info", &out_camera_info);
+	registerStream("out_xyz", &out_xyz);
+	registerStream("out_rgb", &out_rgb);
+	registerStream("out_depth", &out_depth);
+	registerStream("out_intensity", &out_intensity);
+	registerStream("out_mask", &out_mask);
+
+	registerStream("out_stereoL", &out_stereoL);
+	registerStream("out_stereoR", &out_stereoR);
+	registerStream("out_stereoLTextured", &out_stereoLTextured);
+	registerStream("out_stereoRTextured", &out_stereoRTextured);
+	registerStream("out_pc_xyz", &out_pc_xyz);
+	registerStream("out_pc_xyzrgb", &out_pc_xyzrgb);
+
+	registerStream("out_pc_xyzsift", &out_pc_xyzsift);
+	registerStream("out_pc_xyzrgbsift", &out_pc_xyzrgbsift);
+	registerStream("out_pc_xyzshot", &out_pc_xyzshot);
+	registerStream("out_pc_xyzrgbnormal", &out_pc_xyzrgbnormal);
+
+	//registerHandler("onTriggeredReadAllFiles", boost::bind(&ViewReader::readAllFilesTriggered, this));
+	//addDependency("onTriggeredReadAllFiles", &in_trigger);
 }
 
 bool ViewReader::onInit()
 {
         CLOG(LTRACE) << "ViewReader::initialize";
-        if(collectionName=="containers")
-      		MongoBase::dbCollectionPath=dbCollectionPath="images.containers";
-        string hostname = mongoDBHost;
-        connectToMongoDB(hostname);
         return true;
 }
 
@@ -100,78 +127,134 @@ void ViewReader::addToAllChilds(std::vector<OID> & childsVector)
 void ViewReader::readAllFilesTriggered()
 {
 	CLOG(LTRACE)<<"ViewReader::readAllFiles";
-	fileOID = allChildsVector[position];
-    readFile();
-    if(position<allChildsVector.size())
-    	++position;
-    else
-    	position=0;
+//	fileOID = allChildsVector[position];
+ //   readFile();
+//    if(position<allChildsVector.size())
+//    	++position;
+//    else
+ //   	position=0;
 }
 
-void ViewReader::readFromMongoDB(const string& nodeName, const string& modelOrViewName, const string& nodeType)
+
+void ViewReader::readfromDB()
 {
-	CLOG(LTRACE)<<"ViewReader::readFromMongoDB";
-	string name;
-	try{
-		int items=0;
-		findDocumentInCollection(*c, dbCollectionPath, objectName, nodeName, cursorCollection, modelOrViewName, nodeType, items);
-		if(items>0)
+	CLOG(LNOTICE) << "ViewReader::readfromDB";
+	MongoProxy::MongoProxy::getSingleton(hostname);
+	string vn = string(viewName);
+	viewPtr = boost::shared_ptr<View>(new View(vn,hostname));
+
+	bool exist = viewPtr->checkIfExist();
+	if(!exist)
+	{
+		CLOG(LERROR)<<"View doesn't exist in data base!!!, Change view name";
+		return;
+	}
+	else
+	{
+		// get view document
+		viewPtr->readViewDocument();
+
+		// read all required types from GUI
+		std::vector<fileTypes> requiredFileTypes;
+		readRequiredData(requiredFileTypes);
+
+
+		if(requiredFileTypes.size()==0)
 		{
-			CLOG(LINFO)<<"Founded some data";
-			while (cursorCollection->more())
-			{
-				BSONObj obj = cursorCollection->next();
-				CLOG(LTRACE)<<obj;
-				vector<OID> childsVector;
-				int items =  getChildOIDS(obj, "childOIDs", "childOID", childsVector);
-				if(items>0)
-				{
-					if(isViewLastLeaf(nodeName) || isModelLastLeaf(nodeName))
-						addToAllChilds(childsVector);
-					else
-					{
-						CLOG(LTRACE)<<"There are childs "<<childsVector.size();
-						for (unsigned int i = 0; i<childsVector.size(); i++)
-						{
-							childCursor =c->query(dbCollectionPath, Query(BSON("_id"<<childsVector[i])));
-							if(childCursor->more())
-							{
-								BSONObj childObj = childCursor->next();
-								string childNodeName= childObj.getField("NodeName").str();
-								if(childNodeName!="EOO")
-								{
-									if(childNodeName=="View")
-									{
-										string newName;
-										setModelOrViewName(childNodeName, childObj, newName);
-										readFromMongoDB(childNodeName, newName, "View");
-									}
-									else if(childNodeName=="Model")
-									{
-										CLOG(LTRACE)<<"It's a model. Do nothing.";
-									}
-									else
-										readFromMongoDB(childNodeName, modelOrViewName, nodeType);
-								}
-							}//if(childNodeName!="EOO")
-						}//for
-					}
-				}//if
-			}//while
-		}//if
+			CLOG(LERROR)<<"Please mark any checkbox";
+			return;
+		}
+		// check if view contain all required types
+		bool contain = viewPtr->checkIfContain(requiredFileTypes);
+
+		if(!contain)
+		{
+			CLOG(LERROR)<<"View doesn't contain all required files! BYE!";
+		}
 		else
 		{
-			CLOG(LTRACE)<<"10";
-			if(nodeNameProp==nodeName)
-				CLOG(LERROR)<<"Wrong name";
-			CLOG(LTRACE)<<"No results";
+			CLOG(LNOTICE)<<"Read files from View!";
+
+			// read vector of files OIDs
+			vector<OID> fileOIDSVector;
+			viewPtr->getAllFilesOIDS(fileOIDSVector);
+
+			// for full required files vector, read file document and check if its type is equal
+			// one of requested file types
+
+			viewPtr->readFiles(fileOIDSVector, requiredFileTypes);
 		}
-	}//try
-	catch(DBException &e)
-	{
-		CLOG(LERROR) <<"ReadFromMongoDB(). Something goes wrong... :<";
-		exit(1);
 	}
+
+	//readFromMongoDB(nodeNameProp, viewName, nodeType);
+}
+
+void ViewReader::readRequiredData(std::vector<fileTypes> & requiredFileTypes)
+{
+	CLOG(LNOTICE)<<"ViewWriter::checkProvidedData";
+	bool cleanBuffers = false;
+
+	if(cameraInfoProp==true)
+	{
+		requiredFileTypes.push_back(FileCameraInfo);
+	}
+	if(xyzProp==true)
+	{
+		requiredFileTypes.push_back(ImageXyz);
+	}
+	if(rgbProp==true)
+	{
+		requiredFileTypes.push_back(ImageRgb);
+	}
+	if(depthProp==true)
+	{
+		requiredFileTypes.push_back(ImageDepth);
+	}
+	if(intensityProp==true)
+	{
+		requiredFileTypes.push_back(ImageIntensity);
+	}
+	if(maskProp==true)
+	{
+		requiredFileTypes.push_back(ImageMask);
+	}
+	if(stereoProp==true)
+	{
+		requiredFileTypes.push_back(StereoLeft);
+		requiredFileTypes.push_back(StereoRight);
+	}
+	if(stereoTexturedProp==true)
+	{
+		requiredFileTypes.push_back(StereoLeft);
+		requiredFileTypes.push_back(StereoRight);
+		requiredFileTypes.push_back(StereoLeftTextured);
+		requiredFileTypes.push_back(StereoRightTextured);
+	}
+	if(pc_xyzProp==true)
+	{
+		requiredFileTypes.push_back(PCXyz);
+	}
+	if(pc_xyzrgbProp==true)
+	{
+		requiredFileTypes.push_back(PCXyzRgb);
+	}
+	if(pc_xyzsiftProp==true)
+	{
+		requiredFileTypes.push_back(PCXyzSift);
+	}
+	if(pc_xyzrgbsiftProp==true)
+	{
+		requiredFileTypes.push_back(PCXyzRgbSift);
+	}
+	if(pc_xyzshotProp==true)
+	{
+		requiredFileTypes.push_back(PCXyzShot);
+	}
+	if(pc_xyzrgbnormalProp==true)
+	{
+		requiredFileTypes.push_back(PCXyzRgbNormal);
+	}
+	CLOG(LNOTICE)<<"Size of required file types: "<<requiredFileTypes.size();
 }
 } //: namespace ViewReader
 } //: namespace Processors

@@ -72,7 +72,7 @@ public:
    	/// Input RGB image
    	Base::DataStreamIn <cv::Mat, Base::DataStreamBuffer::Newest> in_rgb;
 
-  	/// Input density image
+  	/// Input depth image
   	Base::DataStreamIn <cv::Mat, Base::DataStreamBuffer::Newest> in_depth;
 
   	/// Input intensity image
