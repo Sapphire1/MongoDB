@@ -57,13 +57,12 @@ using namespace std;
 using namespace boost;
 using namespace PrimitiveFile;
 
-class View //: public MongoBase::MongoBase
+class View
 {
 private:
 	string ViewName;						// lab012
 	string SensorType;						// Stereo, ToF...
 	string dateOfInsert;					// 02042013
-	std::vector<shared_ptr<PrimitiveFile::PrimitiveFile> > files;
 	std::vector<string>	allFileTypes;			// [MASK, IMAGE, …, IMAGE3D]
 	std::string description;
 	std::vector<std::string> splitedObjectNames;
@@ -77,8 +76,11 @@ private:
 
 	// pointer to MongoBase object
 //	boost::shared_ptr<MongoBase> basePtr;
+	std::vector<shared_ptr<PrimitiveFile::PrimitiveFile> > files;
+
 
 public:
+
 	View(string& viewName, string& host) : ViewName(viewName), hostname(host)
 	{
 	};
@@ -93,6 +95,11 @@ public:
 	void removeAllFiles();
 	void setViewName();
 	void getViewName();
+	shared_ptr<PrimitiveFile::PrimitiveFile> getFile(int pos);
+	int getFilesSize()
+	{
+		return files.size();
+	};
 	int getAllFilesOIDS(vector<OID>& oidsVector);
 	void setObjectNames(std::vector<std::string> & splitedObjectNames)
 	{
@@ -124,7 +131,7 @@ public:
 	void putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr&, fileTypes typ, string& fileName);
 	bool getViewTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& typesVector);
 	void readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFileTypes);
-
+	fileTypes getFileType(int i);
 };// class View
 
 void View::saveAllFiles()
@@ -172,6 +179,14 @@ void View::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, fileTypes ty
 
 // check if all required types of file are present in vector
 // if types are stereo, check  all stereo files and stereo textured files if needed
+
+/*void View::getDataOfFile(int iterator)
+{
+
+
+
+}
+*/
 
 bool View::checkIfAllFiles()
 {
@@ -248,6 +263,11 @@ bool View::checkIfFileExist(fileTypes typ)
 	return false;
 }
 
+fileTypes View::getFileType(int i)
+{
+	return files[i]->getType();
+}
+
 bool View::getViewTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& fileTypesVector)
 {
 	string output = obj.getField(fieldName);
@@ -281,7 +301,6 @@ bool View::getViewTypes(BSONObj &obj, const string & fieldName, const string & c
 void View::readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFileTypes)
 {
 	LOG(LNOTICE)<<"View::readFiles";
-	int fieldsToReturn=0, queryOptions=0;
 	for(std::vector<OID>::iterator fileOIDIter = fileOIDSVector.begin(); fileOIDIter != fileOIDSVector.end(); ++fileOIDIter)
 	{
 		BSONObj query = BSON("_id" << *fileOIDIter);
@@ -298,7 +317,6 @@ void View::readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFil
 				break;
 			}
 		}
-		LOG(LNOTICE)<<"test1";
 
 		for(std::vector<fileTypes>::iterator reqFileType = requiredFileTypes.begin(); reqFileType != requiredFileTypes.end(); ++reqFileType)
 		{
@@ -307,11 +325,17 @@ void View::readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFil
 			if(ft==*reqFileType)
 			{
 				LOG(LNOTICE)<<"READ FILE!!!";
-				//get methods to read from grid or document here!!!
-				// file->readData() !!!
+				shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(ft, hostname, *fileOIDIter));
+				file->readFile();
+				files.push_back(file);
 			}
 		}
 	}
+}
+
+shared_ptr<PrimitiveFile::PrimitiveFile> View::getFile(int pos)
+{
+	return files[pos];
 }
 
 bool View::checkIfContain(std::vector<fileTypes> & requiredFileTypes)

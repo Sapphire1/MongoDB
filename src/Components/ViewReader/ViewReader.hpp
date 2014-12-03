@@ -106,7 +106,7 @@ protected:
         Base::EventHandler <ViewReader> h_readfromDB;
 
 private:
-	 /// Output camera_info
+	/// Output camera_info
 	Base::DataStreamOut <cv::string> out_camera_info;
 
 	/// Output data stream -XYZ image
@@ -128,7 +128,7 @@ private:
 	Base::DataStreamOut <cv::Mat> out_stereoL;
 
 	/// Output intensity image
-	Base::DataStreamIn <cv::Mat> out_stereoR;
+	Base::DataStreamOut <cv::Mat> out_stereoR;
 
 	/// Output density image
 	Base::DataStreamOut <cv::Mat> out_stereoLTextured;

@@ -158,11 +158,13 @@ private:
 	float sizeMBytes;
 	fileTypes fileType; 		// mask, rgb, depth, I, XYZ, cameraInfo, PCL
 	string PCLType;			// SIFT, SHOT, XYZ, ORB, NORMALS
+	//TODO remove view and model name!!!
 	string viewName;
 	string modelName;
 	string collectionName;
 	string documentType;	// View, Model, Object, file
-
+	OID fileOID;
+	BSONObj fileDocument;
 	boost::variant<	cv::Mat,
 	string,
 	pcl::PointCloud<pcl::PointXYZ>::Ptr,
@@ -218,6 +220,15 @@ public:
 		LOG(LNOTICE)<<"Constructor <pcl::PointXYZRGBNormal>";
 		this->setSize();
 	};
+
+	///////////////////////////////////////////////////
+	PrimitiveFile(fileTypes& type, string& hostname, mongo::OID& fileOID) : fileType(type), hostname(hostname), fileOID(fileOID), sizeMBytes(0), fileName("NoName"), sizeBytes(0)
+	{
+		LOG(LNOTICE)<<"Constructor PrimitiveFile";
+		LOG(LNOTICE)<<"fileType :" <<fileType;
+	};
+
+	/////////////////////////////////////////////////////////
 	string getFileName(){return fileName;}
 	void saveIntoDisc();
 	void saveIntoMongoBase();
@@ -229,20 +240,34 @@ public:
 	void readFromGrid();
 	void readFromDocument();
 	void saveImageOnDisc();
+	void getCVMatData(cv::Mat&);
 	void saveToDisc(bool suffix, bool binary);
-
+	void readXYZMatFromDocument();
+	void getFileFromGrid(const GridFile& file);
+	void writeToSinkFromFile(string& mime);
 	void copyXYZPointToFloatArray (const pcl::PointXYZ &p, float * out) const;
 	void copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const;
 	void copyXYZRGBPointToFloatArray (const pcl::PointXYZRGB &p, float * out) const;
 	void copyXYZRGBNormalPointToFloatArray (const pcl::PointXYZRGBNormal &p, float * out) const;
 	void copyXYZSHOTPointToFloatArray (const PointXYZSHOT &p, float * out) const;
-
+	void readPointCloudFromDocument();
 	void savePCxyzFileToDisc(bool suffix, bool binary, std::string& fn);
 	void savePCxyzRGBFileToDisc(bool suffix, bool binary, std::string& fn);
 	void savePCxyzSIFTFileToDisc(bool suffix, bool binary, std::string& fn);
 	void savePCxyzRGBNormalFileToDisc(bool suffix, bool binary, std::string& fn);
 	void savePCxyzSHOTFileToDisc(bool suffix, bool binary, std::string& fn);
 	void setMime(const fileTypes type,  string& mime);
+	void readTextFileFromDocument();
+	void readFile();
+	void readImageFromDocument();
+	void ReadPCDCloud(const string& filename);
+	void getStringData(std::string& str);
+	void getXYZData(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudXYZ);
+	void getXYZRGBData(pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloudXYZRGB);
+	void getXYZSIFTData(pcl::PointCloud<PointXYZSIFT>::Ptr& cloudXYZSIFT);
+	void getXYZRGBSIFTData(pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloudXYZRGBSIFT);
+	void getXYZSHOTData(pcl::PointCloud<PointXYZSHOT>::Ptr& cloudXYZSHOT);
+	void getXYZRGBNormalData(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloudXYZNormal);
 
 	void setViewName(string& ViewName)
 	{
@@ -279,6 +304,64 @@ public:
 	};
 };
 
+void PrimitiveFile::readTextFileFromDocument()
+{
+	LOG(LERROR)<<"Read text\n";
+
+	const char *buffer;
+	int size = (int)sizeBytes;
+	// get data to buffer
+	buffer = fileDocument[fileName].binData(size);
+	for (int i=0; i<size;i++)
+		LOG(LERROR)<<buffer[i];
+	LOG(LERROR)<<*buffer;
+	LOG(LERROR)<<"size: "<<size;
+	string fromDB(buffer,size-1);
+	LOG(LERROR)<<"ReadedFile: \n"<<fromDB;
+	LOG(LERROR)<<"Save to sink";
+	data = fromDB;
+	//cipFileOut.write(fromDB);
+}
+
+void PrimitiveFile::readXYZMatFromDocument()
+{
+	LOG(LERROR)<<"Read XYZ Mat\n";
+	int len;
+	float *dataXYZ = (float*)fileDocument[fileName].binData(len);
+	LOG(LNOTICE)<<"len : "<<len;
+	int width = fileDocument.getField("width").Int();//480
+	int height = fileDocument.getField("height").Int();//640
+	int channels = fileDocument.getField("channels").Int();
+	// if(channels==3)
+	//TODO dodać jeszcze inne typy CV_32FC4 na przyklad
+	cv::Mat imageXYZRGB(width, height, CV_32FC3);
+	//imageXYZRGB.convertTo(imageXYZRGB, CV_32FC4);
+	vector<float> img;
+	//rows = rows*3;
+	float img_ptr[channels];
+	for (int i = 0; i < width; ++i)
+	{
+		LOG(LERROR)<<"i : "<<i;
+		float* xyz_p = imageXYZRGB.ptr <float> (i);
+		for (int j = 0; j < height*channels; j+=channels)
+		{
+			//TODO dodać jeszcze kilka wierszy w zależności od tego jaki plik czytamy
+			//TODO teraz wywali się dla XYZ-RGB
+			LOG(LERROR)<<"i*height*channels+j: " <<i*height*channels+j;
+			xyz_p[0+j]=dataXYZ[i*height*channels+j];
+			xyz_p[1+j]=dataXYZ[i*height*channels+j+1];
+			xyz_p[2+j]=dataXYZ[i*height*channels+j+2];
+		}
+	}
+	data = imageXYZRGB;
+	cv::FileStorage fs("xyzTest.yaml", cv::FileStorage::WRITE);
+	fs << "img" << imageXYZRGB;
+
+	fs.release();
+	//out_yaml.write(imageXYZRGB);
+}
+
+
 void PrimitiveFile::saveIntoMongoBase()
 {
 	OID oid;
@@ -308,6 +391,290 @@ void PrimitiveFile::saveIntoMongoBase()
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 }
 
+void PrimitiveFile::readImageFromDocument()
+{
+	LOG(LERROR)<<"Read image\n";
+	int len;
+	uchar *dataImage = (uchar*)fileDocument[fileName].binData(len);
+	std::vector<uchar> v(dataImage, dataImage+len);
+	cv::Mat image = cv::imdecode(cv::Mat(v), -1);
+	//out_img.write(image);
+	data = image;
+	// only in test purposes, it's to remove
+	imwrite(fileName, image );
+}
+
+void PrimitiveFile::readFile()
+{
+	LOG(LTRACE)<<"MongoProxy::readFile";
+	// get bson object from collection
+	BSONObj query = BSON("_id" << fileOID);
+	BSONObj obj = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+	LOG(LNOTICE)<<"obj: "<<obj<<", fileOID: "<<fileOID.toString();
+	place = obj.getField("place").str();
+
+	sizeBytes = obj.getField("size").Double();
+	fileName = obj.getField("filename").str();
+	LOG(LNOTICE)<<"place: "<<place<<" size: "<<sizeBytes<<", fileName: "<<fileName<< ", fileType: " << fileType;
+
+	if(place=="document")
+	{
+		LOG(LNOTICE)<<"Read from document";
+
+		BSONObj query = BSON("_id" << fileOID);
+		fileDocument = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+
+		if(fileType==ImageRgb || fileType==ImageDepth || fileType==ImageIntensity || fileType==ImageMask
+				|| fileType==StereoLeft || fileType==StereoRight || fileType==StereoLeftTextured
+				|| fileType==StereoRightTextured)
+		{
+			readImageFromDocument();
+		}
+
+		else if(fileType==PCXyz || fileType==PCXyzRgb || fileType==PCXyzSift || fileType==PCXyzRgbSift
+				|| fileType==PCXyzShot || fileType==PCXyzRgbNormal)
+		{
+			readPointCloudFromDocument();
+		}
+		else if(fileType==ImageXyz)
+		{
+			readXYZMatFromDocument();
+		}
+		else if(fileType==FileCameraInfo)
+		{
+			readTextFileFromDocument();
+		}
+	}
+	else
+	{
+		//TODO add to readed file to data in writeToSinkFromFile method!!!
+
+		LOG(LNOTICE)<<"Read from GRIDFS!";
+		// if saved in grid
+		boost::shared_ptr<DBClientConnection>  c = MongoProxy::MongoProxy::getSingleton(hostname).getClient();
+		// create GridFS client
+		GridFS fs(*c, MongoProxy::MongoProxy::getSingleton(hostname).collectionName);
+
+		LOG(LTRACE)<<"_id"<<fileOID;
+		GridFile file = fs.findFile(Query(BSON("_id" << fileOID)));
+
+		if (!file.exists())
+		{
+			LOG(LERROR) << "File not found in grid";
+		}
+		else
+		{
+			// get filename
+			string filename = file.getFileField("filename").str();
+			// get mime from file
+			string mime = file.getContentType();
+
+			getFileFromGrid(file);
+			writeToSinkFromFile(mime);
+		}
+	}
+}
+
+void PrimitiveFile::ReadPCDCloud(const string& filename)
+{
+	//TODO ADD ALL PCD TYPES!!!
+	LOG(LTRACE) << "ViewReader::ReadPCDCloud";
+	// Try to read the cloud of XYZRGB points.
+	if(filename.find("xyzrgb")!=string::npos)
+	{
+		pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_xyzrgb (new pcl::PointCloud<pcl::PointXYZRGB>);
+		if (pcl::io::loadPCDFile<pcl::PointXYZRGB> (fileName, *cloud_xyzrgb) == -1){
+			LOG(LWARNING) <<"Cannot read PointXYZRGB cloud from "<<fileName;
+			return;
+		}else{
+		//	out_cloud_xyzrgb.write(cloud_xyzrgb);
+			data = cloud_xyzrgb;
+			LOG(LINFO) <<"PointXYZRGB cloud loaded properly from "<<fileName;
+		}
+	}
+	if(filename.find("xyzsift.pcd")!=string::npos)
+	{
+		pcl::PointCloud<PointXYZSIFT>::Ptr cloud_xyzsift (new pcl::PointCloud<PointXYZSIFT>);
+		if (pcl::io::loadPCDFile<PointXYZSIFT> (fileName, *cloud_xyzsift) == -1){
+			LOG(LWARNING) <<"Cannot read PointXYZSIFT cloud from "<<fileName;
+			return;
+		}else{
+			data = cloud_xyzsift;
+		//	out_cloud_xyzsift.write(cloud_xyzsift);
+			LOG(LINFO) <<"PointXYZSIFT cloud loaded properly from "<<fileName;
+		}
+	}
+
+	else if(filename.find("xyz")!=string::npos)
+	{
+		// Try to read the cloud of XYZ points.
+		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz (new pcl::PointCloud<pcl::PointXYZ>);
+		if (pcl::io::loadPCDFile<pcl::PointXYZ> (fileName, *cloud_xyz) == -1){
+			LOG(LWARNING) <<"Cannot read PointXYZ cloud from "<<fileName;
+			return;
+		}else{
+			data = cloud_xyz;
+		//	out_cloud_xyz.write(cloud_xyz);
+			LOG(LINFO) <<"PointXYZ cloud loaded properly from "<<fileName;
+		}
+	}
+}
+
+void PrimitiveFile::writeToSinkFromFile(string& mime)
+{
+	LOG(LNOTICE)<<"PrimitiveFile::writeToSink";
+	if(fileType==ImageRgb || fileType==ImageDepth || fileType==ImageIntensity || fileType==ImageMask
+		|| fileType==StereoLeft || fileType==StereoRight || fileType==StereoLeftTextured
+		|| fileType==StereoRightTextured)
+	{
+		cv::Mat image = imread(fileName, CV_LOAD_IMAGE_UNCHANGED);
+		data = image;
+		//out_img.write(image);
+	}
+	else if(fileType==PCXyz || fileType==PCXyzRgb || fileType==PCXyzSift || fileType==PCXyzRgbSift
+				|| fileType==PCXyzShot || fileType==PCXyzRgbNormal)
+	{
+		ReadPCDCloud(fileName);
+
+	}
+	else if(fileType==ImageXyz)
+	{
+		FileStorage fs2(fileName, FileStorage::READ);
+		cv::Mat imageXYZ;
+		fs2["img"] >> imageXYZ;
+		data = imageXYZ;
+	}
+	else if(fileType==FileCameraInfo)
+	{
+		LOG(LINFO)<<"xml :)";
+		string CIPFile;
+		char const* charFileName = fileName.c_str();
+		LOG(LINFO)<<fileName;
+		std::ifstream t(charFileName);
+		std::stringstream buffer;
+		buffer << t.rdbuf();
+		CIPFile = buffer.str();
+	//	cipFileOut.write(CIPFile);
+		data = CIPFile;
+		LOG(LINFO)<<CIPFile;
+	}
+}
+
+void PrimitiveFile::getFileFromGrid(const GridFile& file)
+{
+	LOG(LTRACE)<<"MongoProxy::getFileFromGrid";
+	stringstream ss;
+	string str = ss.str();
+	char *tempFilename = (char*)fileName.c_str();
+	LOG(LNOTICE)<<"\n\ntempFilename: "<<tempFilename<<"\n";
+	ofstream ofs(tempFilename);
+	gridfs_offset off = file.write(ofs);
+	if (off != file.getContentLength())
+	{
+		LOG(LNOTICE) << "\nFailed to read a file from mongoDB\n";
+	}
+	else
+	{
+		LOG(LNOTICE) << "\nSuccess read a file from mongoDB\n";
+	}
+}
+
+void PrimitiveFile::readPointCloudFromDocument()
+{
+	LOG(LNOTICE)<<"Read Point Cloud";
+	try
+	{
+		if(fileType==PCXyz)
+		{
+			// read data to buffer
+			int totalSize;
+			float* buffer = (float*)fileDocument[fileName].binData(totalSize);
+			int bufferSize = totalSize/sizeof(float);
+			LOG(LERROR)<<"bufferSize: "<<bufferSize;
+			float newBuffer[bufferSize];
+			memcpy(newBuffer, buffer, totalSize);
+			pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ (new pcl::PointCloud<pcl::PointXYZ>);
+			pcl::PointXYZ pt;
+			for(int i=0; i<totalSize/(xyzPointSize*sizeof(float)); i++) // now it should be 10 iterations
+			{
+				pt.x=newBuffer[i*xyzPointSize];
+				pt.y=newBuffer[i*xyzPointSize+1];
+				pt.z=newBuffer[i*xyzPointSize+2];
+				cloudXYZ->push_back(pt);
+			}
+			data = cloudXYZ;
+			// save to file, only in test purposes
+			pcl::io::savePCDFile("newCloudXYZ.pcd", *cloudXYZ, false);
+		}
+		else if(fileType==PCXyzRgb)
+		{
+			// read data to buffer
+			int totalSize;
+			float* buffer = (float*)fileDocument[fileName].binData(totalSize);
+			int bufferSize = totalSize/sizeof(float);
+			LOG(LERROR)<<"bufferSize: "<<bufferSize;
+			float newBuffer[bufferSize];
+			memcpy(newBuffer, buffer, totalSize);
+			pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB (new pcl::PointCloud<pcl::PointXYZRGB>);
+			pcl::PointXYZRGB pt;
+			for(int i=0; i<totalSize/(xyzrgbPointSize*sizeof(float)); i++) // now it should be 10 iterations
+			{
+				pt.x=newBuffer[i*xyzrgbPointSize];
+				pt.y=newBuffer[i*xyzrgbPointSize+1];
+				pt.z=newBuffer[i*xyzrgbPointSize+2];
+				pt.rgb=newBuffer[i*xyzrgbPointSize+3];
+				cloudXYZRGB->push_back(pt);
+			}
+			data = cloudXYZRGB;
+			// save to file, only in test purposes
+			pcl::io::savePCDFile("newCloudXYZRGB.pcd", *cloudXYZRGB, false);
+		}
+		else if(fileType==PCXyzSift)
+		{
+			// read data to buffer
+			int totalSize;
+			float* buffer = (float*)fileDocument[fileName].binData(totalSize);
+			int bufferSize = totalSize/sizeof(float);
+			LOG(LERROR)<<"bufferSize: "<<bufferSize;
+			float newBuffer[bufferSize];
+			memcpy(newBuffer, buffer, totalSize);
+			// for sift row size in float is equal 128+5 =133  floats
+			pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT (new pcl::PointCloud<PointXYZSIFT>);
+			PointXYZSIFT pt;
+			for(int i=0; i<totalSize/(siftPointSize*sizeof(float)); i++) // now it should be 10 iterations
+			{
+				Eigen::Vector3f pointCoordinates;
+				pointCoordinates[0]=newBuffer[i*siftPointSize];
+				pointCoordinates[1]=newBuffer[i*siftPointSize+1];
+				pointCoordinates[2]=newBuffer[i*siftPointSize+2];
+				memcpy(&pt.multiplicity, &newBuffer[3+i*siftPointSize], sizeof(int)); // 4 bytes
+				memcpy(&pt.pointId, &newBuffer[4+i*siftPointSize], sizeof(int));	// 4 bytes
+				memcpy(&pt.descriptor, &newBuffer[5+i*siftPointSize], 128*sizeof(float)); // 128 * 4 bytes = 512 bytes
+
+				pt.getVector3fMap() = pointCoordinates;
+				cloudXYZSIFT->push_back(pt);
+			}
+			data = cloudXYZSIFT;
+			// save to file, only in test purposes
+			pcl::io::savePCDFile("newCloudSIFT.pcd", *cloudXYZSIFT, false);
+		}
+		else if(fileType==PCXyzRgbSift)
+		{
+		}
+		else if(fileType==PCXyzShot)
+		{
+		}
+		else if(fileType==PCXyzRgbNormal)
+		{
+		}
+		LOG(LERROR)<<"ViewWriter::insertFileIntoCollection: END";
+	}catch(Exception &ex)
+	{
+		LOG(LERROR)<<ex.what();
+	}
+}
+
+
 void PrimitiveFile::setMime( const fileTypes fileType,  string& mime)
 {
 	LOG(LNOTICE)<<"fileType : "<<fileType<<std::endl;
@@ -324,6 +691,47 @@ void PrimitiveFile::setMime( const fileTypes fileType,  string& mime)
 		return;
 	}
 }
+
+void PrimitiveFile::getCVMatData(cv::Mat& img)
+{
+	img =  boost::get<cv::Mat>(data);
+}
+
+void PrimitiveFile::getStringData(std::string& str)
+{
+	str =  boost::get<std::string>(data);
+}
+
+void PrimitiveFile::getXYZData(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudXYZ)
+{
+	cloudXYZ = boost::get<pcl::PointCloud<pcl::PointXYZ>::Ptr>(data);
+}
+
+void PrimitiveFile::getXYZRGBData(pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloudXYZRGB)
+{
+	cloudXYZRGB = boost::get<pcl::PointCloud<pcl::PointXYZRGB>::Ptr>(data);
+}
+
+void PrimitiveFile::getXYZSIFTData(pcl::PointCloud<PointXYZSIFT>::Ptr& cloudXYZSIFT)
+{
+	cloudXYZSIFT = boost::get<pcl::PointCloud<PointXYZSIFT>::Ptr>(data);
+}
+
+void PrimitiveFile::getXYZRGBSIFTData(pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloudXYZRGBSIFT)
+{
+	cloudXYZRGBSIFT = boost::get<pcl::PointCloud<PointXYZRGBSIFT>::Ptr>(data);
+}
+
+void PrimitiveFile::getXYZSHOTData(pcl::PointCloud<PointXYZSHOT>::Ptr& cloudXYZSHOT)
+{
+	cloudXYZSHOT = boost::get<pcl::PointCloud<PointXYZSHOT>::Ptr>(data);
+}
+
+void PrimitiveFile::getXYZRGBNormalData(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloudXYZNormal)
+{
+	cloudXYZNormal = boost::get<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr>(data);
+}
+
 void PrimitiveFile::saveImage(OID& oid)
 {
 	LOG(LNOTICE)<<"Insert image";

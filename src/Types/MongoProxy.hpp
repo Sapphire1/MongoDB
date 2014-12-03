@@ -135,25 +135,6 @@ public:
     BSONObj findOne(BSONObj& query);
 };
 
-void MongoProxy::readTextFileFromDocument(mongo::OID& fileOID, int size)
-{
-	LOG(LERROR)<<"Read text\n";
-	const BSONObj *fieldsToReturn = 0;
-	int queryOptions = 0;
-	// get bson object
-	BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << fileOID)), fieldsToReturn, queryOptions);
-	const char *buffer;
-	// get data to buffer
-	buffer = obj[tempFileName].binData(size);
-	for (int i=0; i<size;i++)
-		LOG(LERROR)<<buffer[i];
-	LOG(LERROR)<<*buffer;
-	LOG(LERROR)<<"size: "<<size;
-	string fromDB(buffer,size-1);
-	LOG(LERROR)<<"ReadedFile: \n"<<fromDB;
-	LOG(LERROR)<<"Save to sink";
-	//cipFileOut.write(fromDB);
-}
 
 boost::shared_ptr<DBClientConnection>  MongoProxy::getClient()
 {
@@ -161,44 +142,6 @@ boost::shared_ptr<DBClientConnection>  MongoProxy::getClient()
 	return c2;
 }
 
-void MongoProxy::readXYZMatFromDocument(mongo::OID& fileOID, int size)
-{
-	LOG(LERROR)<<"Read XYZ Mat\n";
-	const BSONObj *fieldsToReturn = 0;
-	int queryOptions = 0;
-	BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << fileOID)), fieldsToReturn, queryOptions);
-	int len;
-	float *data = (float*)obj[tempFileName].binData(len);
-	LOG(LNOTICE)<<"len : "<<len;
-	int width = obj.getField("width").Int();//480
-	int height = obj.getField("height").Int();//640
-	int channels = obj.getField("channels").Int();
-	// if(channels==3)
-	//TODO dodać jeszcze inne typy CV_32FC4 na przyklad
-	cv::Mat imageXYZRGB(width, height, CV_32FC3);
-	//imageXYZRGB.convertTo(imageXYZRGB, CV_32FC4);
-	vector<float> img;
-	//rows = rows*3;
-	float img_ptr[channels];
-	for (int i = 0; i < width; ++i)
-	{
-		LOG(LERROR)<<"i : "<<i;
-		float* xyz_p = imageXYZRGB.ptr <float> (i);
-		for (int j = 0; j < height*channels; j+=channels)
-		{
-			//TODO dodać jeszcze kilka wierszy w zależności od tego jaki plik czytamy
-			//TODO teraz wywali się dla XYZ-RGB
-			LOG(LERROR)<<"i*height*channels+j: " <<i*height*channels+j;
-			xyz_p[0+j]=data[i*height*channels+j];
-			xyz_p[1+j]=data[i*height*channels+j+1];
-			xyz_p[2+j]=data[i*height*channels+j+2];
-		}
-	}
-	cv::FileStorage fs("xyzTest.yaml", cv::FileStorage::WRITE);
-	fs << "img" << imageXYZRGB;
-	fs.release();
-	//out_yaml.write(imageXYZRGB);
-}
 
 void MongoProxy::insert(BSONObj & object)
 {
@@ -231,191 +174,6 @@ auto_ptr<DBClientCursor> MongoProxy::query(BSONObj& query)
 void MongoProxy::index(string& field)
 {
 	c->createIndex(dbCollectionPath, BSON(field<<1));
-}
-
-void MongoProxy::readFile()
-{
-	LOG(LTRACE)<<"MongoProxy::readFile";
-	int queryOptions = 0;
-	const BSONObj *fieldsToReturn = 0;
-
-	// get bson object from collection
-	BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << fileOID)), fieldsToReturn, queryOptions);
-
-	LOG(LERROR)<<"obj: "<<obj<<", childOID: "<<fileOID;
-	string place = obj.getField("place").str();
-	int size = obj.getField("size").Int();
-	string tempFileName = obj.getField("filename").str();
-	LOG(LERROR)<<"place: "<<place<<" size: "<<size<<", fileName: "<<tempFileName;
-
-	if(place=="document")
-	{
-		string extension = obj.getField("extension").str();
-		//readFromCollection();
-		if(extension=="jpg" || extension=="png")
-		{
-			readImageFromDocument(fileOID, size);
-		}
-		else if(extension=="pcd")
-		{
-			readPointCloudFromDocument(fileOID, size);
-		}
-		else if(extension=="yml" || extension=="yaml")
-		{
-			readXYZMatFromDocument(fileOID, size);
-		}
-		else if(extension=="txt")
-		{
-			readTextFileFromDocument(fileOID, size);
-		}
-	}
-	else
-	{
-		// if saved in grid
-		GridFS fs(*c,dbCollectionPath);
-		LOG(LTRACE)<<"_id"<<fileOID;
-		GridFile file = fs.findFile(Query(BSON("_id" << fileOID)));
-
-		if (!file.exists())
-		{
-			LOG(LERROR) << "File not found in grid";
-		}
-		else
-		{
-			// get filename
-			string filename = file.getFileField("filename").str();
-			// get mime from file
-			string mime = file.getContentType();
-
-			getFileFromGrid(file);
-			writeToSinkFromFile(mime, filename);
-		}
-	}
-}
-
-void MongoProxy::readImageFromDocument(mongo::OID& fileOID, int size)
-{
-	LOG(LERROR)<<"Read image\n";
-	const BSONObj *fieldsToReturn = 0;
-	int queryOptions = 0;
-	BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << fileOID)), fieldsToReturn, queryOptions);
-	int len;
-	uchar *data = (uchar*)obj[tempFileName].binData(len);
-	std::vector<uchar> v(data, data+len);
-	LOG(LERROR)<<*data;
-	cv::Mat image = cv::imdecode(cv::Mat(v), -1);
-	LOG(LERROR)<<image.total();
-	//out_img.write(image);
-	// only in test purposes, it's to remove
-	imwrite( "Gray_Image.jpg", image );
-}
-
-void MongoProxy::readPointCloudFromDocument(mongo::OID& fileOID, int size)
-{
-	//TODO dodac pole cloudType i nie bawic sie w ify bo przy else sie moze wywalic teraz!!!
-	LOG(LERROR)<<"pcd ";
-	string cloudType;
-	if (tempFileName.find("xyzrgb") != std::string::npos)
-	{
-		cloudType="xyzrgb";
-	}
-	else if (tempFileName.find("xyzsift") != std::string::npos)
-	{
-		cloudType="xyzsift";
-	}
-	else if (tempFileName.find("xyzshot") != std::string::npos)
-	{
-		cloudType="xyzshot";
-	}
-	else if (tempFileName.find("xyz") != std::string::npos)
-	{
-		cloudType="xyz";
-	}
-	else
-	{
-		LOG(LERROR)<<"Don't know such PC cloud!!!";
-	}
-	try
-	{
-		const BSONObj *fieldsToReturn = 0;
-		int queryOptions = 0;
-		BSONObj obj = c->findOne(dbCollectionPath, Query(BSON("_id" << fileOID)), fieldsToReturn, queryOptions);
-		if(cloudType=="xyz")
-		{
-			// read data to buffer
-			int totalSize;
-			float* buffer = (float*)obj[tempFileName].binData(totalSize);
-			int bufferSize = totalSize/sizeof(float);
-			LOG(LERROR)<<"bufferSize: "<<bufferSize;
-			float newBuffer[bufferSize];
-			memcpy(newBuffer, buffer, totalSize);
-			pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ (new pcl::PointCloud<pcl::PointXYZ>);
-			pcl::PointXYZ pt;
-			for(int i=0; i<totalSize/(xyzPointSize*sizeof(float)); i++) // now it should be 10 iterations
-			{
-				pt.x=newBuffer[i*xyzPointSize];
-				pt.y=newBuffer[i*xyzPointSize+1];
-				pt.z=newBuffer[i*xyzPointSize+2];
-				cloudXYZ->push_back(pt);
-			}
-			// save to file, only in test purposes
-			pcl::io::savePCDFile("newCloudXYZ.pcd", *cloudXYZ, false);
-		}
-		else if(cloudType=="xyzrgb")
-		{
-			// read data to buffer
-			int totalSize;
-			float* buffer = (float*)obj[tempFileName].binData(totalSize);
-			int bufferSize = totalSize/sizeof(float);
-			LOG(LERROR)<<"bufferSize: "<<bufferSize;
-			float newBuffer[bufferSize];
-			memcpy(newBuffer, buffer, totalSize);
-			pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB (new pcl::PointCloud<pcl::PointXYZRGB>);
-			pcl::PointXYZRGB pt;
-			for(int i=0; i<totalSize/(xyzrgbPointSize*sizeof(float)); i++) // now it should be 10 iterations
-			{
-				pt.x=newBuffer[i*xyzrgbPointSize];
-				pt.y=newBuffer[i*xyzrgbPointSize+1];
-				pt.z=newBuffer[i*xyzrgbPointSize+2];
-				pt.rgb=newBuffer[i*xyzrgbPointSize+3];
-				cloudXYZRGB->push_back(pt);
-			}
-			// save to file, only in test purposes
-			pcl::io::savePCDFile("newCloudXYZRGB.pcd", *cloudXYZRGB, false);
-		}
-		else if(cloudType=="xyzsift")
-		{
-			// read data to buffer
-			int totalSize;
-			float* buffer = (float*)obj[tempFileName].binData(totalSize);
-			int bufferSize = totalSize/sizeof(float);
-			LOG(LERROR)<<"bufferSize: "<<bufferSize;
-			float newBuffer[bufferSize];
-			memcpy(newBuffer, buffer, totalSize);
-			// for sift row size in float is equal 128+5 =133  floats
-			pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT (new pcl::PointCloud<PointXYZSIFT>);
-			PointXYZSIFT pt;
-			for(int i=0; i<totalSize/(siftPointSize*sizeof(float)); i++) // now it should be 10 iterations
-			{
-			Eigen::Vector3f pointCoordinates;
-			pointCoordinates[0]=newBuffer[i*siftPointSize];
-			pointCoordinates[1]=newBuffer[i*siftPointSize+1];
-			pointCoordinates[2]=newBuffer[i*siftPointSize+2];
-			memcpy(&pt.multiplicity, &newBuffer[3+i*siftPointSize], sizeof(int)); // 4 bytes
-			memcpy(&pt.pointId, &newBuffer[4+i*siftPointSize], sizeof(int));	// 4 bytes
-			memcpy(&pt.descriptor, &newBuffer[5+i*siftPointSize], 128*sizeof(float)); // 128 * 4 bytes = 512 bytes
-
-			pt.getVector3fMap() = pointCoordinates;
-			cloudXYZSIFT->push_back(pt);
-			}
-			// save to file, only in test purposes
-			pcl::io::savePCDFile("newCloudSIFT.pcd", *cloudXYZSIFT, false);
-		}
-		LOG(LERROR)<<"ViewWriter::insertFileIntoCollection: END";
-	}catch(Exception &ex)
-	{
-		LOG(LERROR)<<ex.what();
-	}
 }
 
 void MongoProxy::cloudEncoding(OID& oid, string& tempFileName, string & cloudType)
@@ -673,24 +431,7 @@ void MongoProxy::initModel(const string & modelName, bool addToModelFlag,  Base:
 	c->update(dbCollectionPath, Query(BSON("NodeName"<<"SOM"<<"ObjectName"<<objectName<<"ModelName"<<modelName)), BSON("$set"<<BSON("childOIDs"<<somArr)), false, true);
 	c->update(dbCollectionPath, Query(BSON("NodeName"<<"SSOM"<<"ObjectName"<<objectName<<"ModelName"<<modelName)), BSON("$set"<<BSON("childOIDs"<<ssomArr)), false, true);
 }
-void MongoProxy::getFileFromGrid(const GridFile& file)
-{
-	LOG(LTRACE)<<"MongoProxy::getFileFromGrid";
-	stringstream ss;
-	string str = ss.str();
-	char *tempFilename = (char*)tempFileOnDisc.c_str();
-	LOG(LNOTICE)<<"\n\ntempFilename: "<<tempFilename<<"\n";
-	ofstream ofs(tempFilename);
-	gridfs_offset off = file.write(ofs);
-	if (off != file.getContentLength())
-	{
-		LOG(LNOTICE) << "\nFailed to read a file from mongoDB\n";
-	}
-	else
-	{
-		LOG(LNOTICE) << "\nSuccess read a file from mongoDB\n";
-	}
-}
+
 
 void MongoProxy::setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName)
 {
@@ -868,79 +609,7 @@ bool MongoProxy::isModelLastLeaf(const string& nodeName)
 		return false;
 }
 
-void MongoProxy::ReadPCDCloud(const string& filename)
-{
-	LOG(LTRACE) << "ViewReader::ReadPCDCloud";
-	// Try to read the cloud of XYZRGB points.
-	if(filename.find("xyzrgb")!=string::npos)
-	{
-		pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_xyzrgb (new pcl::PointCloud<pcl::PointXYZRGB>);
-		if (pcl::io::loadPCDFile<pcl::PointXYZRGB> (tempFileOnDisc, *cloud_xyzrgb) == -1){
-			LOG(LWARNING) <<"Cannot read PointXYZRGB cloud from "<<tempFileOnDisc;
-			return;
-		}else{
-		//	out_cloud_xyzrgb.write(cloud_xyzrgb);
-			LOG(LINFO) <<"PointXYZRGB cloud loaded properly from "<<tempFileOnDisc;
-		}
-	}
-	if(filename.find("xyzsift.pcd")!=string::npos)
-	{
-		pcl::PointCloud<PointXYZSIFT>::Ptr cloud_xyzsift (new pcl::PointCloud<PointXYZSIFT>);
-		if (pcl::io::loadPCDFile<PointXYZSIFT> (tempFileOnDisc, *cloud_xyzsift) == -1){
-			LOG(LWARNING) <<"Cannot read PointXYZSIFT cloud from "<<tempFileOnDisc;
-			return;
-		}else{
-		//	out_cloud_xyzsift.write(cloud_xyzsift);
-			LOG(LINFO) <<"PointXYZSIFT cloud loaded properly from "<<tempFileOnDisc;
-		}
-	}
 
-	else if(filename.find("xyz")!=string::npos)
-	{
-		// Try to read the cloud of XYZ points.
-		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz (new pcl::PointCloud<pcl::PointXYZ>);
-		if (pcl::io::loadPCDFile<pcl::PointXYZ> (tempFileOnDisc, *cloud_xyz) == -1){
-			LOG(LWARNING) <<"Cannot read PointXYZ cloud from "<<tempFileOnDisc;
-			return;
-		}else{
-		//	out_cloud_xyz.write(cloud_xyz);
-			LOG(LINFO) <<"PointXYZ cloud loaded properly from "<<tempFileOnDisc;
-		}
-	}
-}
 
-void MongoProxy::writeToSinkFromFile(string& mime, string& fileName)
-{
-	LOG(LNOTICE)<<"MongoProxy::writeToSink";
-	if(mime=="image/png" || mime=="image/jpeg")
-	{
-		cv::Mat image = imread(tempFileOnDisc, CV_LOAD_IMAGE_UNCHANGED);
-		//out_img.write(image);
-	}
-	else if(mime=="text/plain")
-	{
-		LOG(LINFO)<<"mime==text/plain";
-		if((fileName.find("pcd"))!=string::npos)
-		{
-			LOG(LINFO)<<"pcd :)";
-			ReadPCDCloud(fileName);
-		}
-		else if(fileName.find("txt")!=string::npos)
-		{
-			LOG(LINFO)<<"txt :)";
-			string CIPFile;
-			char const* charFileName = tempFileOnDisc.c_str();
-			LOG(LINFO)<<tempFileOnDisc;
-			std::ifstream t(charFileName);
-			std::stringstream buffer;
-			buffer << t.rdbuf();
-			CIPFile = buffer.str();
-		//	cipFileOut.write(CIPFile);
-			LOG(LINFO)<<CIPFile;
-		}
-		else
-			LOG(LERROR)<<"Nie wiem co to za plik :/";
-	}
-}
 } /* namespace MongoProxy */
 #endif /* MONGOPROXY_HPP_ */

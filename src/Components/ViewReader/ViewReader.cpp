@@ -183,10 +183,135 @@ void ViewReader::readfromDB()
 			// one of requested file types
 
 			viewPtr->readFiles(fileOIDSVector, requiredFileTypes);
+
+			//write to output
+			LOG(LNOTICE)<<"WRITE FILE!!!";
+			int filesNr = viewPtr->getFilesSize();
+			for (int i=0; i<filesNr; i++)
+			{
+				// get type
+				fileTypes ft = viewPtr->getFileType(i);
+				// send to output
+				switch(ft)
+				{
+					case FileCameraInfo:
+					{
+						std::string str;
+						viewPtr->getFile(i)->getStringData(str);
+						out_camera_info.write(str);
+						break;
+					}
+					case ImageRgb:
+					{
+						cv::Mat img;
+						viewPtr->getFile(i)->getCVMatData(img);
+						out_rgb.write(img);
+						break;
+					}
+					case ImageDepth:
+					{
+						cv::Mat img;
+						viewPtr->getFile(i)->getCVMatData(img);
+						out_depth.write(img);
+						break;
+					}
+					case ImageIntensity:
+					{
+						cv::Mat img;
+						viewPtr->getFile(i)->getCVMatData(img);
+						out_intensity.write(img);
+						break;
+					}
+					case ImageMask:
+					{
+						cv::Mat img;
+						viewPtr->getFile(i)->getCVMatData(img);
+						out_mask.write(img);
+						break;
+					}
+					case StereoLeft:
+					{
+						cv::Mat img;
+						viewPtr->getFile(i)->getCVMatData(img);
+						out_stereoL.write(img);
+						break;
+					}
+					case StereoRight:
+					{
+						cv::Mat img;
+						viewPtr->getFile(i)->getCVMatData(img);
+						out_stereoR.write(img);
+						break;
+					}
+					case StereoLeftTextured:
+					{
+						cv::Mat img;
+						viewPtr->getFile(i)->getCVMatData(img);
+						out_stereoLTextured.write(img);
+						break;
+					}
+					case StereoRightTextured:
+					{
+						cv::Mat img;
+						viewPtr->getFile(i)->getCVMatData(img);
+						out_stereoRTextured.write(img);
+						break;
+					}
+					case PCXyz:
+					{
+						pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ;
+						viewPtr->getFile(i)->getXYZData(cloudXYZ);
+						out_pc_xyz.write(cloudXYZ);
+						break;
+					}
+					case PCXyzRgb:
+					{
+						pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB;
+						viewPtr->getFile(i)->getXYZRGBData(cloudXYZRGB);
+						out_pc_xyzrgb.write(cloudXYZRGB);
+						break;
+					}
+					case PCXyzSift:
+					{
+						pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT;
+						viewPtr->getFile(i)->getXYZSIFTData(cloudXYZSIFT);
+						out_pc_xyzsift.write(cloudXYZSIFT);
+						break;
+					}
+					case PCXyzRgbSift:
+					{
+						pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT;
+						viewPtr->getFile(i)->getXYZRGBSIFTData(cloudXYZRGBSIFT);
+						out_pc_xyzrgbsift.write(cloudXYZRGBSIFT);
+						break;
+					}
+					case PCXyzShot:
+					{
+						pcl::PointCloud<PointXYZSHOT>::Ptr cloudXYZSHOT;
+						viewPtr->getFile(i)->getXYZSHOTData(cloudXYZSHOT);
+						out_pc_xyzshot.write(cloudXYZSHOT);
+						break;
+					}
+					case PCXyzRgbNormal:
+					{
+						pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloudXYZNormal;
+						viewPtr->getFile(i)->getXYZRGBNormalData(cloudXYZNormal);
+						out_pc_xyzrgbnormal.write(cloudXYZNormal);
+						break;
+					}
+					case ImageXyz:
+					{
+						cv::Mat img;
+						viewPtr->getFile(i)->getCVMatData(img);
+						out_xyz.write(img);
+						break;
+					}
+				}
+			}
+
 		}
 	}
 
-	//readFromMongoDB(nodeNameProp, viewName, nodeType);
 }
 
 void ViewReader::readRequiredData(std::vector<fileTypes> & requiredFileTypes)
