@@ -111,6 +111,13 @@ private:
 		Base::Property<bool> pc_xyzshotProp;
 		Base::Property<bool> pc_xyzrgbnormalProp;
 		shared_ptr<MongoDB::Model> modelPtr;
+		pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloudXYZNormal;
+		pcl::PointCloud<PointXYZSHOT>::Ptr cloudXYZSHOT;
+		pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT;
+		pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT;
+		pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB;
+		pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ;
+
 		string hostname;
         string nodeType;
         string dbCollectionPath;
@@ -142,10 +149,11 @@ private:
 
 		/// Cloud containing points with Cartesian coordinates, colors and normals (XYZ + RGB + NORMAL).
 		Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr> out_pc_xyzrgbnormal;
+		Base::DataStreamOut<std::vector<AbstractObject*> > out_models;
 
         void readFromMongoDB(const string&, const string&, const string&);
         void readfromDB();
-        void loadModels(string&, string&, std::vector<AbstractObject*>&);
+        void loadModels(fileTypes fT, string& ModelName, int meanViewpointFeaturesNumber, std::vector<AbstractObject*>& models);
         void ReadPCDCloudFromFile(const string&, const string&);
 
         void readFile(const OID& childOID, std::vector<AbstractObject*>& models);

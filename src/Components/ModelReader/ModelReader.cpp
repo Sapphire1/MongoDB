@@ -35,6 +35,8 @@ ModelReader::ModelReader(const std::string & name) : Base::Component(name),
 	registerProperty(pc_xyzrgbnormalProp);
 	hostname = mongoDBHost;
 	CLOG(LTRACE) << "Hello ModelReader";
+	AbstractObject* aObjPtr;
+
 }
 
 ModelReader::~ModelReader()
@@ -53,7 +55,7 @@ void ModelReader::readfromDB()
 	bool exist = modelPtr->checkIfExist();
 	if(!exist)
 	{
-		CLOG(LERROR)<<"View doesn't exist in data base!!!, Change view name";
+		CLOG(LERROR)<<"Model doesn't exist in data base!!!, Change model name";
 		return;
 	}
 	else
@@ -76,11 +78,11 @@ void ModelReader::readfromDB()
 
 		if(!contain)
 		{
-			CLOG(LERROR)<<"View doesn't contain all required files! BYE!";
+			CLOG(LERROR)<<"Model doesn't contain all required files! BYE!";
 		}
 		else
 		{
-			CLOG(LNOTICE)<<"Read files from View!";
+			CLOG(LNOTICE)<<"Read files from Model!";
 
 			// read vector of files OIDs
 			vector<OID> fileOIDSVector;
@@ -94,6 +96,8 @@ void ModelReader::readfromDB()
 			//write to output
 			LOG(LNOTICE)<<"WRITE FILE!!!";
 			int filesNr = modelPtr->getFilesSize();
+			std::vector<AbstractObject*> models;
+
 			for (int i=0; i<filesNr; i++)
 			{
 				// get type
@@ -103,49 +107,45 @@ void ModelReader::readfromDB()
 				{
 					case PCXyz:
 					{
-						pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ;
 						modelPtr->getFile(i)->getXYZData(cloudXYZ);
 						out_pc_xyz.write(cloudXYZ);
 						break;
 					}
 					case PCXyzRgb:
 					{
-						pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB;
 						modelPtr->getFile(i)->getXYZRGBData(cloudXYZRGB);
 						out_pc_xyzrgb.write(cloudXYZRGB);
 						break;
 					}
 					case PCXyzSift:
 					{
-						pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT;
 						modelPtr->getFile(i)->getXYZSIFTData(cloudXYZSIFT);
 						out_pc_xyzsift.write(cloudXYZSIFT);
 						break;
 					}
 					case PCXyzRgbSift:
 					{
-						pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT;
 						modelPtr->getFile(i)->getXYZRGBSIFTData(cloudXYZRGBSIFT);
 						out_pc_xyzrgbsift.write(cloudXYZRGBSIFT);
 						break;
 					}
 					case PCXyzShot:
 					{
-						pcl::PointCloud<PointXYZSHOT>::Ptr cloudXYZSHOT;
 						modelPtr->getFile(i)->getXYZSHOTData(cloudXYZSHOT);
 						out_pc_xyzshot.write(cloudXYZSHOT);
 						break;
 					}
 					case PCXyzRgbNormal:
 					{
-						pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloudXYZNormal;
 						modelPtr->getFile(i)->getXYZRGBNormalData(cloudXYZNormal);
 						out_pc_xyzrgbnormal.write(cloudXYZNormal);
 						break;
 					}
 				}
-			}
-
+				string name= modelPtr->getFile(i)->getFileName();
+				loadModels(ft, name, 0, models);
+			}//for
+			out_models.write(models);
 		}
 	}
 
@@ -153,7 +153,7 @@ void ModelReader::readfromDB()
 
 void ModelReader::readRequiredData(std::vector<fileTypes> & requiredFileTypes)
 {
-	CLOG(LNOTICE)<<"ViewWriter::checkProvidedData";
+	CLOG(LNOTICE)<<"ModelReader::readRequiredData";
 	bool cleanBuffers = false;
 
 	if(pc_xyzProp==true)
@@ -229,55 +229,27 @@ void ModelReader::addToAllChilds(std::vector<OID> & childsVector)
 {
 	CLOG(LTRACE)<<"ModelReader::addToAllChilds";
 }
-/*
-void ModelReader::readAllFilesTriggered()
+
+void ModelReader::loadModels(fileTypes fT, string& ModelName, int meanViewpointFeaturesNumber, std::vector<AbstractObject*>& models)
 {
-
-	CLOG(LTRACE)<<"ModelReader::readAllFilesTriggered";
-	std::vector<AbstractObject*> models;
-	for(std::vector<OID>::iterator it = allChildsVector.begin(); it != allChildsVector.end(); ++it)
+	CLOG(LDEBUG) << "Create model";
+	SIFTObjectModel* model;
+	//TODO add more types!!!
+	if(fT==PCXyz)
+		CLOG(LERROR)<<"Unsupported type!!!";
+	else if(fT==PCXyzRgb)
+		cloud_xyzrgb=cloudXYZRGB;
+	else if(fT==PCXyzSift)
+		cloud_xyzsift=cloudXYZSIFT;
+	else
 	{
-		//przerobic zeby czytalo tez bezposrednio z dokumentow...
-		readFile(*it, models);
+		CLOG(LERROR)<<"Unsupported type!!!";
 	}
-	CLOG(LTRACE)<<"Send models to sink";
-	out_cloud_xyzrgb.write(cloud_xyzrgb);
-	out_models.write(models);
+	model_name = ModelName;
+	mean_viewpoint_features_number=meanViewpointFeaturesNumber;
+	model = dynamic_cast<SIFTObjectModel*>(produce());
+	models.push_back(model);
 }
 
-
-void ModelReader::loadModels(string& name_cloud, string& features_number, std::vector<AbstractObject*>& models) {
-	CLOG(LTRACE) << "SOMJSONReader::loadModels()";
-
-	model_name = nodeNameProp;
-	if(name_cloud.find("xyzrgb")!=string::npos)
-		name_cloud_xyzrgb = name_cloud;
-	else if(name_cloud.find("xyzsift")!=string::npos)
-	{
-		istringstream (features_number) >> mean_viewpoint_features_number;
-		name_cloud_xyzsift = name_cloud;
-	}
-	else if(name_cloud.find("xyz")!=string::npos)
-		name_cloud_xyz = name_cloud;
-
-	CLOG(LDEBUG) << "name_cloud_xyzrgb:" << name_cloud_xyzrgb;
-	CLOG(LDEBUG) << "name_cloud_xyzsift:" << name_cloud_xyzsift;
-	CLOG(LDEBUG) << "name_cloud_xyz:" << name_cloud_xyz;
-
-	// Create SOModel and add it to list.
-	if(name_cloud_xyzsift!="" && name_cloud_xyzrgb!="")
-	{
-		CLOG(LDEBUG) << "Create model";
-		SIFTObjectModel* model;
-		//TODO sprawdzic czy przypadkiem nie trzeba tworzyc modeli typu SSOM, to generuje tylko SOM
-		model = dynamic_cast<SIFTObjectModel*>(produce());
-		models.push_back(model);
-		name_cloud_xyzsift="";
-		name_cloud_xyzrgb="";
-	}
-}
-
-vo
-*/
 } //: namespace ModelReader
 } //: namespace Processors
