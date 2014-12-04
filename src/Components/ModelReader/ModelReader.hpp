@@ -29,18 +29,26 @@
 #include "mongo/bson/bson.h"
 #include "Logger.hpp"
 
-#include <Types/SIFTObjectModelFactory.hpp>
-#include <Types/MongoBase.hpp>
 #include <Types/AddVector.hpp>
+#include <Types/MongoProxy.hpp>
+#include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZRGBSIFT.hpp>
+#include <Types/PointXYZSHOT.hpp>
+#include <Types/Model.hpp>
+#include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZRGBSIFT.hpp>
 
 namespace Processors {
 namespace ModelReader {
 
 using namespace cv;
 using namespace mongo;
+using namespace std;
+using namespace MongoProxy;
+using namespace MongoDB;
 
 
-class ModelReader: public Base::Component, SIFTObjectModelFactory, MongoBase::MongoBase
+class ModelReader: public Base::Component, SIFTObjectModelFactory
 {
 public:
         /*!
@@ -95,11 +103,15 @@ protected:
 
 private:
         Base::Property<string> mongoDBHost;
-        Base::Property<string> objectName;
-        Base::Property<string> collectionName;
-        Base::Property<string> nodeNameProp;
-        Base::Property<string> viewOrModelName;
-        Base::Property<string> modelType;
+        Base::Property<string> modelName;
+        Base::Property<bool> pc_xyzProp;
+		Base::Property<bool> pc_xyzrgbProp;
+		Base::Property<bool> pc_xyzsiftProp;
+		Base::Property<bool> pc_xyzrgbsiftProp;
+		Base::Property<bool> pc_xyzshotProp;
+		Base::Property<bool> pc_xyzrgbnormalProp;
+		shared_ptr<MongoDB::Model> modelPtr;
+		string hostname;
         string nodeType;
         string dbCollectionPath;
         auto_ptr<DBClientCursor> cursorCollection;
@@ -107,11 +119,29 @@ private:
     	std::string name_cloud_xyz;
     	std::string name_cloud_xyzrgb;
     	std::string name_cloud_xyzsift;
-		// vector consisting all files OIDS
-		std::vector<OID> allChildsVector;
+		// vector consisting all files OIDS\
 		// position of allChildsVector
 		/// Trigger - used for writing clouds
 		Base::DataStreamIn<Base::UnitType> in_trigger;
+
+		//PCL - Point Clouds
+		/// Cloud containing points with Cartesian coordinates (XYZ).
+		Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZ>::Ptr>  out_pc_xyz;
+
+		/// Cloud containing points with Cartesian coordinates and colour (XYZ + RGB).
+		Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZRGB>::Ptr> out_pc_xyzrgb;
+
+		/// Cloud containing points with Cartesian coordinates and SIFT descriptor (XYZ + 128).
+		Base::DataStreamOut<pcl::PointCloud<PointXYZSIFT>::Ptr> out_pc_xyzsift;
+
+		/// Cloud containing points with Cartesian coordinates,  SIFT descriptor and color (XYZ + RGB + 128)
+		Base::DataStreamOut<pcl::PointCloud<PointXYZRGBSIFT>::Ptr> out_pc_xyzrgbsift;
+
+		/// Cloud containing points with Cartesian coordinates and SHOT descriptor  (XYZ + SHOT).
+		Base::DataStreamOut<pcl::PointCloud<PointXYZSHOT>::Ptr> out_pc_xyzshot;
+
+		/// Cloud containing points with Cartesian coordinates, colors and normals (XYZ + RGB + NORMAL).
+		Base::DataStreamOut<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr> out_pc_xyzrgbnormal;
 
         void readFromMongoDB(const string&, const string&, const string&);
         void readfromDB();
@@ -123,6 +153,7 @@ private:
         void writeToSink(string& mime, string& tempFilename, string& fileName);
         void addToAllChilds(std::vector<OID>&);
         void readAllFilesTriggered();
+    	void readRequiredData(std::vector<fileTypes> & requiredFileTypes);
 };
 }//: namespace ModelReader
 }//: namespace Processors

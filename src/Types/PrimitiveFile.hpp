@@ -158,9 +158,6 @@ private:
 	float sizeMBytes;
 	fileTypes fileType; 		// mask, rgb, depth, I, XYZ, cameraInfo, PCL
 	string PCLType;			// SIFT, SHOT, XYZ, ORB, NORMALS
-	//TODO remove view and model name!!!
-	string viewName;
-	string modelName;
 	string collectionName;
 	string documentType;	// View, Model, Object, file
 	OID fileOID;
@@ -179,43 +176,43 @@ private:
 //	boost::shared_ptr<MongoBase> basePtr;
 
 public:
-	PrimitiveFile(const cv::Mat& img, fileTypes& type, string& name, string& viewName, string& hostname) : data(img), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const cv::Mat& img, fileTypes& type, string& name, string& viewName, string& hostname) : data(img), fileType(type), fileName(name),  hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor cv::Mat";
 		LOG(LNOTICE)<<"fileType :" <<fileType;
 		this->setSize();
 	};
-	PrimitiveFile(const std::string& str, fileTypes& type, string& name, string& viewName, string& hostname) : data(str), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const std::string& str, fileTypes& type, string& name, string& viewName, string& hostname) : data(str), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor std::string";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,  fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,  fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <pcl::PointXYZ>";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <pcl::PointXYZRGB>";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <PointXYZSIFT>";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <PointXYZRGBSIFT>";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <PointXYZSHOT>";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), viewName(viewName), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LNOTICE)<<"Constructor <pcl::PointXYZRGBNormal>";
 		this->setSize();
@@ -231,7 +228,7 @@ public:
 	/////////////////////////////////////////////////////////
 	string getFileName(){return fileName;}
 	void saveIntoDisc();
-	void saveIntoMongoBase();
+	void saveIntoMongoBase(string& type, string& name);
 	void insertFileIntoGrid(OID& oid);
 	void insertFileIntoDocument(OID& oid);
 	void convertToBuffer();
@@ -268,16 +265,6 @@ public:
 	void getXYZRGBSIFTData(pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloudXYZRGBSIFT);
 	void getXYZSHOTData(pcl::PointCloud<PointXYZSHOT>::Ptr& cloudXYZSHOT);
 	void getXYZRGBNormalData(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloudXYZNormal);
-
-	void setViewName(string& ViewName)
-	{
-		this->viewName = ViewName;
-	};
-
-	void setModelName(string& ModelName)
-	{
-		this->modelName = ModelName;
-	};
 
 	void setType(fileTypes type)
 	{
@@ -362,7 +349,7 @@ void PrimitiveFile::readXYZMatFromDocument()
 }
 
 
-void PrimitiveFile::saveIntoMongoBase()
+void PrimitiveFile::saveIntoMongoBase(string& type, string& name)
 {
 	OID oid;
 //	if(sizeMBytes<15)
@@ -370,19 +357,20 @@ void PrimitiveFile::saveIntoMongoBase()
 //	else if(sizeMBytes>=15)
 	//	insertFileIntoGrid(oid);
 
+	LOG(LERROR)<<"TYPE: "<<type;
 	BSONObj query;
 	// update document
-	if (viewName!="")
+	if (type=="View")
 	{
-		query = BSON("ViewName"<<viewName<<"DocumentType"<<"View");
+		query = BSON("ViewName"<<name<<"DocumentType"<<type);
 	}
-	else if (modelName!="")
+	else if (type=="Model")
 	{
-		query = BSON("ModelName"<<modelName<<"DocumentType"<<"Model");
+		query = BSON("ModelName"<<name<<"DocumentType"<<type);
 	}
 	else
 	{
-		LOG(LERROR)<<"NO VIEW OR MODEL NAME!!!";
+		LOG(LERROR)<<"Couldn't update type: "<<type<<" !!!";
 	}
 	BSONObj update = BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString())));
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
@@ -1184,10 +1172,11 @@ void PrimitiveFile::insertFileIntoGrid(OID& oid)
 		//		b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").obj();
 		BSONObj b;
 		LOG(LNOTICE)<<"fileType: "<<fileType;
-		if(viewName!="")
-			b = BSONObjBuilder().appendElements(object).append("ViewName", viewName).append("fileType", FTypes[fileType]).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
-		else if(modelName!="")
-			b = BSONObjBuilder().appendElements(object).append("ModelName", modelName).append("fileType", FTypes[fileType]).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
+		//TODO ADD THIS!!!
+	//	if(viewName!="")
+	//		b = BSONObjBuilder().appendElements(object).append("ViewName", viewName).append("fileType", FTypes[fileType]).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
+	//	else if(modelName!="")
+	//		b = BSONObjBuilder().appendElements(object).append("ModelName", modelName).append("fileType", FTypes[fileType]).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
 
 		MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
 		b.getObjectID(bsonElement);

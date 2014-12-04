@@ -159,7 +159,6 @@ private:
 	shared_ptr<MongoDB::View> viewPtr;
    	string hostname;
 	Base::Property<string> mongoDBHost;
-	Base::Property<string> collectionName;
 	Base::Property<string> viewName;
 	Base::Property<bool> cameraInfoProp;
 	Base::Property<bool> xyzProp;
@@ -178,10 +177,6 @@ private:
 	auto_ptr<DBClientCursor> childCursor;
 	Base::DataStreamIn<Base::UnitType> in_trigger;
 
-	// vector consisting all files OIDS
-	std::vector<OID> allChildsVector;
-	// position of allChildsVector
-	int position;
 
 	void readFromMongoDB(const string&, const string&, const string&);
 	//void ReadPCDCloud(const string&, const string&);

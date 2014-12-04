@@ -17,8 +17,7 @@ using namespace boost::posix_time;
 
 ViewReader::ViewReader(const std::string & name) : Base::Component(name),
 	mongoDBHost("mongoDBHost", string("localhost")),
-	collectionName("collectionName", string("containers")),
-	viewName("viewName", string("lab012")),
+	viewName("ViewName", string("lab012")),
 	cameraInfoProp("file.cameraInfo.xml", false),
 	xyzProp("image.xyz", false),
 	rgbProp("image.rgb", false),
@@ -35,7 +34,6 @@ ViewReader::ViewReader(const std::string & name) : Base::Component(name),
 	pc_xyzrgbnormalProp("PC.xyzrgbnormal", false)
 {
 	registerProperty(mongoDBHost);
-	registerProperty(collectionName);
 	registerProperty(viewName);
 	registerProperty(cameraInfoProp);
 	registerProperty(xyzProp);
@@ -52,7 +50,6 @@ ViewReader::ViewReader(const std::string & name) : Base::Component(name),
 	registerProperty(pc_xyzshotProp);
 	registerProperty(pc_xyzrgbnormalProp);
 
-	this->position=0;
 	hostname = mongoDBHost;
 	CLOG(LTRACE) << "Hello ViewReader";
 }
@@ -78,9 +75,9 @@ void ViewReader::prepareInterface() {
 	registerStream("out_stereoR", &out_stereoR);
 	registerStream("out_stereoLTextured", &out_stereoLTextured);
 	registerStream("out_stereoRTextured", &out_stereoRTextured);
+
 	registerStream("out_pc_xyz", &out_pc_xyz);
 	registerStream("out_pc_xyzrgb", &out_pc_xyzrgb);
-
 	registerStream("out_pc_xyzsift", &out_pc_xyzsift);
 	registerStream("out_pc_xyzrgbsift", &out_pc_xyzrgbsift);
 	registerStream("out_pc_xyzshot", &out_pc_xyzshot);
@@ -121,18 +118,11 @@ bool ViewReader::onStart()
 void ViewReader::addToAllChilds(std::vector<OID> & childsVector)
 {
 	CLOG(LTRACE)<<"ViewReader::addToAllChilds";
-	allChildsVector+=childsVector;
 }
 
 void ViewReader::readAllFilesTriggered()
 {
 	CLOG(LTRACE)<<"ViewReader::readAllFiles";
-//	fileOID = allChildsVector[position];
- //   readFile();
-//    if(position<allChildsVector.size())
-//    	++position;
-//    else
- //   	position=0;
 }
 
 

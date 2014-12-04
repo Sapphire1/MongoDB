@@ -139,7 +139,8 @@ void View::saveAllFiles()
 
 	for(std::vector<boost::shared_ptr<PrimitiveFile::PrimitiveFile> >::iterator it = files.begin(); it != files.end(); ++it)
 	{
-		it->get()->saveIntoMongoBase();
+		string type = "View";
+		it->get()->saveIntoMongoBase(type, ViewName);
 	}
 	return ;
 }
@@ -157,7 +158,6 @@ void View::readViewDocument()
 
 void View::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, fileTypes typ)
 {
-	file->setViewName(ViewName);
 	// add file to vector
 	files.push_back(file);
 	insertedKeyTypes.push_back(typ);
@@ -270,32 +270,48 @@ fileTypes View::getFileType(int i)
 
 bool View::getViewTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& fileTypesVector)
 {
+
+	LOG(LNOTICE)<<"View::getModelTypes";
 	string output = obj.getField(fieldName);
+	LOG(LNOTICE)<<output;
 	if(output!="EOO")
 	{
+		LOG(LNOTICE)<<output;
 		vector<BSONElement> v = obj.getField(fieldName).Array();
+
 		for (unsigned int i = 0; i<v.size(); i++)
 		{
 			// read to string
-			string viewFileType =v[i][childfieldName].str();
+			LOG(LNOTICE)<<v[i][childfieldName].String();
 
+			fileTypes ft=fileTypes(-1);
+			LOG(LNOTICE)<<"viewFileType: "<<v[i][childfieldName].String();
 			// map from string to enum
-			fileTypes ft;
-			for(int i=0; i<18;i++)
+
+			for(int j=0; j<18;j++)
 			{
-				if(viewFileType == FTypes[i])
+
+				if(v[i][childfieldName].String() == FTypes[j])
 				{
-					ft = (fileTypes)i;
+					LOG(LNOTICE)<<v[i][childfieldName].String() <<" == " << FTypes[j];
+					ft = (fileTypes)j;
+					LOG(LNOTICE)<<ft;
 					break;
 				}
+			//	else
+			//		ft=fileTypes(-1);
 			}
+
+			LOG(LNOTICE)<<" ft: "<<ft;
 			// insert enum to vector
-			fileTypesVector.push_back(ft);
+			if(ft>-1)
+				fileTypesVector.push_back(ft);
 		}
 		return true;
 	}
 	else
 		return false;
+
 }
 
 void View::readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFileTypes)

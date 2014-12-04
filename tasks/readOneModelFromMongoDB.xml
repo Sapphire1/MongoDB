@@ -38,7 +38,7 @@
 		<!--Source name="ModelReader.out_cloud_xyz">
 			<sink>InputCloud.in_cloud_xyz</sink>
 		</Source-->
-		<Source name="ModelReader.out_cloud_xyzrgb">
+		<Source name="ModelReader.out_pc_xyzrgb">
 			<sink>InputCloud.in_cloud_xyzrgb</sink>
 		</Source>
 <!--		<Source name="ModelReader.out_cloud_xyzsift">

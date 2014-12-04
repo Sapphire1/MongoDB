@@ -305,6 +305,7 @@ void ViewWriter::saveFile(fileTypes & fileType)
 
 	string filename = (string)fileName;
 	string ViewName = viewName;
+	string type = "View";
 	switch(fileType)
 	{
 		case FileCameraInfo:
@@ -312,7 +313,7 @@ void ViewWriter::saveFile(fileTypes & fileType)
 			filename += ".xml";
 			string cameraInfo = in_camera_info.read();
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cameraInfo, fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case ImageRgb:
@@ -320,105 +321,105 @@ void ViewWriter::saveFile(fileTypes & fileType)
 			CLOG(LNOTICE)<<"Read ImageRGB!";
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_rgb.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case ImageXyz:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_xyz.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case ImageDepth:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_depth.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case ImageIntensity:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_intensity.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case ImageMask:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_mask.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case StereoLeft:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_stereoL.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case StereoRight:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_stereoR.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case StereoLeftTextured:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_stereoLTextured.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case StereoRightTextured:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_stereoRTextured.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case PCXyz:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyz.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case PCXyzRgb:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgb.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case PCXyzSift:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzsift.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case PCXyzRgbSift:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgbsift.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case PCXyzShot:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzshot.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		case PCXyzRgbNormal:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgbnormal.read(), fileType, filename, ViewName, hostname));
-			file->saveIntoMongoBase();
+			file->saveIntoMongoBase(type, ViewName);
 			break;
 		}
 		default:

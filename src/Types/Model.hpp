@@ -67,6 +67,7 @@ private:
 	std::string description;
 	string hostname;
 	string objectName;
+	BSONObj modelDocument;
 
 	// all required types to store
 	boost::shared_ptr<std::vector<fileTypes> > requiredKeyTypes;
@@ -94,8 +95,9 @@ public:
 	// check if exist this same kind of file
 	bool checkIfFileExist(fileTypes key);
 	void pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>&, fileTypes);
-
+	void readModelDocument();
 	bool checkIfAllFiles();
+	int getAllFilesOIDS(vector<OID>& oidsVector);
 	void putStringToFile(const std::string& str, fileTypes key, string& fileName);
 	void putMatToFile(const cv::Mat& image, fileTypes key, string& fileName);
 	void putPCxyzToFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr&, fileTypes key, string& fileName);
@@ -104,7 +106,19 @@ public:
 	void putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr&, fileTypes key, string& fileName);
 	void putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr&, fileTypes key, string& fileName);
 	void putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr&, fileTypes key, string& fileName);
-
+	void readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFileTypes);
+	int getFilesSize()
+	{
+		return files.size();
+	};
+	fileTypes getFileType(int i)
+	{
+		return files[i]->getType();
+	};
+	shared_ptr<PrimitiveFile::PrimitiveFile> getFile(int pos)
+	{
+		return files[pos];
+	}
 	void addFile();
 	void getAllFiles();
 	void saveAllFiles();
@@ -118,20 +132,182 @@ public:
 	void getDateOfInsert();
 	void loadModel();
 	std::vector<AbstractObject*> getModels();
+	bool checkIfContain(std::vector<fileTypes> & requiredFileTypes);
+	bool getModelTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& typesVector);
+
+
 };// class Model
+
+void Model::readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFileTypes)
+{
+	LOG(LNOTICE)<<"Model::readFiles";
+	for(std::vector<OID>::iterator fileOIDIter = fileOIDSVector.begin(); fileOIDIter != fileOIDSVector.end(); ++fileOIDIter)
+	{
+		BSONObj query = BSON("_id" << *fileOIDIter);
+		BSONObj file = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+		string fileType = file.getField("fileType").str();
+		LOG(LNOTICE)<<"fileType : " <<fileType;
+		// map from string to enum
+		fileTypes ft;
+		//TODO change it to define or const static!!!
+		for(int i=0; i<18; i++)
+		{
+			if(fileType == FTypes[i])
+			{
+				ft = (fileTypes)i;
+				break;
+			}
+		}
+
+		for(std::vector<fileTypes>::iterator reqFileType = requiredFileTypes.begin(); reqFileType != requiredFileTypes.end(); ++reqFileType)
+		{
+			LOG(LNOTICE)<<"for(std::vector<fileTypes>::iterator reqFileType";
+			LOG(LNOTICE)<<"ft : " <<ft << "*reqFileType: " <<*reqFileType;
+			if(ft==*reqFileType)
+			{
+				LOG(LNOTICE)<<"READ FILE!!!";
+				shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(ft, hostname, *fileOIDIter));
+				file->readFile();
+				files.push_back(file);
+			}
+		}
+	}
+}
+
+int Model::getAllFilesOIDS(vector<OID>& oidsVector)
+{
+	string fieldName = "fileOIDs";
+	string childfieldName = "fileOID";
+	string output = modelDocument.getField(fieldName);
+	if(output!="EOO")
+	{
+		vector<BSONElement> v = modelDocument.getField(fieldName).Array();
+		for (unsigned int i = 0; i<v.size(); i++)
+		{
+			string readedOid =v[i][childfieldName].str();
+			OID o = OID(readedOid);
+			oidsVector.push_back(o);
+			LOG(LNOTICE)<<"FileOID : "<<o;
+		}
+		return 1;
+	}
+	else
+		return -1;
+}
+
+void Model::readModelDocument()
+{
+	auto_ptr<DBClientCursor> cursorCollection;
+	BSONObj query = BSON("ModelName"<<ModelName<<"DocumentType"<<"Model");
+	cursorCollection =MongoProxy::MongoProxy::getSingleton(hostname).query(query);
+	while(cursorCollection->more())
+	{
+		modelDocument = cursorCollection->next();
+	}
+}
+
+bool Model::getModelTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& fileTypesVector)
+{
+	LOG(LNOTICE)<<"Model::getModelTypes";
+	string output = obj.getField(fieldName);
+	LOG(LNOTICE)<<output;
+	if(output!="EOO")
+	{
+		LOG(LNOTICE)<<output;
+		vector<BSONElement> v = obj.getField(fieldName).Array();
+
+		for (unsigned int i = 0; i<v.size(); i++)
+		{
+			// read to string
+			LOG(LNOTICE)<<v[i][childfieldName].String();
+
+			fileTypes ft=fileTypes(-1);
+			LOG(LNOTICE)<<"modelFileType: "<<v[i][childfieldName].String();
+			// map from string to enum
+
+			for(int j=0; j<18;j++)
+			{
+
+				if(v[i][childfieldName].String() == FTypes[j])
+				{
+					LOG(LNOTICE)<<v[i][childfieldName].String() <<" == " << FTypes[j];
+					ft = (fileTypes)j;
+					LOG(LNOTICE)<<ft;
+					break;
+				}
+			//	else
+			//		ft=fileTypes(-1);
+			}
+
+			LOG(LNOTICE)<<" ft: "<<ft;
+			// insert enum to vector
+			if(ft>-1)
+				fileTypesVector.push_back(ft);
+		}
+		return true;
+	}
+	else
+		return false;
+
+}
+
+bool Model::checkIfContain(std::vector<fileTypes> & requiredFileTypes)
+{
+	//read fileTypes from view document
+	vector<fileTypes> fileTypesVector;
+	string fieldName = "FileTypes";
+	string childfieldName = "Type";
+	LOG(LNOTICE)<<modelDocument;
+	bool arrayNotEmpty = getModelTypes(modelDocument,fieldName, childfieldName, fileTypesVector);
+
+	if(!arrayNotEmpty)
+	{
+		LOG(LNOTICE)<<"Array is empty!!!";
+		return false;
+	}
+
+	bool present = false;
+
+	if(requiredFileTypes.size()>fileTypesVector.size())
+	{
+		LOG(LERROR)<<"You want to get more files then view has! "<< requiredFileTypes.size()<<" : "<<fileTypesVector.size();
+		return false;
+	}
+	for(std::vector<fileTypes>::iterator reqTypes = requiredFileTypes.begin(); reqTypes != requiredFileTypes.end(); ++reqTypes)
+	{
+		for(std::vector<fileTypes>::iterator modelTypes = fileTypesVector.begin(); modelTypes != fileTypesVector.end(); ++modelTypes)
+		{
+			LOG(LNOTICE)<<"reqTypes : "<<*reqTypes;
+			LOG(LNOTICE)<<"modelTypes : "<<*modelTypes;
+
+			if(*modelTypes==*reqTypes)
+			{
+				present = true;
+				break;
+			}
+		}
+		if(present)
+			present = false;
+		else
+			return false;
+
+	}
+	return true;
+}
 
 void Model::saveAllFiles()
 {
 
 	for(std::vector<boost::shared_ptr<PrimitiveFile::PrimitiveFile> >::iterator it = files.begin(); it != files.end(); ++it)
 	{
-		it->get()->saveIntoMongoBase();
+		string type = "Model";
+		it->get()->saveIntoMongoBase(type, ModelName);
 	}
 	return ;
 }
+
 void Model::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, fileTypes key)
 {
-	file->setModelName(ModelName);
 	// add file to vector
 	LOG(LNOTICE)<<"Push file to the vector files";
 	files.push_back(file);
@@ -195,7 +371,6 @@ bool Model::checkIfExist()
 	LOG(LNOTICE)<<"items: "<<items<<"\n";
 	if(items==0)
 		return false;
-	LOG(LNOTICE)<<"Model document founded! Change model name and try again";
 	return true;
 }
 // check if in model exist this same kind of file
