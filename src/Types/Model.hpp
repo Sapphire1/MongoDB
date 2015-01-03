@@ -301,7 +301,7 @@ void Model::saveAllFiles()
 	for(std::vector<boost::shared_ptr<PrimitiveFile::PrimitiveFile> >::iterator it = files.begin(); it != files.end(); ++it)
 	{
 		string type = "Model";
-		it->get()->saveIntoMongoBase(type, ModelName);
+		//it->get()->saveIntoMongoBase(type, ModelName, false, "");
 	}
 	return ;
 }

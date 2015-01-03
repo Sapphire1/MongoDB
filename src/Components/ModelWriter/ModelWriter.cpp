@@ -173,48 +173,49 @@ void ModelWriter::saveFile(fileTypes & fileType)
 	string filename = (string)fileName;
 	string ModelName = modelName;
 	string type = "Model";
+	string empty = "";
 	switch(fileType)
 	{
 		case PCXyz:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyz.read(), fileType, filename, ModelName, hostname));
-			file->saveIntoMongoBase(type, ModelName);
+			file->saveIntoMongoBase(type, ModelName, true, empty);
 			break;
 		}
 		case PCXyzRgb:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgb.read(), fileType, filename, ModelName, hostname));
-			file->saveIntoMongoBase(type, ModelName);
+			file->saveIntoMongoBase(type, ModelName, true, empty);
 			break;
 		}
 		case PCXyzSift:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzsift.read(), fileType, filename, ModelName, hostname));
-			file->saveIntoMongoBase(type, ModelName);
+			file->saveIntoMongoBase(type, ModelName, true, empty);
 			break;
 		}
 		case PCXyzRgbSift:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgbsift.read(), fileType, filename, ModelName, hostname));
-			file->saveIntoMongoBase(type, ModelName);
+			file->saveIntoMongoBase(type, ModelName, true, empty);
 			break;
 		}
 		case PCXyzShot:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzshot.read(), fileType, filename, ModelName, hostname));
-			file->saveIntoMongoBase(type, ModelName);
+			file->saveIntoMongoBase(type, ModelName, true, empty);
 			break;
 		}
 		case PCXyzRgbNormal:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgbnormal.read(), fileType, filename, ModelName, hostname));
-			file->saveIntoMongoBase(type, ModelName);
+			file->saveIntoMongoBase(type, ModelName, true, empty);
 			break;
 		}
 		default:

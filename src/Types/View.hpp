@@ -140,7 +140,7 @@ void View::saveAllFiles()
 	for(std::vector<boost::shared_ptr<PrimitiveFile::PrimitiveFile> >::iterator it = files.begin(); it != files.end(); ++it)
 	{
 		string type = "View";
-		it->get()->saveIntoMongoBase(type, ViewName);
+		//it->get()->saveIntoMongoBase(type, ViewName);
 	}
 	return ;
 }

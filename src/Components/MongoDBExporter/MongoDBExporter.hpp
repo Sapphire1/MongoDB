@@ -21,8 +21,15 @@
 #include "DataStream.hpp"
 #include "Property.hpp"
 #include <dirent.h>
-#include <Types/MongoBase.hpp>
-
+#include <Types/MongoProxy.hpp>
+#include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZRGBSIFT.hpp>
+#include <Types/PointXYZSHOT.hpp>
+#include <Types/View.hpp>
+#include <Types/Model.hpp>
+using namespace MongoDB;
+using namespace MongoProxy;
+using namespace PrimitiveFile;
 namespace Processors {
 namespace MongoDBExporter {
 
@@ -31,7 +38,7 @@ using namespace mongo;
 using namespace std;
 
 
-class MongoDBExporter: public Base::Component, MongoBase::MongoBase
+class MongoDBExporter: public Base::Component
 {
 public:
         /*!
@@ -97,8 +104,8 @@ private:
         std::vector<std::string> fileExtensions;
         //string sceneName;
         std::vector<std::string> splitedSceneNames;
-
-
+        shared_ptr<MongoDB::View> viewPtr;
+        shared_ptr<MongoDB::Model> modelPtr;
     	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudXYZ;
     	pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudXYZRGB;
     	pcl::PointCloud<PointXYZSIFT>::Ptr cloudXYZSIFT;
@@ -107,6 +114,7 @@ private:
 		cv::Mat tempImg;
 		cv::Mat xyzrgbImage;
 		std::string str;
+		string hostname;
 		//float sizeOfCloud;
 
 
@@ -121,13 +129,15 @@ private:
         void insert2MongoDB(const string &destination,  const string&,  const string& );
         void write2DB();
         void insertToModelOrView(const string &,const string &);
-
+        vector<string> getAllFiles(const string& pattern);
+        vector<string> getAllFolders(const string& directoryPath);
         void insertFileToGrid(string&, const std::vector<string>::iterator, string &, OID&, int);
         void addToObject(const Base::Property<string> & nodeNameProp, const string &);
         void writeToMemory(string& mime, string& fileName);
         void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
         void insertFileIntoCollection(OID& oid, const string& fileType, string& tempFileName, int size);
         void ReadPCDCloudFromFile(const string& filename);
+
 };
 }//: namespace MongoDBExporter
 }//: namespace Processors

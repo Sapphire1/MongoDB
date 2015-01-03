@@ -496,33 +496,6 @@ void MongoProxy::initModelNames()
 	docModelsNames.push_back("SOM");
 }
 
-vector<string> MongoProxy::getAllFiles(const string& pattern)
-{
-	glob_t glob_result;
-	glob(pattern.c_str(),GLOB_TILDE,NULL,&glob_result);
-	vector<string> files;
-	for(unsigned int i=0;i<glob_result.gl_pathc;++i){
-	    files.push_back(string(glob_result.gl_pathv[i]));
-	}
-	globfree(&glob_result);
-	return files;
-}
-
-vector<string> MongoProxy::getAllFolders(const string& directoryPath)
-{
-	vector<string> directories;
-	const char *cstr = directoryPath.c_str();
-	DIR *dir = opendir(cstr);
-    struct dirent *entry = readdir(dir);
-    while (entry != NULL)
-    {
-    	if (entry->d_type == DT_DIR)
-    		directories.push_back(entry->d_name);
-    	entry = readdir(dir);
-    }
-    closedir(dir);
-    return directories;
-}
 
 int MongoProxy::getChildOIDS(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<OID>& oidsVector)
 {
