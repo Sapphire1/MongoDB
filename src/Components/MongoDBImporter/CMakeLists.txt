@@ -16,8 +16,6 @@ FILE(GLOB files *.cpp)
 
 # Create an executable file from sources:
 
-#add_executable (procDBTest testDB.cpp) 
-
 set( LIBS_TO_LINK
     ${Boost_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
@@ -29,5 +27,6 @@ set( LIBS_TO_LINK
 ADD_LIBRARY(MongoDBImporter SHARED ${files} )
 
 TARGET_LINK_LIBRARIES(MongoDBImporter pthread ${LIBS_TO_LINK} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
+
 
 INSTALL_COMPONENT(MongoDBImporter)

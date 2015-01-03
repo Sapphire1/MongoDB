@@ -166,8 +166,9 @@ void Model::readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFi
 			if(ft==*reqFileType)
 			{
 				LOG(LNOTICE)<<"READ FILE!!!";
+				string empty = "";
 				shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(ft, hostname, *fileOIDIter));
-				file->readFile();
+				file->readFile(true, empty, false);
 				files.push_back(file);
 			}
 		}

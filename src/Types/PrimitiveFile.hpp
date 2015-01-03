@@ -243,24 +243,24 @@ public:
 	void saveImageOnDisc();
 	void getCVMatData(cv::Mat&);
 	void saveToDisc(bool suffix, bool binary);
-	void readXYZMatFromDocument();
-	void getFileFromGrid(const GridFile& file);
+	void readXYZMatFromDocument(bool saveToDiscFlag, string& pathToFiles);
+	void getFileFromGrid(const GridFile& file, string& path);
 	void writeToSinkFromFile(string& path);
 	void copyXYZPointToFloatArray (const pcl::PointXYZ &p, float * out) const;
 	void copyXYZSiftPointToFloatArray (const PointXYZSIFT &p, float * out) const;
 	void copyXYZRGBPointToFloatArray (const pcl::PointXYZRGB &p, float * out) const;
 	void copyXYZRGBNormalPointToFloatArray (const pcl::PointXYZRGBNormal &p, float * out) const;
 	void copyXYZSHOTPointToFloatArray (const PointXYZSHOT &p, float * out) const;
-	void readPointCloudFromDocument();
+	void readPointCloudFromDocument(bool saveToDiscFlag, string& pathToFiles);
 	void savePCxyzFileToDisc(bool suffix, bool binary, std::string& fn);
 	void savePCxyzRGBFileToDisc(bool suffix, bool binary, std::string& fn);
 	void savePCxyzSIFTFileToDisc(bool suffix, bool binary, std::string& fn);
 	void savePCxyzRGBNormalFileToDisc(bool suffix, bool binary, std::string& fn);
 	void savePCxyzSHOTFileToDisc(bool suffix, bool binary, std::string& fn);
 	void setMime(const fileTypes type,  string& mime);
-	void readTextFileFromDocument();
-	void readFile();
-	void readImageFromDocument();
+	void readTextFileFromDocument(bool saveToDiscFlag, string& pathToFiles);
+	void readFile(bool file2Memory, string& pathToFiles, bool saveToDiscFlag);
+	void readImageFromDocument(bool saveToDiscFlag, string& pathToFiles);
 	void ReadPCDCloud(const string& filename);
 	void getStringData(std::string& str);
 	void getXYZData(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudXYZ);
@@ -308,7 +308,7 @@ public:
 	};
 };
 
-void PrimitiveFile::readTextFileFromDocument()
+void PrimitiveFile::readTextFileFromDocument(bool saveToDiscFlag, string& pathToFiles)
 {
 	LOG(LERROR)<<"Read text\n";
 
@@ -324,10 +324,17 @@ void PrimitiveFile::readTextFileFromDocument()
 	LOG(LERROR)<<"ReadedFile: \n"<<fromDB;
 	LOG(LERROR)<<"Save to sink";
 	data = fromDB;
+	if(saveToDiscFlag)
+	{
+		//const char *fn;
+		std::ofstream out(fileName.c_str());
+		out << fromDB;
+		out.close();
+	}
 	//cipFileOut.write(fromDB);
 }
 
-void PrimitiveFile::readXYZMatFromDocument()
+void PrimitiveFile::readXYZMatFromDocument(bool saveToDiscFlag, string& pathToFiles)
 {
 	LOG(LERROR)<<"Read XYZ Mat\n";
 	int len;
@@ -358,11 +365,15 @@ void PrimitiveFile::readXYZMatFromDocument()
 		}
 	}
 	data = imageXYZRGB;
-	cv::FileStorage fs("xyzTest.yaml", cv::FileStorage::WRITE);
-	fs << "img" << imageXYZRGB;
 
-	fs.release();
-	//out_yaml.write(imageXYZRGB);
+	if(saveToDiscFlag)
+	{
+		string name = pathToFiles+"/"+fileName;
+		cv::FileStorage fs(name, cv::FileStorage::WRITE);
+		fs << "img" << imageXYZRGB;
+		fs.release();
+	}
+
 }
 
 
@@ -396,7 +407,7 @@ void PrimitiveFile::saveIntoMongoBase(string& type, string& name, bool dataInBuf
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 }
 
-void PrimitiveFile::readImageFromDocument()
+void PrimitiveFile::readImageFromDocument(bool saveToDiscFlag, string& pathToFiles)
 {
 	LOG(LERROR)<<"Read image\n";
 	int len;
@@ -405,11 +416,16 @@ void PrimitiveFile::readImageFromDocument()
 	cv::Mat image = cv::imdecode(cv::Mat(v), -1);
 	//out_img.write(image);
 	data = image;
-	// only in test purposes, it's to remove
-	imwrite(fileName, image );
+
+	// save to disc :)
+	if(saveToDiscFlag)
+	{
+		LOG(LERROR)<<"Save to disc: " <<pathToFiles+"/"+fileName;
+		imwrite(pathToFiles+"/"+fileName, image);
+	}
 }
 
-void PrimitiveFile::readFile()
+void PrimitiveFile::readFile(bool file2Memory, string& pathToFiles, bool saveToDiscFlag)
 {
 	LOG(LTRACE)<<"MongoProxy::readFile";
 	// get bson object from collection
@@ -433,21 +449,21 @@ void PrimitiveFile::readFile()
 				|| fileType==StereoLeft || fileType==StereoRight || fileType==StereoLeftTextured
 				|| fileType==StereoRightTextured)
 		{
-			readImageFromDocument();
+			readImageFromDocument(saveToDiscFlag, pathToFiles);
 		}
 
 		else if(fileType==PCXyz || fileType==PCXyzRgb || fileType==PCXyzSift || fileType==PCXyzRgbSift
 				|| fileType==PCXyzShot || fileType==PCXyzRgbNormal)
 		{
-			readPointCloudFromDocument();
+			readPointCloudFromDocument(saveToDiscFlag, pathToFiles);
 		}
 		else if(fileType==ImageXyz)
 		{
-			readXYZMatFromDocument();
+			readXYZMatFromDocument(saveToDiscFlag, pathToFiles);
 		}
 		else if(fileType==FileCameraInfo)
 		{
-			readTextFileFromDocument();
+			readTextFileFromDocument(saveToDiscFlag, pathToFiles);
 		}
 	}
 	else
@@ -474,9 +490,11 @@ void PrimitiveFile::readFile()
 			// get mime from file
 			//string mime = file.getContentType();
 
-			getFileFromGrid(file);
-			//TODO add
-			//writeToSinkFromFile();
+			getFileFromGrid(file, pathToFiles);
+			string empty = "";
+			//TODO check!!!
+			if(file2Memory)
+				writeToSinkFromFile(empty);
 		}
 	}
 }
@@ -569,14 +587,18 @@ void PrimitiveFile::writeToSinkFromFile(string& path)
 	}
 }
 
-void PrimitiveFile::getFileFromGrid(const GridFile& file)
+void PrimitiveFile::getFileFromGrid(const GridFile& file, string& path)
 {
 	LOG(LTRACE)<<"MongoProxy::getFileFromGrid";
 	stringstream ss;
 	string str = ss.str();
-	char *tempFilename = (char*)fileName.c_str();
-	LOG(LNOTICE)<<"\n\ntempFilename: "<<tempFilename<<"\n";
-	ofstream ofs(tempFilename);
+	string name;
+	if(path=="")
+		name = fileName;
+	else
+		name = path+"/"+fileName;
+
+	ofstream ofs((char*)name.c_str());
 	gridfs_offset off = file.write(ofs);
 	if (off != file.getContentLength())
 	{
@@ -588,7 +610,7 @@ void PrimitiveFile::getFileFromGrid(const GridFile& file)
 	}
 }
 
-void PrimitiveFile::readPointCloudFromDocument()
+void PrimitiveFile::readPointCloudFromDocument(bool saveToDiscFlag, string& pathToFiles)
 {
 	LOG(LNOTICE)<<"Read Point Cloud";
 	try
@@ -612,8 +634,8 @@ void PrimitiveFile::readPointCloudFromDocument()
 				cloudXYZ->push_back(pt);
 			}
 			data = cloudXYZ;
-			// save to file, only in test purposes
-			pcl::io::savePCDFile("newCloudXYZ.pcd", *cloudXYZ, false);
+			if(saveToDiscFlag)
+				pcl::io::savePCDFile(pathToFiles+"/"+fileName, *cloudXYZ, false);
 		}
 		else if(fileType==PCXyzRgb)
 		{
@@ -635,8 +657,8 @@ void PrimitiveFile::readPointCloudFromDocument()
 				cloudXYZRGB->push_back(pt);
 			}
 			data = cloudXYZRGB;
-			// save to file, only in test purposes
-			pcl::io::savePCDFile("newCloudXYZRGB.pcd", *cloudXYZRGB, false);
+			if(saveToDiscFlag)
+				pcl::io::savePCDFile(pathToFiles+"/"+fileName, *cloudXYZRGB, false);
 		}
 		else if(fileType==PCXyzSift)
 		{
@@ -664,8 +686,8 @@ void PrimitiveFile::readPointCloudFromDocument()
 				cloudXYZSIFT->push_back(pt);
 			}
 			data = cloudXYZSIFT;
-			// save to file, only in test purposes
-			pcl::io::savePCDFile("newCloudSIFT.pcd", *cloudXYZSIFT, false);
+			if(saveToDiscFlag)
+				pcl::io::savePCDFile(pathToFiles+"/"+fileName, *cloudXYZSIFT, false);
 		}
 		else if(fileType==PCXyzRgbSift)
 		{

@@ -88,7 +88,6 @@ public:
 	{
 		this->requiredKeyTypes = requiredKeyTypes;
 	};
-	void addFile();
 	void getAllFiles();
 	void saveAllFiles();
 	void removeFile();
@@ -338,11 +337,12 @@ void View::readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFil
 		{
 			LOG(LNOTICE)<<"for(std::vector<fileTypes>::iterator reqFileType";
 			LOG(LNOTICE)<<"ft : " <<ft << "*reqFileType: " <<*reqFileType;
+			string empty = "";
 			if(ft==*reqFileType)
 			{
 				LOG(LNOTICE)<<"READ FILE!!!";
 				shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(ft, hostname, *fileOIDIter));
-				file->readFile();
+				file->readFile(true, empty, false);
 				files.push_back(file);
 			}
 		}
