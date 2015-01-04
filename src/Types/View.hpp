@@ -90,8 +90,6 @@ public:
 	};
 	void getAllFiles();
 	void saveAllFiles();
-	void removeFile();
-	void removeAllFiles();
 	void setViewName();
 	void getViewName();
 	shared_ptr<PrimitiveFile::PrimitiveFile> getFile(int pos);
@@ -108,6 +106,10 @@ public:
 	{
 		SensorType = type;
 	};
+	BSONObj getDocument()
+	{
+		return viewDocument;
+	}
 	void getSensorType();
 	void setDateOfInsert();
 	bool checkIfExist();

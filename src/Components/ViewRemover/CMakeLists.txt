@@ -25,8 +25,11 @@ set( LIBS_TO_LINK
     libmongoclient.a
 )
 
-ADD_LIBRARY(ObjectRemover SHARED ${files} )
+ADD_LIBRARY(ViewRemover SHARED ${files} )
 
-TARGET_LINK_LIBRARIES(ObjectRemover pthread ${LIBS_TO_LINK} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
+TARGET_LINK_LIBRARIES(ViewRemover pthread ${LIBS_TO_LINK} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
 
-INSTALL_COMPONENT(ObjectRemover)
+INSTALL_COMPONENT(ViewRemover)
+
+
+

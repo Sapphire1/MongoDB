@@ -242,6 +242,7 @@ public:
 	void readFromDocument();
 	void saveImageOnDisc();
 	void getCVMatData(cv::Mat&);
+	void removeDocument();
 	void saveToDisc(bool suffix, bool binary);
 	void readXYZMatFromDocument(bool saveToDiscFlag, string& pathToFiles);
 	void getFileFromGrid(const GridFile& file, string& path);
@@ -423,6 +424,11 @@ void PrimitiveFile::readImageFromDocument(bool saveToDiscFlag, string& pathToFil
 		LOG(LERROR)<<"Save to disc: " <<pathToFiles+"/"+fileName;
 		imwrite(pathToFiles+"/"+fileName, image);
 	}
+}
+
+void PrimitiveFile::removeDocument()
+{
+	MongoProxy::MongoProxy::getSingleton(hostname).remove(fileOID);
 }
 
 void PrimitiveFile::readFile(bool file2Memory, string& pathToFiles, bool saveToDiscFlag)

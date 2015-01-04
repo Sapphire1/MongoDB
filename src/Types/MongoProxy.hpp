@@ -111,6 +111,7 @@ public:
 	void initViewNames();
 	void initModelNames();
 
+	void remove(OID & oid);
 	void connectToMongoDB();
 	void setModelOrViewName(const string& childNodeName, const BSONObj& childObj, string& newName);
     void getFileFromGrid(const GridFile &);
@@ -146,6 +147,11 @@ boost::shared_ptr<DBClientConnection>  MongoProxy::getClient()
 void MongoProxy::insert(BSONObj & object)
 {
 	c->insert(dbCollectionPath, object);
+}
+
+void MongoProxy::remove(OID & oid)
+{
+	c->remove(dbCollectionPath , Query(BSON("_id" << oid)));
 }
 
 int MongoProxy::count(BSONObj & object)
