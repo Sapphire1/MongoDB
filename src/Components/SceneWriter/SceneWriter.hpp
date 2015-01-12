@@ -21,7 +21,14 @@
 #include "DataStream.hpp"
 #include "Property.hpp"
 #include <dirent.h>
-#include <Types/MongoBase.hpp>
+#include <Types/SIFTObjectModelFactory.hpp>
+#include <Types/AddVector.hpp>
+#include <Types/MongoProxy.hpp>
+#include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZRGBSIFT.hpp>
+#include <Types/PointXYZSHOT.hpp>
+#include <Types/View.hpp>
+#include <Types/Scene.hpp>
 
 namespace Processors {
 namespace SceneWriter {
@@ -29,9 +36,11 @@ namespace SceneWriter {
 using namespace cv;
 using namespace mongo;
 using namespace std;
+using namespace MongoDB;
+using namespace MongoProxy;
 
 
-class SceneWriter: public Base::Component, MongoBase::MongoBase
+class SceneWriter: public Base::Component
 {
 public:
         /*!
@@ -86,28 +95,16 @@ protected:
 
 private:
         Base::Property<string> mongoDBHost;
-        Base::Property<string> objectName;
+        Base::Property<string> viewName;
         Base::Property<string> description;
-        Base::Property<string> collectionName;
-        Base::Property<string> nodeNameProp;
-        Base::Property<string> sceneNamesProp;
-        //string sceneName;
-        std::vector<std::string> splitedSceneNames;
-        string dbCollectionPath;
-
-
-        void run();
-        void initObject();
-        void writeNode2MongoDB(const string &source, const string &destination, const string &option, string );
-        void insert2MongoDB(const string &destination,  const string&,  const string& );
+        Base::Property<string> sceneNameProp;
+        string sceneName;
+        string hostname;
+        shared_ptr<MongoDB::View> viewPtr;
+        shared_ptr<MongoDB::Scene> scenePtr;
         void write2DB();
         void insertToModelOrView(const string &,const string &);
-        void initView(const string &, bool);
-        void initModel(const string &, bool);
-        void insertFileToGrid(const std::vector<string>::iterator, const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
-        void addToObject(const Base::Property<string> & nodeNameProp, const string &);
-        void addScenes(BSONObj&);
-        void createModelOrView(const std::vector<string>::iterator, const string&, BSONArrayBuilder&);
+        void addSceneToView();
 };
 }//: namespace SceneWriter
 }//: namespace Processors

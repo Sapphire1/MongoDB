@@ -30,8 +30,13 @@
 #include "Logger.hpp"
 
 #include <Types/SIFTObjectModelFactory.hpp>
-#include <Types/MongoBase.hpp>
 #include <Types/AddVector.hpp>
+#include <Types/MongoProxy.hpp>
+#include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZRGBSIFT.hpp>
+#include <Types/PointXYZSHOT.hpp>
+#include <Types/View.hpp>
+#include <Types/Scene.hpp>
 
 namespace Processors {
 namespace SceneRemover {
@@ -40,7 +45,7 @@ using namespace cv;
 using namespace mongo;
 
 
-class SceneRemover: public Base::Component, SIFTObjectModelFactory, MongoBase::MongoBase
+class SceneRemover: public Base::Component
 {
 public:
         /*!
@@ -94,9 +99,9 @@ protected:
         Base::EventHandler <SceneRemover> h_readfromDB;
 
 private:
-        Base::Property<string> mongoDBHost;
+        string hostname;
         Base::Property<string> sceneName;
-        Base::Property<string> collectionName;
+        Base::Property<string> mongoDBHost;
         string dbCollectionPath;
         auto_ptr<DBClientCursor> cursorCollection;
         auto_ptr<DBClientCursor> childCursor;

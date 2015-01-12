@@ -14,19 +14,17 @@ namespace SceneRemover  {
 using namespace cv;
 using namespace mongo;
 using namespace boost::property_tree;
+using namespace MongoProxy;
 
 SceneRemover::SceneRemover(const std::string & name) : Base::Component(name),
 		mongoDBHost("mongoDBHost", string("localhost")),
-		sceneName("sceneName", string("scene3")),
-		collectionName("collectionName", string("containers"))
+		sceneName("sceneName", string("scene3"))
 {
 		registerProperty(mongoDBHost);
 		registerProperty(sceneName);
-		registerProperty(collectionName);
 
         CLOG(LTRACE) << "Hello SceneRemover";
 
-        //base = new MongoBase::MongoBase();
 }
 
 SceneRemover::~SceneRemover()
@@ -48,18 +46,8 @@ void SceneRemover::prepareInterface() {
 bool SceneRemover::onInit()
 {
 	CLOG(LTRACE) << "SceneRemover::initialize";
-	if(collectionName=="containers")
-		dbCollectionPath="images.containers";
-
-	name_cloud_xyz="";
-	name_cloud_xyzrgb="";
-	name_cloud_xyzsift="";
-
-	string hostname = mongoDBHost;
-	connectToMongoDB(hostname);
-	if(collectionName=="containers")
-		MongoBase::dbCollectionPath=dbCollectionPath="images.containers";
-
+	hostname = mongoDBHost;
+	MongoProxy::MongoProxy::getSingleton(hostname);
 	return true;
 }
 
@@ -89,42 +77,42 @@ void SceneRemover::removeSceneFromMongoDB()
 {
 	CLOG(LTRACE)<<"SceneRemover::readFromMongoDB";
 	string name;
-	std::vector<AbstractObject*> models;
 	try{
 		int items=0;
-		cursorCollection  =c->query(dbCollectionPath, Query(BSON("SceneName"<<sceneName)));
-		CLOG(LINFO)<<"Founded some data";
+		BSONObj query = BSON("SceneName"<<sceneName<<"DocumentType"<<"Scene");
+		cursorCollection = MongoProxy::MongoProxy::getSingleton(hostname).query(query);
 		while (cursorCollection->more())
 		{
 			BSONObj obj = cursorCollection->next();
-			BSONObj objTemp = obj;
 			//remove document
 			BSONElement oi;
-			objTemp.getObjectID(oi);
-			OID docOID = oi.__oid();
-			CLOG(LFATAL)<<"Usuwamy: "<<docOID.toString();
-			c->remove(dbCollectionPath , Query(BSON("_id" << docOID)));
-			CLOG(LFATAL)<<"usunieto";
+			obj.getObjectID(oi);
+			OID sceneOID = oi.__oid();
+			CLOG(LINFO)<<"Usuwamy: "<<sceneOID.toString();
+			MongoProxy::MongoProxy::getSingleton(hostname).remove(sceneOID);
+			CLOG(LINFO)<<"Usunieto";
 
-			vector<OID> childsVector;
-			int items =  getChildOIDS(obj, "objectsOIDs", "objectOID", childsVector);
-			// if node has a child
-			int queryOptions = 0;
-			const BSONObj *fieldsToReturn = 0;
-
-			vector<OID> scenesVector;
-			// get all scenes of object
-			//int items =  getChildOIDS(obj, "sceneOIDs", "sceneOID", scenesVector);
-			for(std::vector<OID>::iterator it = childsVector.begin(); it != childsVector.end(); ++it)
+			vector<OID> viewsList;
+			int items =  MongoProxy::MongoProxy::getSingleton(hostname).getChildOIDS(obj, "ViewsList", "viewOID", viewsList);
+			if (items==0)
 			{
-				BSONObj objFile = c->findOne(dbCollectionPath, Query(BSON("_id" << *it)), fieldsToReturn, queryOptions);
-				string objectName = objFile.getField("ObjectName").str();
-				//objFile.getObjectID(oi);
-				//OID docOIDObject = oi.__oid();
+				LOG(LINFO)<<"No views founded to update";
+				return;
+			}
 
-				// remove object from scene
-				CLOG(LERROR)<<"remove scene from: "<<objectName;
-				c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName)), BSON("$pull"<<BSON("sceneOIDs"<<BSON("sceneOID"<<docOID.toString()))), false, true);
+			for(std::vector<OID>::iterator it = viewsList.begin(); it != viewsList.end(); ++it)
+			{
+				BSONObj query = BSON("_id" << *it);
+				BSONObj objFile = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+				string viewName = objFile.getField("ViewName").str();
+
+				// remove scene from view
+				CLOG(LINFO)<<"remove scene from: "<<*it;
+				query = BSON("ViewName"<<viewName<<"DocumentType"<<"View");
+
+				// remove sceneName and sceneOID, if you want to add, use $set operator
+				BSONObj update = BSON("$unset"<<BSON("SceneOID"<<1 <<"SceneName"<<1));
+				MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 			}
 		}
 	}//try

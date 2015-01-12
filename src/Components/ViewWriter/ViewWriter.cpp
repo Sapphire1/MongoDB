@@ -50,7 +50,8 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	pc_xyzsiftProp("PC.xyzsift", false),
 	pc_xyzrgbsiftProp("PC.xyzrgbsift", false),
 	pc_xyzshotProp("PC.xyzshot", false),
-	pc_xyzrgbnormalProp("PC.xyzrgbnormal", false)
+	pc_xyzrgbnormalProp("PC.xyzrgbnormal", false),
+	sceneNameProp("sceneNamesProp", string("scene1"))
 
 	// for sift cloud:
 	//mean_viewpoint_features_number("mean_viewpoint_features_number", int(12)),
@@ -77,6 +78,8 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	registerProperty(pc_xyzrgbsiftProp);
 	registerProperty(pc_xyzshotProp);
 	registerProperty(pc_xyzrgbnormalProp);
+
+	registerProperty(sceneNameProp);
 
 	//registerProperty(mean_viewpoint_features_number);
 
@@ -131,11 +134,18 @@ void ViewWriter::writeData()
 	if(!exist)
 	{
 		string objectList = objects;
+		string sceneName = sceneNameProp;
 		string sensor = SensorType;
 		std::vector<std::string> splitedObjectNames;
 		boost::split(splitedObjectNames, objectList, is_any_of(";"));
 		viewPtr->setSensorType(sensor);
 		viewPtr->setObjectNames(splitedObjectNames);
+		scenePtr = boost::shared_ptr<Scene>(new Scene(sceneName,hostname));
+		OID sceneOID;
+		scenePtr->create(sceneOID);
+		OID viewOID;
+		viewPtr->create(sceneOID, viewOID, sceneName);
+		scenePtr->addView(vn, viewOID);
 	}
 	else
 	{

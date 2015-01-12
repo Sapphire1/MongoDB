@@ -29,7 +29,7 @@ MongoDBExporter::MongoDBExporter(const string & name) : Base::Component(name),
 	nodeNameProp("nodeName", string("Object")),
 	folderName("folderName", string("/home/lzmuda/mongo_driver_tutorial")),
 	viewNameProp("viewName", string("")),
-	sceneNamesProp("sceneNamesProp", string("scene1,scene2,scene3")),
+	sceneNameProp("sceneNamesProp", string("scene1")),
 	modelNameProp("modelName", string(""))
 {
 	registerProperty(mongoDBHost);
@@ -40,7 +40,7 @@ MongoDBExporter::MongoDBExporter(const string & name) : Base::Component(name),
 	registerProperty(folderName);
 	registerProperty(viewNameProp);
 	registerProperty(modelNameProp);
-	registerProperty(sceneNamesProp);
+	registerProperty(sceneNameProp);
 	fileExtensions.push_back("*.png");
 	fileExtensions.push_back("*.jpg");
 	fileExtensions.push_back("*.txt");
@@ -89,13 +89,12 @@ vector<string> MongoDBExporter::getAllFolders(const string& directoryPath)
 void MongoDBExporter::write2DB()
 {
 	CLOG(LNOTICE) << "MongoDBExporter::write2DB";
-
 	string type;// model or view
 	// set source folder name
 	string directory = folderName;
 	string viewFolders;
 	std::vector<std::string> folders = getAllFolders(directory);
-
+	std::string sceneName = sceneNameProp;
 	for(std::vector<string>::iterator itfolders = folders.begin(); itfolders != folders.end(); ++itfolders)
 	{
 		if(itfolders->find(".") != std::string::npos || itfolders->find("..") != std::string::npos)
@@ -105,7 +104,6 @@ void MongoDBExporter::write2DB()
 			type = "View";
 			string vn = string(*itfolders);
 			viewPtr = boost::shared_ptr<View>(new View(vn,hostname));
-
 			bool exist = viewPtr->checkIfExist();
 			if(!exist)
 			{
@@ -115,13 +113,19 @@ void MongoDBExporter::write2DB()
 				//boost::split(splitedObjectNames, objectList, is_any_of(";"));
 				//viewPtr->setSensorType(sensor);
 				//viewPtr->setObjectNames(splitedObjectNames);
+				scenePtr = boost::shared_ptr<Scene>(new Scene(sceneName,hostname));
+				OID sceneOID;
+				scenePtr->create(sceneOID);
+				OID viewOID;
+				viewPtr->create(sceneOID, viewOID, sceneName);
+				scenePtr->addView(vn, viewOID);
 			}
 			else
 			{
 				CLOG(LERROR)<<"View exist in data base!!!";
 				continue;
 			}
-			viewPtr->create();
+
 		}
 		else if (itfolders->find("model") != std::string::npos || itfolders->find("Model") != std::string::npos )
 		{

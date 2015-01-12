@@ -26,6 +26,7 @@
 #include <Types/PointXYZRGBSIFT.hpp>
 #include <Types/PointXYZSHOT.hpp>
 #include <Types/View.hpp>
+#include <Types/Scene.hpp>
 #include <Types/Model.hpp>
 using namespace MongoDB;
 using namespace MongoProxy;
@@ -100,7 +101,7 @@ private:
         Base::Property<string> folderName;
         Base::Property<string> viewNameProp;
         Base::Property<string> modelNameProp;
-        Base::Property<string> sceneNamesProp;
+        Base::Property<string> sceneNameProp;
         std::vector<std::string> fileExtensions;
         //string sceneName;
         std::vector<std::string> splitedSceneNames;
@@ -115,6 +116,7 @@ private:
 		cv::Mat xyzrgbImage;
 		std::string str;
 		string hostname;
+		shared_ptr<MongoDB::Scene> scenePtr;
 		//float sizeOfCloud;
 
 

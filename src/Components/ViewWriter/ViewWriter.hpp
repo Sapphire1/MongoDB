@@ -34,6 +34,7 @@
 #include <Types/PointXYZRGBSIFT.hpp>
 #include <Types/PointXYZSHOT.hpp>
 #include <Types/View.hpp>
+#include <Types/Scene.hpp>
 
 namespace Processors {
 namespace ViewWriter {
@@ -112,6 +113,7 @@ public:
    	/// Cloud containing points with Cartesian coordinates, colors and normals (XYZ + RGB + NORMAL).
    	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr, Base::DataStreamBuffer::Newest> in_pc_xyzrgbnormal;
 	shared_ptr<MongoDB::View> viewPtr;
+	shared_ptr<MongoDB::Scene> scenePtr;
 	string hostname;
 protected:
 
@@ -155,6 +157,7 @@ private:
 	Base::Property<string> fileName;
 	Base::Property<string> SensorType;
 	Base::Property<string> objects;
+	Base::Property<string> sceneNameProp;
 	Base::Property<bool> cameraInfoProp;
 	Base::Property<bool> xyzProp;
 	Base::Property<bool> rgbProp;

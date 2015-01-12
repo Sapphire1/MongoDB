@@ -6,28 +6,27 @@
 
 
 #include "SceneWriter.hpp"
+#include <stddef.h>
 namespace Processors {
 namespace SceneWriter  {
 using namespace cv;
 using namespace mongo;
 using namespace std;
 using namespace boost;
-#include <stddef.h>
+using namespace MongoDB;
+using namespace MongoProxy;
+
 
 SceneWriter::SceneWriter(const string & name) : Base::Component(name),
 		mongoDBHost("mongoDBHost", string("localhost")),
-		objectName("objectName", string("GreenCup")),
+		viewName("viewName", string("032_View")),
 		description("description", string("My green coffe cup")),
-		collectionName("collectionName", string("containers")),
-		nodeNameProp("nodeName", string("Object")),
-		sceneNamesProp("sceneNamesProp", string("scene1,scene2,scene3"))
+		sceneNameProp("sceneNameProp", string("scene3"))
 {
         registerProperty(mongoDBHost);
-        registerProperty(objectName);
+        registerProperty(viewName);
         registerProperty(description);
-        registerProperty(collectionName);
-        registerProperty(nodeNameProp);
-        registerProperty(sceneNamesProp);
+        registerProperty(sceneNameProp);
         CLOG(LTRACE) << "Hello SceneWriter";
 }
 
@@ -37,11 +36,9 @@ SceneWriter::~SceneWriter()
 }
 void SceneWriter::write2DB()
 {
-        CLOG(LNOTICE) << "SceneWriter::write2DB";
-        string sceneNames = sceneNamesProp;
-        boost::split(splitedSceneNames, sceneNames, is_any_of(","));
-        BSONObj object;
-        initObject();
+       CLOG(LNOTICE) << "SceneWriter::write2DB";
+       sceneName = sceneNameProp;
+       addSceneToView();
 }
 
 void SceneWriter::prepareInterface() {
@@ -53,25 +50,14 @@ void SceneWriter::prepareInterface() {
 bool SceneWriter::onInit()
 {
       CLOG(LTRACE) << "SceneWriter::initialize";
-      try
-      {
-    	  string hostname = mongoDBHost;
-    	  connectToMongoDB(hostname);
-		  if(collectionName=="containers")
-			dbCollectionPath="images.containers";
-      }
-	 catch(DBException &e)
-	 {
-		 CLOG(LERROR) <<"Something goes wrong... :<";
-		 CLOG(LERROR) <<c->getLastError();
-	 }
-	 return true;
+	  hostname = mongoDBHost;
+	  MongoProxy::MongoProxy::getSingleton(hostname);
+	  return true;
 }
 
 bool SceneWriter::onFinish()
 {
         CLOG(LTRACE) << "SceneWriter::finish";
-
         return true;
 }
 
@@ -91,123 +77,83 @@ bool SceneWriter::onStart()
         return true;
 }
 
-void SceneWriter::addScenes(BSONObj& object)
+void SceneWriter::addSceneToView()
 {
-	int items = 0;
-	bool objectInTheScene = false;
-	OID objectOID;
-	OID sceneOID;
-	BSONElement bsonElement;
-	BSONElement sceneOI;
-	BSONElement objectOI;
-	BSONArrayBuilder bsonBuilder;
 
-	object.getObjectID(objectOI);
-	objectOID=objectOI.__oid();
-	CLOG(LINFO)<<"objectOID.str(): "<<objectOID.toString();
+	CLOG(LTRACE)<<"Scene: "<<sceneName;
 
-try{
-	for(std::vector<string>::iterator itSceneName = splitedSceneNames.begin(); itSceneName != splitedSceneNames.end(); ++itSceneName)
+	// if scene exist
+	string vn = viewName;
+	string sn = sceneName;
+	viewPtr = boost::shared_ptr<View>(new View(vn,hostname));
+	scenePtr = boost::shared_ptr<Scene>(new Scene(sn,hostname));
+	bool exist = viewPtr->checkIfExist();
+	BSONObj sceneQuery = BSON("SceneName"<<sceneName<<"DocumentType"<<"Scene");
+	// no view
+	if(!exist)
 	{
-		CLOG(LTRACE)<<"Scene: "<<*itSceneName;
-		// if scene exist
-		items = c->count(dbCollectionPath, Query(BSON("SceneName"<<*itSceneName)));
-
-		// jesli scena istnieje
-		if(items>0)
+		int items = MongoProxy::MongoProxy::getSingleton(hostname).count(sceneQuery);
+		string vn = viewName;
+		OID viewOID;
+		OID sceneOID;
+		// no scene
+		if(items==0)
 		{
-			auto_ptr<DBClientCursor> cursorCollection =c->query(dbCollectionPath, Query(BSON("SceneName"<<*itSceneName)));
-			BSONObj scene = cursorCollection->next();
-			scene.getObjectID(sceneOI);
-			sceneOID=sceneOI.__oid();
-			CLOG(LINFO)<<"Add scene to the object items>0!";
-
-			vector<OID> childsVector;
-			if(getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
-			{
-
-				CLOG(LINFO)<<"Sprawdzam czy scena zawiera juz ten obiekt";
-				for (unsigned int i = 0; i<childsVector.size(); i++)
-				{
-					CLOG(LINFO)<<"Sprawdzam obiekt";
-					CLOG(LINFO)<<"childsVector[i].toString(): "<<childsVector[i].toString();
-					CLOG(LINFO)<<"objectOID.toString(): "<<objectOID.toString();
-					if(childsVector[i].toString()==objectOID.toString())
-					{
-						objectInTheScene = true;
-						CLOG(LERROR)<< "Object exists in the scene!";
-						break;
-					}
-				}
-			}
-			if(!objectInTheScene)
-			{
-				CLOG(LINFO)<<"objectOID.toString(): "<<objectOID.toString();
-				CLOG(LINFO)<<"Adding object to the scene and scene to the object";
-				c->update(dbCollectionPath, Query(BSON("SceneName"<<*itSceneName)), BSON("$addToSet"<<BSON("objectsOIDs"<<BSON("objectOID"<<objectOID.toString()))), false, true);
-				// jak nie ma obiektu w scenie to w obiekcie nie ma sceny
-				CLOG(LINFO)<<"sceneOID.str(): "<<sceneOID.toString();
-				c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<"Object")), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<sceneOID.toString()))), false, true);
-			}
-		}//if
+			scenePtr = boost::shared_ptr<Scene>(new Scene(sceneName,hostname));
+			scenePtr->create(sceneOID);
+		}
 		else
 		{
-			CLOG(LINFO)<<"Create scene and add object to array list";
-			BSONObj scene = BSONObjBuilder().genOID().append("SceneName", *itSceneName).obj();
-			c->insert(dbCollectionPath, scene);
-
-			CLOG(LINFO)<<"Adding object to the scene";
-			if(object.isEmpty())
-				CLOG(LINFO)<<"Object is empty";
-			CLOG(LINFO)<<"OID: "<< objectOID.toString();
-			c->update(dbCollectionPath, Query(BSON("SceneName"<<*itSceneName)), BSON("$addToSet"<<BSON("objectsOIDs"<<BSON("objectOID"<<objectOID.toString()))), false, true);
-
-			CLOG(LINFO)<<"Add scene to object!";
+			// get sceneOID
+			BSONObj scene = MongoProxy::MongoProxy::getSingleton(hostname).findOne(sceneQuery);
+			BSONElement sceneOI;
 			scene.getObjectID(sceneOI);
 			sceneOID=sceneOI.__oid();
-			c->update(dbCollectionPath, Query(BSON("ObjectName"<<objectName<<"Type"<<"Object")), BSON("$addToSet"<<BSON("sceneOIDs"<<BSON("sceneOID"<<sceneOID.toString()))), false, true);
+		}
+		// create, add scene to view
+		viewPtr->create(sceneOID, viewOID, sn);
+
+		// add view to scene
+		scenePtr->addView(vn, viewOID);
+	}
+	else	// view exist
+	{
+		LOG(LINFO)<<("Check scene!");
+		int items = MongoProxy::MongoProxy::getSingleton(hostname).count(sceneQuery);
+		string vn = viewName;
+		OID viewOID;
+		OID sceneOID;
+		// no scene
+		if(items==0)
+		{
+			scenePtr = boost::shared_ptr<Scene>(new Scene(sceneName,hostname));
+			scenePtr->create(sceneOID);
+		}
+		else
+		{
+			// get sceneOID
+			BSONObj scene = MongoProxy::MongoProxy::getSingleton(hostname).findOne(sceneQuery);
+			BSONElement sceneOI;
+			scene.getObjectID(sceneOI);
+			sceneOID=sceneOI.__oid();
+		}
+		//check if view contains scene and scene contains view
+		BSONObj viewQuery = BSON("ViewName"<<viewName<<"DocumentType"<<"View");
+
+		BSONObj view = MongoProxy::MongoProxy::getSingleton(hostname).findOne(viewQuery);
+		string output = view.getField("SceneName");
+		if(output=="EOO")
+		{
+			// create, add scene to view
+			viewPtr->addScene(sn, sceneOID);
+
+			// add view to scene
+			BSONElement viewOI;
+			view.getObjectID(viewOI);
+			viewOID=viewOI.__oid();
+			scenePtr->addView(vn, viewOID);
 		}
 	}
-}catch(DBException & ex)
-{
-	CLOG(LERROR)<<ex.what();
-}
-}
-
-void SceneWriter::initObject()
-{
-	CLOG(LTRACE) <<"Create template of object";
-	BSONArrayBuilder bsonBuilder;
-	bool objectInTheScene = false;
-	auto_ptr<DBClientCursor> cursorCollection;
-	BSONObj object;
-	BSONElement oi;
-	try
-	{
-		int items = c->count(dbCollectionPath, BSON("Type"<<"Object"<<"ObjectName"<<objectName),0,0,0);
-		if(items>0)
-		{
-			CLOG(LTRACE)<<"Object exist";
-			auto_ptr<DBClientCursor> cursorCollection =c->query(dbCollectionPath, Query(BSON("Type"<<"Object"<<"ObjectName"<<objectName)));
-			object=cursorCollection->next();
-			OID objectOID;
-			object.getObjectID(oi);
-			objectOID=oi.__oid();
-			CLOG(LINFO)<<"objectOID.str(): "<<objectOID.toString();
-		}
-		else
-		{
-			CLOG(LTRACE)<<"Object does not exist, create object";
-			object = BSONObjBuilder().genOID().append("Type", "Object").append("ObjectName", objectName).append("description", description).obj();
-			c->insert(dbCollectionPath, object);
-		}
-		addScenes(object);
-  }
-	  catch(DBException &e)
-	  {
-		CLOG(LERROR) <<"Something goes wrong... :<";
-		CLOG(LERROR) <<c->getLastError();
-	  }
 }
 
 

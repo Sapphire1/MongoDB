@@ -26,9 +26,7 @@ set( LIBS_TO_LINK
 
 ADD_LIBRARY(SceneWriter SHARED ${files} )
 
-target_link_libraries( SceneWriter
-    pthread
-    ${LIBS_TO_LINK}
-)
+TARGET_LINK_LIBRARIES(SceneWriter pthread ${LIBS_TO_LINK} ${PCL_COMMON_LIBRARIES} ${PCL_IO_LIBRARIES})
+
 
 INSTALL_COMPONENT(SceneWriter)

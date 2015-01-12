@@ -115,6 +115,7 @@ public:
 	bool checkIfExist();
 	void getDateOfInsert();
 	void create();
+	void create(OID& sceneOID, OID& viewOID, string& sceneName);
 
 	// check if exist this same kind of file
 	bool checkIfFileExist(fileTypes key);
@@ -132,6 +133,7 @@ public:
 	void putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr&, fileTypes typ, string& fileName);
 	bool getViewTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& typesVector);
 	void readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFileTypes);
+	void addScene(string& sceneName, OID& sceneOID);
 	fileTypes getFileType(int i);
 };// class View
 
@@ -249,7 +251,7 @@ bool View::checkIfExist()
 		return false;
 	else
 	{
-		LOG(LNOTICE)<<"View document founded! Change view name and try again";
+		LOG(LNOTICE)<<"View document founded!";
 		return true;
 	}
 }
@@ -418,6 +420,56 @@ int View::getAllFilesOIDS(vector<OID>& oidsVector)
 	}
 	else
 		return -1;
+}
+
+void View::create(OID& sceneOID, OID& viewOID, string& sceneName)
+{
+	BSONArrayBuilder objectArrayBuilder;
+	BSONObj view = BSONObjBuilder().genOID().append("ViewName", ViewName).append("SceneOID", sceneOID).append("SceneName", sceneName).append("DocumentType","View").append("sensorType", SensorType).append("description", description).obj();
+	// get view oid
+	BSONElement bsonElement;
+	view.getObjectID(bsonElement);
+	viewOID=bsonElement.__oid();
+	MongoProxy::MongoProxy::getSingleton(hostname).insert(view);
+	for(std::vector<string>::iterator itObject = splitedObjectNames.begin(); itObject != splitedObjectNames.end(); ++itObject)
+	{
+		BSONObj b = BSON("ObjectName"<<*itObject<<"DocumentType"<<"Object");
+		// check if object exist
+		int items = MongoProxy::MongoProxy::getSingleton(hostname).count(b);
+		// document of object doesn't exist
+		if(items==0)
+		{
+			BSONObj object = BSONObjBuilder().genOID().append("ObjectName", *itObject).append("DocumentType","Object").obj();
+			MongoProxy::MongoProxy::getSingleton(hostname).insert(object);
+		}
+		// insert view oid to object document
+		BSONObj query = BSON("ObjectName"<<*itObject<<"DocumentType"<<"Object");
+		BSONObj update = BSON("$addToSet"<<BSON("ViewsList"<<BSON("viewOID"<<viewOID.toString())));
+		MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
+
+		// insert object oid to view document
+		BSONObj object;
+		query = BSON("ObjectName"<<*itObject<<"DocumentType"<<"Object");
+		auto_ptr<DBClientCursor> cursorCollection =MongoProxy::MongoProxy::getSingleton(hostname).query(query);
+		while(cursorCollection->more())
+		{
+			object = cursorCollection->next();
+		}
+		object.getObjectID(bsonElement);
+		OID objectOID;
+		objectOID=bsonElement.__oid();
+		query = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");
+		update = BSON("$addToSet"<<BSON("ObjectsList"<<BSON("objectOID"<<objectOID.toString())));
+		MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
+	}
+	return;
+}
+
+void View::addScene(string& sceneName, OID& sceneOID)
+{
+	BSONObj query = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");
+	BSONObj update = BSON("$set"<<BSON("SceneName"<<sceneName<<"sceneOID"<<sceneOID));
+	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 }
 
 void View::create()
