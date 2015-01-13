@@ -23,7 +23,15 @@
 #include "mongo/client/dbclient.h"
 #include "mongo/bson/bson.h"
 #include "Logger.hpp"
-#include <Types/MongoBase.hpp>
+#include <Types/AddVector.hpp>
+#include <Types/MongoProxy.hpp>
+#include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZRGBSIFT.hpp>
+#include <Types/PointXYZSHOT.hpp>
+#include <Types/View.hpp>
+#include <Types/Scene.hpp>
+#include <Types/PointXYZSIFT.hpp>
+#include <Types/PointXYZRGBSIFT.hpp>
 
 namespace Processors {
 namespace SceneReader {
@@ -32,7 +40,7 @@ using namespace cv;
 using namespace mongo;
 
 
-class SceneReader: public Base::Component, MongoBase::MongoBase
+class SceneReader: public Base::Component
 {
 public:
         /*!
@@ -82,26 +90,28 @@ protected:
          * Event handler function.
          */
 
-        /// Event handler.
-        Base::EventHandler <SceneReader> h_readfromDB;
 
 private:
         Base::Property<string> mongoDBHost;
         Base::Property<string> sceneName;
-        Base::Property<string> objectName;
+        Base::Property<string> viewName;
         Base::Property<string> collectionName;
-        Base::Property<bool> getObjectsActive;
-        Base::Property<bool> getScenesActive;
-        Base::Property<bool> getObjectFromSceneActive;
+        Base::Property<bool> getViewFlag;
+        Base::Property<bool> getScenesFromViewFlag;
+        boost::shared_ptr<MongoDB::View> viewPtr;
+        boost::shared_ptr<MongoDB::Scene> scenePtr;
+        string hostname;
+        string sn;
 
 		string dbCollectionPath;
 		auto_ptr<DBClientCursor> cursorCollection;
 		auto_ptr<DBClientCursor> childCursor;
 
-        void readfromDB();
-        void getObjects();
+        void getView();
         void getScenes();
-        void getObjectFromScene();
+        void readfromDB();
+
+
 
 };
 }//: namespace SceneReader

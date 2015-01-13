@@ -28,7 +28,9 @@ ADD_LIBRARY(SceneReader SHARED ${files} )
 
 target_link_libraries( SceneReader
     pthread
-    ${LIBS_TO_LINK}
+    ${LIBS_TO_LINK} 
+    ${PCL_COMMON_LIBRARIES} 
+    ${PCL_IO_LIBRARIES}
 )
 
 INSTALL_COMPONENT(SceneReader)

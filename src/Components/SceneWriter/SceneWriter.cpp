@@ -112,7 +112,6 @@ void SceneWriter::addSceneToView()
 		}
 		// create, add scene to view
 		viewPtr->create(sceneOID, viewOID, sn);
-
 		// add view to scene
 		scenePtr->addView(vn, viewOID);
 	}

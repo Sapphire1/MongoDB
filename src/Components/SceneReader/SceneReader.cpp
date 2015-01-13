@@ -11,25 +11,24 @@ namespace Processors {
 namespace SceneReader  {
 using namespace cv;
 using namespace mongo;
-using namespace boost::property_tree;
+using namespace std;
+using namespace boost;
+using namespace MongoDB;
 
 SceneReader::SceneReader(const std::string & name) : Base::Component(name),
 		mongoDBHost("mongoDBHost", string("localhost")),
-		objectName("objectName", string("GreenCup")),
+		viewName("viewName", string("GreenCup")),
 		sceneName("sceneName", string("scene1")),
 		collectionName("collectionName", string("containers")),
-		getObjectsActive("Get objects", bool("1")),
-		getScenesActive("Get scenes", bool("0")),
-		getObjectFromSceneActive("Get object from scene", bool("0"))
-
+		getScenesFromViewFlag("Get scenes", false),
+		getViewFlag("Get view", false)
 {
 		registerProperty(mongoDBHost);
 		registerProperty(sceneName);
-		registerProperty(objectName);
+		registerProperty(viewName);
 		registerProperty(collectionName);
-		registerProperty(getObjectsActive);
-		registerProperty(getScenesActive);
-		registerProperty(getObjectFromSceneActive);
+		registerProperty(getViewFlag);
+		registerProperty(getScenesFromViewFlag);
         CLOG(LTRACE) << "Hello SceneReader";
 }
 
@@ -41,151 +40,100 @@ SceneReader::~SceneReader()
 void SceneReader::readfromDB()
 {
 	CLOG(LNOTICE) << "SceneReader::readfromDB";
-	if(getObjectsActive)
+	if(getViewFlag)
 	{
-		getObjects();
+		CLOG(LINFO)<<"Get view";
+		getView();
 	}
-	else if(getScenesActive)
+	else if(getScenesFromViewFlag)
 	{
+		CLOG(LINFO)<<"Get scene";
 		getScenes();
-	}
-	else if(getObjectFromSceneActive)
-	{
-		getObjectFromScene();
 	}
 }
 
-void SceneReader::getObjects()
+void SceneReader::getView()
 {
-	CLOG(LINFO)<<"SceneReader::getObjects()";
-	OID objectOID;
-	OID sceneOID;
-	BSONElement bsonElement;
-	BSONElement sceneOI;
-	BSONElement objectOI;
-	auto_ptr<DBClientCursor> cursorCollection;
-	int items = c->count(dbCollectionPath, BSON("SceneName"<<sceneName),0,0,0);
-	if(items>0)
+	sn = sceneName;
+	string vn = viewName;
+	viewPtr = boost::shared_ptr<View>(new View(vn,hostname));
+	bool exist = viewPtr->checkIfExist();
+	if(exist)
 	{
-		cursorCollection  =c->query(dbCollectionPath, Query(BSON("SceneName"<<sceneName)));
+		BSONObj query = BSON("ViewName"<<viewName<<"DocumentType"<<"View");
+		cursorCollection = MongoProxy::MongoProxy::getSingleton(hostname).query(query);
 		vector<OID> childsVector;
-		BSONObj scene = cursorCollection->next();
-		if(getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
+		BSONObj sceneDocument = cursorCollection->next();
+
+		string output = sceneDocument.getField("SceneName").str();
+		if(output!="EOO")
 		{
-			for (unsigned int i = 0; i<childsVector.size(); i++)
-			{
-				auto_ptr<DBClientCursor> childCursor =c->query(dbCollectionPath, Query(BSON("_id"<<childsVector[i])));
-				while(childCursor->more())
-				{
-					BSONObj objectDocument = childCursor->next();
-					//CLOG(LINFO)<<"objectDocument: "<< objectDocument;
-					string objectNameFromScene = objectDocument.getField("ObjectName").str();
-					CLOG(LINFO)<<"Object: "<< objectNameFromScene;
-				}
-			}
+			CLOG(LINFO)<<"SceneName : "<< output;
+			if(output==sn)
+				CLOG(LINFO)<<sceneName <<"=="<<output;
 		}
 	}
 	else
 	{
-		CLOG(LERROR)<<"No scene founded!";
+		CLOG(LERROR)<<"View doesn't exist!";
+		return;
 	}
 }
 
 void SceneReader::getScenes()
 {
-	CLOG(LINFO)<<"SceneReader::getScenes()";
-	OID objectOID;
-	OID sceneOID;
-	BSONElement bsonElement;
-	BSONElement sceneOI;
-	BSONElement objectOI;
-	auto_ptr<DBClientCursor> cursorCollection;
-	int items = c->count(dbCollectionPath, BSON("ObjectName"<<objectName),0,0,0);
-	if(items>0)
+	sn = sceneName;
+	scenePtr = boost::shared_ptr<Scene>(new Scene(sn,hostname));
+	BSONObj query = BSON("SceneName"<<sn<<"DocumentType"<<"Scene");
+	CLOG(LINFO)<<"SceneName"<<sn<<"DocumentType"<<"Scene";
+	cursorCollection = MongoProxy::MongoProxy::getSingleton(hostname).query(query);
+	if (cursorCollection->more())
 	{
-		cursorCollection  =c->query(dbCollectionPath, Query(BSON("ObjectName"<<objectName)));
 		vector<OID> childsVector;
-		BSONObj object = cursorCollection->next();
-		if(getChildOIDS(object, "sceneOIDs", "sceneOID", childsVector)>0)
+		BSONObj sceneDocument = cursorCollection->next();
+		vector<OID> viewsList;
+		int items =  MongoProxy::MongoProxy::getSingleton(hostname).getChildOIDS(sceneDocument, "ViewsList", "viewOID", viewsList);
+		if(items>0)
 		{
-			for (unsigned int i = 0; i<childsVector.size(); i++)
+			for(std::vector<OID>::iterator viewOIDIter = viewsList.begin(); viewOIDIter != viewsList.end(); ++viewOIDIter)
 			{
-				auto_ptr<DBClientCursor> childCursor =c->query(dbCollectionPath, Query(BSON("_id"<<childsVector[i])));
-				while(childCursor->more())
+				BSONObj query = BSON("_id" << *viewOIDIter);
+				BSONObj viewDocument = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+				string output = viewDocument.getField("ViewName").str();
+				if(output!="EOO")
 				{
-					BSONObj objectDocument = childCursor->next();
-					//CLOG(LINFO)<<"objectDocument: "<< objectDocument;
-					string sceneNameFromObject = objectDocument.getField("SceneName").str();
-					CLOG(LINFO)<<"Scene: "<< sceneNameFromObject;
+					CLOG(LINFO)<<"ViewName : "<< output;
 				}
-			}
-		}
-	}
+				else
+				{
+					CLOG(LINFO)<<"No name!";
+					return;
+				}
+			}//for
+		}//if
+		else
+			CLOG(LINFO)<<"No View in Scene";
+	}//if
 	else
 	{
-		CLOG(LERROR)<<"No scene founded!";
+		CLOG(LINFO)<<"No Scene founded!!!";
 	}
-
+	return;
 }
 
-void SceneReader::getObjectFromScene()
-{
-	CLOG(LINFO)<<"SceneReader::getObjectFromScene()";
-	OID objectOID;
-	OID sceneOID;
-	BSONElement bsonElement;
-	BSONElement sceneOI;
-	BSONElement objectOI;
-	bool objectFound = false;
-	auto_ptr<DBClientCursor> cursorCollection;
-	int items = c->count(dbCollectionPath, Query(BSON("SceneName"<<sceneName)));
-	if(items>0)
-	{
-		cursorCollection  =c->query(dbCollectionPath, Query(BSON("SceneName"<<sceneName)));
-		vector<OID> childsVector;
-		BSONObj scene = cursorCollection->next();
-		if(getChildOIDS(scene, "objectsOIDs", "objectOID", childsVector)>0)
-		{
-			for (unsigned int i = 0; i<childsVector.size(); i++)
-			{
-				auto_ptr<DBClientCursor> childCursor =c->query(dbCollectionPath, Query(BSON("_id"<<childsVector[i])));
-				while(childCursor->more())
-				{
-					BSONObj objectDocument = childCursor->next();
-					//CLOG(LINFO)<<"objectDocument: "<< objectDocument;
-					string objectNameFromScene = objectDocument.getField("ObjectName").str();
-					if(objectNameFromScene==(string)objectName)
-					{
-						objectFound=true;
-						CLOG(LINFO)<<"Object: "<< objectNameFromScene;
-					}
-				}
-			}
-			if(!objectFound)
-				CLOG(LERROR)<<"No object founded!";
-		}
-	}
-	else
-	{
-		CLOG(LERROR)<<"No scene founded!";
-	}
-
-}
 
 void SceneReader::prepareInterface() {
         CLOG(LTRACE) << "SceneReader::prepareInterface";
-
-        h_readfromDB.setup(this, &SceneReader::readfromDB);
-        registerHandler("Read", &h_readfromDB);
+        registerHandler("readData", boost::bind(&SceneReader::readfromDB, this));
+        // adding dependency
+        addDependency("readData", NULL);
 }
 
 bool SceneReader::onInit()
 {
         CLOG(LTRACE) << "SceneReader::initialize";
-        if(collectionName=="containers")
-        	dbCollectionPath="images.containers";
-        string hostname = mongoDBHost;
-        connectToMongoDB(hostname);
+        hostname = mongoDBHost;
+        MongoProxy::MongoProxy::getSingleton(hostname);
 		return true;
 }
 
@@ -210,7 +158,6 @@ bool SceneReader::onStart()
 {
         return true;
 }
-
 
 } //: namespace SceneReader
 } //: namespace Processors
