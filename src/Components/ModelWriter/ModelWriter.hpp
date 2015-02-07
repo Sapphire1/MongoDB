@@ -119,7 +119,7 @@ private:
 	Base::Property<string> description;
 	Base::Property<string> modelName;
 	Base::Property<string> fileName;
-	Base::Property<string> object;
+	Base::Property<string> viewsSet;
 	Base::Property<bool> pc_xyzProp;
 	Base::Property<bool> pc_xyzrgbProp;
 	Base::Property<bool> pc_xyzsiftProp;

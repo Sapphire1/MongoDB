@@ -73,7 +73,8 @@ void ModelReader::readfromDB()
 			CLOG(LERROR)<<"Please mark any checkbox";
 			return;
 		}
-		// check if view contain all required types
+		//LOG(LNOTICE)<<"modelDocument: "<<modelPtr->modelDocument;
+		// check if model contain all required types
 		bool contain = modelPtr->checkIfContain(requiredFileTypes);
 
 		if(!contain)
@@ -82,6 +83,7 @@ void ModelReader::readfromDB()
 		}
 		else
 		{
+
 			CLOG(LNOTICE)<<"Read files from Model!";
 
 			// read vector of files OIDs
@@ -97,7 +99,6 @@ void ModelReader::readfromDB()
 			LOG(LNOTICE)<<"WRITE FILE!!!";
 			int filesNr = modelPtr->getFilesSize();
 			std::vector<AbstractObject*> models;
-
 			for (int i=0; i<filesNr; i++)
 			{
 				// get type

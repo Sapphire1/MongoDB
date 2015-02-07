@@ -233,7 +233,7 @@ public:
 	string getFileName(){return fileName;}
 	void saveIntoDisc();
 	void saveIntoMongoBase(string& type, string& name, bool dataInBuffer, string& path);
-	void insertFileIntoGrid(OID& oid, bool dataInMemory, string& path);
+	void insertFileIntoGrid(OID& oid, bool dataInMemory, string& path, string&, string&);
 	void insertFileIntoDocument(OID& oid);
 	void convertToBuffer();
 	void getMime();
@@ -381,10 +381,10 @@ void PrimitiveFile::readXYZMatFromDocument(bool saveToDiscFlag, string& pathToFi
 void PrimitiveFile::saveIntoMongoBase(string& type, string& name, bool dataInBuffer, string& path)
 {
 	OID oid;
-	if(sizeMBytes<15)
-		insertFileIntoDocument(oid);
-	else if(sizeMBytes>=15)
-		insertFileIntoGrid(oid, dataInBuffer, path);
+	//if(sizeMBytes<15)
+	//	insertFileIntoDocument(oid);
+	//else if(sizeMBytes>=15)
+		insertFileIntoGrid(oid, dataInBuffer, path, type, name);
 
 	LOG(LERROR)<<"TYPE: "<<type;
 	BSONObj query;
@@ -401,6 +401,7 @@ void PrimitiveFile::saveIntoMongoBase(string& type, string& name, bool dataInBuf
 	{
 		LOG(LERROR)<<"Couldn't update type: "<<type<<" !!!";
 	}
+	LOG(LERROR)<<"OID: "<<oid.toString();
 	BSONObj update = BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString())));
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 
@@ -433,6 +434,8 @@ void PrimitiveFile::removeDocument()
 
 void PrimitiveFile::readFile(bool file2Memory, string& pathToFiles, bool saveToDiscFlag)
 {
+	if(file2Memory!=true)
+		LOG(LWARNING)<<"file2Memory is not set! Method writeToSinkFromFile will not be invoked!!!";
 	LOG(LTRACE)<<"MongoProxy::readFile";
 	// get bson object from collection
 	BSONObj query = BSON("_id" << fileOID);
@@ -493,6 +496,7 @@ void PrimitiveFile::readFile(bool file2Memory, string& pathToFiles, bool saveToD
 		{
 			// get filename
 			string filename = file.getFileField("filename").str();
+			LOG(LNOTICE)<<"filename: "<<filename;
 			// get mime from file
 			//string mime = file.getContentType();
 
@@ -500,7 +504,10 @@ void PrimitiveFile::readFile(bool file2Memory, string& pathToFiles, bool saveToD
 			string empty = "";
 			//TODO check!!!
 			if(file2Memory)
-				writeToSinkFromFile(empty);
+				writeToSinkFromFile(filename);
+				//writeToSinkFromFile(empty);
+			else
+				LOG(LNOTICE)<<"file2Memory=" <<file2Memory;
 		}
 	}
 }
@@ -508,59 +515,67 @@ void PrimitiveFile::readFile(bool file2Memory, string& pathToFiles, bool saveToD
 void PrimitiveFile::ReadPCDCloud(const string& filename)
 {
 	//TODO ADD ALL PCD TYPES!!!
-	LOG(LTRACE) << "ViewReader::ReadPCDCloud";
+	LOG(LNOTICE) << "PrimitiveFile::ReadPCDCloud";
+	LOG(LNOTICE) << "filename::"<<filename;
 	// Try to read the cloud of XYZRGB points.
 	if(filename.find("xyzrgb")!=string::npos)
 	{
+		LOG(LNOTICE)<<"filename.find(xyzrgb)!=string::npos";
 		pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_xyzrgb (new pcl::PointCloud<pcl::PointXYZRGB>);
 		if (pcl::io::loadPCDFile<pcl::PointXYZRGB> (filename, *cloud_xyzrgb) == -1){
-			LOG(LWARNING) <<"Cannot read PointXYZRGB cloud from "<<fileName;
+			LOG(LNOTICE) <<"Cannot read PointXYZRGB cloud from "<<fileName;
 			return;
 		}else{
-		//	out_cloud_xyzrgb.write(cloud_xyzrgb);
+			//out_cloud_xyzrgb.write(cloud_xyzrgb);
 			data = cloud_xyzrgb;
-			LOG(LINFO) <<"PointXYZRGB cloud loaded properly from "<<fileName;
+			LOG(LNOTICE) <<"PointXYZRGB cloud loaded properly from "<<fileName;
 		}
 	}
-	if(filename.find("xyzsift.pcd")!=string::npos)
+	else if(filename.find("xyzsift.pcd")!=string::npos)
 	{
+		LOG(LNOTICE)<<"filename.find(xyzsift)!=string::npos";
 		pcl::PointCloud<PointXYZSIFT>::Ptr cloud_xyzsift (new pcl::PointCloud<PointXYZSIFT>);
 		if (pcl::io::loadPCDFile<PointXYZSIFT> (filename, *cloud_xyzsift) == -1){
-			LOG(LWARNING) <<"Cannot read PointXYZSIFT cloud from "<<fileName;
+			LOG(LNOTICE) <<"Cannot read PointXYZSIFT cloud from "<<fileName;
 			return;
 		}else{
 			data = cloud_xyzsift;
 		//	out_cloud_xyzsift.write(cloud_xyzsift);
-			LOG(LINFO) <<"PointXYZSIFT cloud loaded properly from "<<fileName;
+			LOG(LNOTICE) <<"PointXYZSIFT cloud loaded properly from "<<fileName;
 		}
 	}
-
 	else if(filename.find("xyz")!=string::npos)
 	{
+		LOG(LNOTICE)<<"filename.find(xyz)!=string::npos";
 		// Try to read the cloud of XYZ points.
 		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz (new pcl::PointCloud<pcl::PointXYZ>);
 		if (pcl::io::loadPCDFile<pcl::PointXYZ> (filename, *cloud_xyz) == -1){
-			LOG(LWARNING) <<"Cannot read PointXYZ cloud from "<<fileName;
+			LOG(LNOTICE) <<"Cannot read PointXYZ cloud from "<<fileName;
 			return;
 		}else{
 			data = cloud_xyz;
 		//	out_cloud_xyz.write(cloud_xyz);
-			LOG(LINFO) <<"PointXYZ cloud loaded properly from "<<fileName;
+			LOG(LNOTICE) <<"PointXYZ cloud loaded properly from "<<fileName;
 		}
+	}
+	else
+	{
+		LOG(LNOTICE) <<"OTHER!!!";
+		exit(1);
 	}
 }
 
 void PrimitiveFile::writeToSinkFromFile(string& path)
 {
 	LOG(LNOTICE)<<"PrimitiveFile::writeToSink";
-	LOG(LERROR)<<"fileType : "<<fileType;
+	LOG(LNOTICE)<<"fileType : "<<fileType;
 	string fileNm = path;
 	if(fileType==ImageRgb || fileType==ImageDepth || fileType==ImageIntensity || fileType==ImageMask
 		|| fileType==StereoLeft || fileType==StereoRight || fileType==StereoLeftTextured
 		|| fileType==StereoRightTextured)
 	{
-		LOG(LERROR)<<"Insert to data!!!";
-		LOG(LERROR)<<"fileNm :"<< fileNm;
+		LOG(LNOTICE)<<"Insert to data!!!";
+		LOG(LNOTICE)<<"fileNm :"<< fileNm;
 		cv::Mat image = imread(fileNm, CV_LOAD_IMAGE_UNCHANGED);
 		data = image;
 		//out_img.write(image);
@@ -568,10 +583,12 @@ void PrimitiveFile::writeToSinkFromFile(string& path)
 	else if(fileType==PCXyz || fileType==PCXyzRgb || fileType==PCXyzSift || fileType==PCXyzRgbSift
 				|| fileType==PCXyzShot || fileType==PCXyzRgbNormal)
 	{
+		LOG(LNOTICE)<<"ReadPCDCloud";
 		ReadPCDCloud(fileNm);
 	}
 	else if(fileType==ImageXyz)
 	{
+		LOG(LNOTICE)<<"fileType==ImageXyz";
 		FileStorage fs2(fileNm, FileStorage::READ);
 		cv::Mat imageXYZ;
 		fs2["img"] >> imageXYZ;
@@ -591,11 +608,17 @@ void PrimitiveFile::writeToSinkFromFile(string& path)
 		data = CIPFile;
 		LOG(LINFO)<<CIPFile;
 	}
+	else
+	{
+		LOG(LERROR)<<"Unsupported file type!";
+		exit(1);
+	}
 }
 
 void PrimitiveFile::getFileFromGrid(const GridFile& file, string& path)
 {
-	LOG(LTRACE)<<"MongoProxy::getFileFromGrid";
+	LOG(LNOTICE)<<"PrimitiveFile::getFileFromGrid";
+	LOG(LNOTICE)<<"path : "<<path;
 	stringstream ss;
 	string str = ss.str();
 	string name;
@@ -604,6 +627,7 @@ void PrimitiveFile::getFileFromGrid(const GridFile& file, string& path)
 	else
 		name = path+"/"+fileName;
 
+	LOG(LNOTICE)<<"name : "<<name;
 	ofstream ofs((char*)name.c_str());
 	gridfs_offset off = file.write(ofs);
 	if (off != file.getContentLength())
@@ -746,6 +770,7 @@ void PrimitiveFile::getXYZData(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudXYZ)
 
 void PrimitiveFile::getXYZRGBData(pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloudXYZRGB)
 {
+	LOG(LNOTICE)<<"getXYZRGBData";
 	cloudXYZRGB = boost::get<pcl::PointCloud<pcl::PointXYZRGB>::Ptr>(data);
 }
 
@@ -1200,7 +1225,7 @@ void PrimitiveFile::saveToDisc(bool suffix, bool binary)
 	}
 }
 //TODO dodać type i name!!!
-void PrimitiveFile::insertFileIntoGrid(OID& oid, bool dataInBuffer, string& path)
+void PrimitiveFile::insertFileIntoGrid(OID& oid, bool dataInBuffer, string& path, string& type, string& name)
 {
 	LOG(LNOTICE)<<"Writting to GRIDFS!";
 	try{
@@ -1229,15 +1254,18 @@ void PrimitiveFile::insertFileIntoGrid(OID& oid, bool dataInBuffer, string& path
 		//		b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").obj();
 		BSONObj b;
 		LOG(LNOTICE)<<"fileType: "<<fileType;
-		//TODO ADD THIS!!!
-	//	if(viewName!="")
-	//		b = BSONObjBuilder().appendElements(object).append("ViewName", viewName).append("fileType", FTypes[fileType]).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
-	//	else if(modelName!="")
-	//		b = BSONObjBuilder().appendElements(object).append("ModelName", modelName).append("fileType", FTypes[fileType]).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
-
+		if(type=="View")
+			b = BSONObjBuilder().appendElements(object).append("ViewName", name).append("fileType", FTypes[fileType]).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
+		else if(type=="Model")
+			b = BSONObjBuilder().appendElements(object).append("ModelName", name).append("fileType", FTypes[fileType]).append("DocumentType", "file").append("size", sizeBytes).append("place", "grid").obj();
+		else
+		{
+			LOG(LERROR)<<"Couldn't update type: "<<type<<" !!!";
+		}
 		MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
+		LOG(LERROR)<<"OID :"<<oid;
 		string field = "filename";
 		MongoProxy::MongoProxy::getSingleton(hostname).index(field);
 	}catch(DBException &e)

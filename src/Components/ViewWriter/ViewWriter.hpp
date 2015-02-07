@@ -156,7 +156,7 @@ private:
 	Base::Property<string> viewName;
 	Base::Property<string> fileName;
 	Base::Property<string> SensorType;
-	Base::Property<string> objects;
+	Base::Property<string> viewsSet;
 	Base::Property<string> sceneNameProp;
 	Base::Property<bool> cameraInfoProp;
 	Base::Property<bool> xyzProp;

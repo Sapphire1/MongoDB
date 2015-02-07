@@ -26,7 +26,7 @@ ModelWriter::ModelWriter(const string & name) : Base::Component(name),
 		description("description", string("My green coffe cup")),
 		modelName("modelName", string("model1")),
 		fileName("fileName", string("tempFile")),
-		object("object", string("object1")),
+		viewsSet("viewsSet", string("viewsSet1")),
 		pc_xyzProp("PC.xyz", true),
 		pc_xyzrgbProp("PC.xyzrgb", true),
 		pc_xyzsiftProp("PC.xyzsift", false),
@@ -38,7 +38,7 @@ ModelWriter::ModelWriter(const string & name) : Base::Component(name),
 	registerProperty(description);
 	registerProperty(modelName);
 	registerProperty(fileName);
-	registerProperty(object);
+	registerProperty(viewsSet);
 
 	registerProperty(pc_xyzProp);
 	registerProperty(pc_xyzrgbProp);
@@ -84,8 +84,8 @@ void ModelWriter::writeData()
 	bool exist = modelPtr->checkIfExist();
 	if(!exist)
 	{
-		string objectList = object;
-		modelPtr->setObjectNames(objectList);
+		string viewsSetList = viewsSet;
+		modelPtr->setViewsSetNames(viewsSetList);
 	}
 	else
 	{

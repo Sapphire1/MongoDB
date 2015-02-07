@@ -36,7 +36,7 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	viewName("viewName", string("lab012")),
 	fileName("fileName", string("tempFile")),
 	SensorType("SensorType", string("Stereo")),
-	objects("objects", string("object1;object2;object3")),
+	viewsSet("viewsSet", string("viewsSet1;viewsSet2;viewsSet3")),
 	cameraInfoProp("file.cameraInfo.xml", false),
 	xyzProp("image.xyz", false),
 	rgbProp("image.rgb", false),
@@ -60,7 +60,7 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	registerProperty(description);
 	registerProperty(viewName);
 	registerProperty(fileName);
-	registerProperty(objects);
+	registerProperty(viewsSet);
 	registerProperty(SensorType);
 
 	registerProperty(cameraInfoProp);
@@ -130,28 +130,6 @@ void ViewWriter::writeData()
 	string vn = string(viewName);
 	viewPtr = boost::shared_ptr<View>(new View(vn,hostname));
 
-	bool exist = viewPtr->checkIfExist();
-	if(!exist)
-	{
-		string objectList = objects;
-		string sceneName = sceneNameProp;
-		string sensor = SensorType;
-		std::vector<std::string> splitedObjectNames;
-		boost::split(splitedObjectNames, objectList, is_any_of(";"));
-		viewPtr->setSensorType(sensor);
-		viewPtr->setObjectNames(splitedObjectNames);
-		scenePtr = boost::shared_ptr<Scene>(new Scene(sceneName,hostname));
-		OID sceneOID;
-		scenePtr->create(sceneOID);
-		OID viewOID;
-		viewPtr->create(sceneOID, viewOID, sceneName);
-		scenePtr->addView(vn, viewOID);
-	}
-	else
-	{
-		CLOG(LERROR)<<"View exist in data base!!!";
-		return;
-	}
 
 	std::vector<fileTypes> providedFileTypes;
 	bool anyMarked = false;
@@ -169,9 +147,30 @@ void ViewWriter::writeData()
 		else if(!cleanData)
 		{
 			CLOG(LNOTICE)<<"Save all data";
-
 			// save view in mongo
-			viewPtr->create();
+			bool exist = viewPtr->checkIfExist();
+			if(!exist)
+			{
+				string viewsSetList = viewsSet;
+				string sceneName = sceneNameProp;
+				string sensor = SensorType;
+				std::vector<std::string> splitedViewsSetNames;
+				boost::split(splitedViewsSetNames, viewsSetList, is_any_of(";"));
+				viewPtr->setSensorType(sensor);
+				viewPtr->setViewsSetNames(splitedViewsSetNames);
+				scenePtr = boost::shared_ptr<Scene>(new Scene(sceneName,hostname));
+				OID sceneOID;
+				scenePtr->create(sceneOID);
+				OID viewOID;
+				viewPtr->create(sceneOID, viewOID, sceneName);
+				scenePtr->addView(vn, viewOID);
+			}
+			else
+			{
+				CLOG(LERROR)<<"View exist in data base!!!";
+				return;
+			}
+			//viewPtr->create();
 
 			// save all files from input to mongo
 			for(std::vector<fileTypes>::iterator it = providedFileTypes.begin(); it != providedFileTypes.end(); ++it)

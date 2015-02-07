@@ -301,7 +301,6 @@ void ViewReader::readfromDB()
 
 		}
 	}
-
 }
 
 void ViewReader::readRequiredData(std::vector<fileTypes> & requiredFileTypes)

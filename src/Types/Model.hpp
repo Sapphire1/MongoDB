@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <exception>
 
 #include "Logger.hpp"
 #include "mongo/client/dbclient.h"
@@ -66,7 +67,7 @@ private:
 	std::vector<string>	allFileTypes;			// [MASK, IMAGE, …, IMAGE3D]
 	std::string description;
 	string hostname;
-	string objectName;
+	string viewSetName;
 	BSONObj modelDocument;
 
 	// all required types to store
@@ -84,9 +85,9 @@ public:
 	{
 		this->requiredKeyTypes = requiredKeyTypes;
 	};
-	void setObjectNames(std::string & objectName)
+	void setViewsSetNames(std::string & viewSetName)
 	{
-		this->objectName = objectName;
+		this->viewSetName = viewSetName;
 	}
 
 	bool checkIfExist();
@@ -154,6 +155,7 @@ void Model::readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFi
 		{
 			if(fileType == FTypes[i])
 			{
+				LOG(LNOTICE)<<fileType <<"="<< FTypes[i];
 				ft = (fileTypes)i;
 				break;
 			}
@@ -198,34 +200,30 @@ int Model::getAllFilesOIDS(vector<OID>& oidsVector)
 
 void Model::readModelDocument()
 {
-	auto_ptr<DBClientCursor> cursorCollection;
 	BSONObj query = BSON("ModelName"<<ModelName<<"DocumentType"<<"Model");
-	cursorCollection =MongoProxy::MongoProxy::getSingleton(hostname).query(query);
-	while(cursorCollection->more())
-	{
-		modelDocument = cursorCollection->next();
-	}
+	modelDocument = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
 }
 
 bool Model::getModelTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& fileTypesVector)
 {
 	LOG(LNOTICE)<<"Model::getModelTypes";
-	string output = obj.getField(fieldName);
-	LOG(LNOTICE)<<output;
+	LOG(LNOTICE)<<"fieldName : "<<fieldName;
+
+	 string output = obj.getField(fieldName);
+	 LOG(LNOTICE)<<output;
+
+
 	if(output!="EOO")
 	{
 		LOG(LNOTICE)<<output;
 		vector<BSONElement> v = obj.getField(fieldName).Array();
-
 		for (unsigned int i = 0; i<v.size(); i++)
 		{
 			// read to string
 			LOG(LNOTICE)<<v[i][childfieldName].String();
-
 			fileTypes ft=fileTypes(-1);
 			LOG(LNOTICE)<<"modelFileType: "<<v[i][childfieldName].String();
 			// map from string to enum
-
 			for(int j=0; j<18;j++)
 			{
 
@@ -239,7 +237,6 @@ bool Model::getModelTypes(BSONObj &obj, const string & fieldName, const string &
 			//	else
 			//		ft=fileTypes(-1);
 			}
-
 			LOG(LNOTICE)<<" ft: "<<ft;
 			// insert enum to vector
 			if(ft>-1)
@@ -248,7 +245,9 @@ bool Model::getModelTypes(BSONObj &obj, const string & fieldName, const string &
 		return true;
 	}
 	else
+
 		return false;
+
 
 }
 
@@ -258,7 +257,9 @@ bool Model::checkIfContain(std::vector<fileTypes> & requiredFileTypes)
 	vector<fileTypes> fileTypesVector;
 	string fieldName = "FileTypes";
 	string childfieldName = "Type";
-	LOG(LNOTICE)<<modelDocument;
+
+	LOG(LNOTICE)<<"modelDocument: "<<modelDocument;
+
 	bool arrayNotEmpty = getModelTypes(modelDocument,fieldName, childfieldName, fileTypesVector);
 
 	if(!arrayNotEmpty)
@@ -293,6 +294,7 @@ bool Model::checkIfContain(std::vector<fileTypes> & requiredFileTypes)
 			return false;
 
 	}
+
 	return true;
 }
 
@@ -402,33 +404,27 @@ void Model::create()
 	MongoProxy::MongoProxy::getSingleton(hostname).insert(model);
 	// thesis: model doesn't exist so doesn't contain any object
 
-	// check if object exist
-	BSONObj b = BSON("ObjectName"<<objectName<<"DocumentType"<<"Object");
+	// check if ViewsSet exist
+	BSONObj b = BSON("ViewsSetName"<<viewSetName<<"DocumentType"<<"ViewsSet");
 	int items = MongoProxy::MongoProxy::getSingleton(hostname).count(b);
 	// document of object doesn't exist
 	if(items==0)
 	{
-		BSONObj object = BSONObjBuilder().genOID().append("ObjectName", objectName).append("DocumentType","Object").obj();
-		MongoProxy::MongoProxy::getSingleton(hostname).insert(object);
+		BSONObj viewSet = BSONObjBuilder().genOID().append("ViewsSetName", viewSetName).append("DocumentType","ViewsSet").obj();
+		MongoProxy::MongoProxy::getSingleton(hostname).insert(viewSet);
 	}
-	BSONObj query = BSON("ObjectName"<<objectName<<"DocumentType"<<"Object");
+	BSONObj query = BSON("ViewsSetName"<<viewSetName<<"DocumentType"<<"ViewsSet");
 	BSONObj update = BSON("$addToSet"<<BSON("ModelsList"<<BSON("modelOID"<<modelOID.toString())));
 	// insert model oid to object document
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 
-	// insert object oid to model document
-	BSONObj object;
-	query = BSON("ObjectName"<<objectName<<"DocumentType"<<"Object");
-	auto_ptr<DBClientCursor> cursorCollection =MongoProxy::MongoProxy::getSingleton(hostname).query(query);
-	while(cursorCollection->more())
-	{
-		object = cursorCollection->next();
-	}
-	object.getObjectID(bsonElement);
-	OID objectOID;
-	objectOID=bsonElement.__oid();
+	// insert viewSet oid to model document
+	query = BSON("ViewsSetName"<<viewSetName<<"DocumentType"<<"ViewsSet");
+	BSONObj viewSet= MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+	viewSet.getObjectID(bsonElement);
+	OID viewSetOID=bsonElement.__oid();
 	query = BSON("ModelName"<<ModelName<<"DocumentType"<<"Model");
-	update = BSON("$addToSet"<<BSON("ObjectsList"<<BSON("objectOID"<<objectOID.toString())));
+	update = BSON("$addToSet"<<BSON("ViewsSetsList"<<BSON("objectOID"<<viewSetOID.toString())));
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 	return;
 }
