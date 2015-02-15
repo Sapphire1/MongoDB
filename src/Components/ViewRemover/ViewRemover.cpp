@@ -21,7 +21,7 @@ ViewRemover::ViewRemover(const std::string & name) : Base::Component(name),
 	cameraInfoProp("file.cameraInfo.xml", false),
 	xyzProp("image.xyz", false),
 	rgbProp("image.rgb", false),
-	depthProp("image.density", false),
+	depthProp("image.depth", false),
 	intensityProp("image.intensity", false),
 	maskProp("image.mask", false),
 	stereoProp("image.stereo", false),
@@ -65,10 +65,7 @@ ViewRemover::~ViewRemover()
 void ViewRemover::prepareInterface() {
 	CLOG(LTRACE) << "ViewRemover::prepareInterface";
 	h_readfromDB.setup(this, &ViewRemover::readfromDB);
-	registerHandler("Read", &h_readfromDB);
-
-	//registerHandler("onTriggeredReadAllFiles", boost::bind(&ViewRemover::readAllFilesTriggered, this));
-	//addDependency("onTriggeredReadAllFiles", &in_trigger);
+	registerHandler("Remove", &h_readfromDB);
 }
 
 bool ViewRemover::onInit()
@@ -126,64 +123,96 @@ void ViewRemover::readfromDB()
 	}
 	else
 	{
+		BSONObj query;
+		BSONObj update;
 		// get view document
 		viewPtr->readViewDocument();
-
-		// read all required types from GUI
-		std::vector<fileTypes> requiredFileTypes;
-		readRequiredData(requiredFileTypes);
-
-
-		if(requiredFileTypes.size()==0)
+		bool contain = true;
+		CLOG(LNOTICE)<<"Read files from View!";
+		if(removeAll)
 		{
-			CLOG(LERROR)<<"Please mark any checkbox";
-			return;
-		}
-		// check if view contain all required types
-		bool contain = viewPtr->checkIfContain(requiredFileTypes);
+			viewPtr->getAllFiles();
+			// remove all files
+			int filesNr = viewPtr->getFilesSize();
+			// remove all from view files
+			for (int i=0; i<filesNr; i++)
+			{
+				CLOG(LERROR)<<"Removed Type: " << viewPtr->getFile(i)->getType();
+				OID fileOID = viewPtr->getFile(i)->getOID();
+				CLOG(LERROR)<<"Usuwamy : " << FTypes[viewPtr->getFile(i)->getType()];
+				CLOG(LERROR)<<"fileOID: " << fileOID;
+				query = BSON("ViewName"<<vn<<"DocumentType"<<"View");
+				update = BSON("$pull"<<BSON("FileTypes"<<BSON("Type"<<FTypes[viewPtr->getFile(i)->getType()])));
+				MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
+				update = BSON("$pull"<<BSON("fileOIDs"<<BSON("fileOID"<<fileOID.toString())));
+				MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
+				viewPtr->getFile(i)->removeFile();
+			}
+			//get scene from doc
+			string sceneName;
+			viewPtr->getSceneName(sceneName);
+			OID viewOID;
+			viewPtr->getID(viewOID);
+			CLOG(LERROR)<<"Scene: " << sceneName;
+			CLOG(LERROR)<<"viewOID.toString(): " << viewOID.toString();
+			query = BSON("SceneName"<<sceneName<<"DocumentType"<<"Scene");
+			update = BSON("$pull"<<BSON("ViewsList"<<BSON("viewOID"<<viewOID.toString())));
+			MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 
-		if(!contain)
-		{
-			CLOG(LERROR)<<"View doesn't contain all required files! BYE!";
+			// remove from viewsSet
+			vector<OID> viewsSetOIDS;
+			string tableName = "viewSetList";
+			string fieldName = "ViewsSetOID";
+			viewPtr->getViewsSetOID(viewsSetOIDS, tableName, fieldName);
+
+			for(std::vector<OID>::iterator viewsSetIter = viewsSetOIDS.begin(); viewsSetIter != viewsSetOIDS.end(); ++viewsSetIter)
+			{
+				BSONObj query = BSON("_id" << *viewsSetIter);
+				BSONObj bsonfile = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+				string ViewsSetName = bsonfile.getField("ViewsSetName").str();
+				LOG(LNOTICE)<<"ViewsSetName : " <<ViewsSetName;
+
+				query = BSON("ViewsSetName"<<ViewsSetName<<"DocumentType"<<"ViewsSet");
+				update = BSON("$pull"<<BSON("ViewsList"<<BSON("viewOID"<<viewOID.toString())));
+				CLOG(LERROR)<<query.toString(false, false);
+				CLOG(LERROR)<<update.toString(false, false);
+				MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
+			}
+			// remove view document
+			MongoProxy::MongoProxy::getSingleton(hostname).remove(viewOID);
 		}
 		else
 		{
-			CLOG(LNOTICE)<<"Read files from View!";
-
-			// read vector of files OIDs
-			vector<OID> fileOIDSVector;
-			viewPtr->getAllFilesOIDS(fileOIDSVector);
-
-			// for full required files vector, read file document and check if its type is equal
-			// one of requested file types
-
-			if(removeAll)
+			// read all required types from GUI
+			std::vector<fileTypes> requiredFileTypes;
+			readRequiredData(requiredFileTypes);
+			if(requiredFileTypes.size()==0)
 			{
-				// remove all files
-				for(std::vector<OID>::iterator fileOIDIter = fileOIDSVector.begin(); fileOIDIter != fileOIDSVector.end(); ++fileOIDIter)
-				{
-					BSONObj query = BSON("_id" << *fileOIDIter);
-					MongoProxy::MongoProxy::getSingleton(hostname).remove(*fileOIDIter);
-				}
-
-				// remove view document
-				BSONObj obj = viewPtr->getDocument();
-				BSONElement oi;
-				obj.getObjectID(oi);
-				OID viewOID = oi.__oid();
-				MongoProxy::MongoProxy::getSingleton(hostname).remove(viewOID);
+				CLOG(LERROR)<<"Please mark any checkbox";
+				return;
 			}
-			else
+			// check if view contain all required types
+			contain = viewPtr->checkIfContain(requiredFileTypes);
+			if(!contain)
 			{
-				viewPtr->readFiles(fileOIDSVector, requiredFileTypes);
+				CLOG(LERROR)<<"View doesn't contain all required files! BYE!";
+			}
+			viewPtr->getRequiredFiles(requiredFileTypes);
 
-				//write to output
-				int filesNr = viewPtr->getFilesSize();
-				// remove only marked files
-				for (int i=0; i<filesNr; i++)
-				{
-					viewPtr->getFile(i)->removeDocument();
-				}
+			int filesNr = viewPtr->getFilesSize();
+			// remove only marked files
+			for (int i=0; i<filesNr; i++)
+			{
+				CLOG(LERROR)<<"Removed Type: " << viewPtr->getFile(i)->getType();
+				OID fileOID = viewPtr->getFile(i)->getOID();
+				CLOG(LERROR)<<"Usuwamy : " << FTypes[viewPtr->getFile(i)->getType()];
+				CLOG(LERROR)<<"fileOID: " << fileOID;
+				BSONObj query = BSON("ViewName"<<vn<<"DocumentType"<<"View");
+				BSONObj update = BSON("$pull"<<BSON("FileTypes"<<BSON("Type"<<FTypes[viewPtr->getFile(i)->getType()])));
+				MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
+				update = BSON("$pull"<<BSON("fileOIDs"<<BSON("fileOID"<<fileOID.toString())));
+				MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
+				viewPtr->getFile(i)->removeFile();
 			}
 		}
 	}

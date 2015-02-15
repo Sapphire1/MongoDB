@@ -36,7 +36,7 @@ ViewWriter::ViewWriter(const string & name) : Base::Component(name),
 	viewName("viewName", string("lab012")),
 	fileName("fileName", string("tempFile")),
 	SensorType("SensorType", string("Stereo")),
-	viewsSet("viewsSet", string("viewsSet1;viewsSet2;viewsSet3")),
+	viewsSet("viewsSet", string("viewsSet1")),
 	cameraInfoProp("file.cameraInfo.xml", false),
 	xyzProp("image.xyz", false),
 	rgbProp("image.rgb", false),
@@ -149,6 +149,7 @@ void ViewWriter::writeData()
 			CLOG(LNOTICE)<<"Save all data";
 			// save view in mongo
 			bool exist = viewPtr->checkIfExist();
+			//TODO sprawdzać czy istnieje viewsSet
 			if(!exist)
 			{
 				string viewsSetList = viewsSet;

@@ -150,8 +150,8 @@ void Model::readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFi
 		LOG(LNOTICE)<<"fileType : " <<fileType;
 		// map from string to enum
 		fileTypes ft;
-		//TODO change it to define or const static!!!
-		for(int i=0; i<18; i++)
+		//for(int i=0; i<18; i++)
+		for(int i=0; i<StereoTextured; i++)
 		{
 			if(fileType == FTypes[i])
 			{
@@ -224,7 +224,8 @@ bool Model::getModelTypes(BSONObj &obj, const string & fieldName, const string &
 			fileTypes ft=fileTypes(-1);
 			LOG(LNOTICE)<<"modelFileType: "<<v[i][childfieldName].String();
 			// map from string to enum
-			for(int j=0; j<18;j++)
+			//for(int j=0; j<18;j++)
+			for(int j=0; j<StereoTextured;j++)
 			{
 
 				if(v[i][childfieldName].String() == FTypes[j])

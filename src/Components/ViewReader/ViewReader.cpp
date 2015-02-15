@@ -165,14 +165,10 @@ void ViewReader::readfromDB()
 		{
 			CLOG(LNOTICE)<<"Read files from View!";
 
-			// read vector of files OIDs
-			vector<OID> fileOIDSVector;
-			viewPtr->getAllFilesOIDS(fileOIDSVector);
-
 			// for full required files vector, read file document and check if its type is equal
 			// one of requested file types
 
-			viewPtr->readFiles(fileOIDSVector, requiredFileTypes);
+			viewPtr->getRequiredFiles(requiredFileTypes);
 
 			//write to output
 			LOG(LNOTICE)<<"WRITE FILE!!!";

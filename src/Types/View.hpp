@@ -132,11 +132,84 @@ public:
 	void putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr&, fileTypes typ, string& fileName);
 	void putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr&, fileTypes typ, string& fileName);
 	bool getViewTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& typesVector);
-	void readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFileTypes);
+	void getRequiredFiles(vector<fileTypes>& requiredFileTypes);
 	void addScene(string& sceneName, OID& sceneOID);
+	void getSceneName(string& name);
 	fileTypes getFileType(int i);
+	void getID(OID& id);
+	void getViewsSetName(string& name);
+	void getViewsSetOID(vector<OID>& viewsSetOIDS, string& tableName, string& fieldName);
 };// class View
 
+void View::getSceneName(string& name)
+{
+	name = viewDocument["SceneName"].toString(false,false);
+	name.erase(name.begin());
+	name.erase(name.end()-1);
+}
+
+/*
+void View::getViewsSetName(string& name)
+{
+	name = viewDocument["ViewsSet"].toString(false,false);
+	LOG(LNOTICE) << "name: " <<name;
+	name.erase(name.begin());
+	LOG(LNOTICE) << "name: " <<name;
+	name.erase(name.end()-1);
+	LOG(LNOTICE) << "name: " <<name;
+}
+*/
+
+// return viewsSetsOids in vector of string
+void View::getViewsSetOID(vector<OID>& viewsSetOIDS, string& tableName, string& fieldName)
+{
+	vector<BSONElement> v = viewDocument.getField(tableName).Array();
+	for (unsigned int i = 0; i<v.size(); i++)
+	{
+		string readedOid =v[i][fieldName].str();
+		OID o = OID(readedOid);
+		viewsSetOIDS.push_back(o);
+		LOG(LNOTICE)<<"DocumentOID : "<<o;
+	}
+}
+
+void View::getID(OID& id)
+{
+	BSONElement oi;
+	viewDocument.getObjectID(oi);
+	id= oi.__oid();
+}
+
+void View::getAllFiles()
+{
+	LOG(LNOTICE)<<"View::getAllFiles";
+	vector<OID> fileOIDSVector;
+	int filesNumber = getAllFilesOIDS(fileOIDSVector);
+	for(std::vector<OID>::iterator fileOIDIter = fileOIDSVector.begin(); fileOIDIter != fileOIDSVector.end(); ++fileOIDIter)
+	{
+		BSONObj query = BSON("_id" << *fileOIDIter);
+		BSONObj bsonfile = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+		string fileType = bsonfile.getField("fileType").str();
+		LOG(LNOTICE)<<"fileType : " <<fileType;
+
+		// map from string to enum
+		// now stereoTextured is equal 18, it's the last one type
+		fileTypes ft;
+		for(int i=0; i<StereoTextured;i++)
+		{
+			if(fileType == FTypes[i])
+			{
+				ft = (fileTypes)i;
+				break;
+			}
+		}
+		string empty = "";
+		LOG(LNOTICE)<<"READ FILE!!!";
+		shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(ft, hostname, *fileOIDIter));
+		file->readFile(true, empty, false);
+		files.push_back(file);
+	}
+}
 void View::saveAllFiles()
 {
 
@@ -313,8 +386,11 @@ bool View::getViewTypes(BSONObj &obj, const string & fieldName, const string & c
 
 }
 
-void View::readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFileTypes)
+void View::getRequiredFiles(vector<fileTypes>& requiredFileTypes)
 {
+	// read vector of files OIDs
+	vector<OID> fileOIDSVector;
+	getAllFilesOIDS(fileOIDSVector);
 	LOG(LNOTICE)<<"View::readFiles";
 	for(std::vector<OID>::iterator fileOIDIter = fileOIDSVector.begin(); fileOIDIter != fileOIDSVector.end(); ++fileOIDIter)
 	{
@@ -324,7 +400,8 @@ void View::readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFil
 		LOG(LNOTICE)<<"fileType : " <<fileType;
 		// map from string to enum
 		fileTypes ft;
-		for(int i=0; i<18;i++)
+		// now stereoTextured is equal 18, it's the last one type
+		for(int i=0; i<StereoTextured;i++)
 		{
 			if(fileType == FTypes[i])
 			{

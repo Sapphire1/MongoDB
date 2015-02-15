@@ -23,23 +23,17 @@ using namespace PrimitiveFile;
 
 MongoDBExporter::MongoDBExporter(const string & name) : Base::Component(name),
 	mongoDBHost("mongoDBHost", string("localhost")),
-	objectName("objectName", string("GreenCup")),
 	description("description", string("My green coffe cup")),
-	collectionName("collectionName", string("containers")),
-	nodeNameProp("nodeName", string("Object")),
+	viewsSet("viewsSet", string("viewsSet1")),
+	SensorType("SensorType", string("Stereo")),
 	folderName("folderName", string("/home/lzmuda/mongo_driver_tutorial")),
-	viewNameProp("viewName", string("")),
-	sceneNameProp("sceneNamesProp", string("scene1")),
-	modelNameProp("modelName", string(""))
+	sceneNameProp("sceneNamesProp", string("scene1"))
 {
 	registerProperty(mongoDBHost);
-	registerProperty(objectName);
 	registerProperty(description);
-	registerProperty(collectionName);
-	registerProperty(nodeNameProp);
+	registerProperty(viewsSet);
+	registerProperty(SensorType);
 	registerProperty(folderName);
-	registerProperty(viewNameProp);
-	registerProperty(modelNameProp);
 	registerProperty(sceneNameProp);
 	fileExtensions.push_back("*.png");
 	fileExtensions.push_back("*.jpg");
@@ -105,14 +99,16 @@ void MongoDBExporter::write2DB()
 			string vn = string(*itfolders);
 			viewPtr = boost::shared_ptr<View>(new View(vn,hostname));
 			bool exist = viewPtr->checkIfExist();
+			//TODO sprawdzać czy istnieje viewsSet
 			if(!exist)
 			{
-				//string objectList = objects;
-				//string sensor = SensorType;
-				//std::vector<std::string> splitedObjectNames;
-				//boost::split(splitedObjectNames, objectList, is_any_of(";"));
-				//viewPtr->setSensorType(sensor);
-				//viewPtr->setObjectNames(splitedObjectNames);
+				string viewsSetList = viewsSet;
+				string sceneName = sceneNameProp;
+				string sensor = SensorType;
+				std::vector<std::string> splitedViewsSetNames;
+				boost::split(splitedViewsSetNames, viewsSetList, is_any_of(";"));
+				viewPtr->setSensorType(sensor);
+				viewPtr->setViewsSetNames(splitedViewsSetNames);
 				scenePtr = boost::shared_ptr<Scene>(new Scene(sceneName,hostname));
 				OID sceneOID;
 				scenePtr->create(sceneOID);

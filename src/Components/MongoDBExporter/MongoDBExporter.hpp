@@ -94,13 +94,10 @@ protected:
 private:
 
         Base::Property<string> mongoDBHost;
-        Base::Property<string> objectName;
         Base::Property<string> description;
-        Base::Property<string> collectionName;
-        Base::Property<string> nodeNameProp;
+        Base::Property<string> viewsSet;
+    	Base::Property<string> SensorType;
         Base::Property<string> folderName;
-        Base::Property<string> viewNameProp;
-        Base::Property<string> modelNameProp;
         Base::Property<string> sceneNameProp;
         std::vector<std::string> fileExtensions;
         //string sceneName;

@@ -143,7 +143,7 @@ void MongoDBImporter::readfromDB()
 				// for full required files vector, read file document and check if its type is equal
 				// one of requested file types
 
-				viewPtr->readFiles(fileOIDSVector, requiredFileTypes);
+				viewPtr->getRequiredFiles(requiredFileTypes);
 
 				//write to output
 				LOG(LNOTICE)<<"WRITE FILE!!!";

@@ -100,13 +100,7 @@ void Scene::create(OID& sceneOID)
 	else
 	{
 		LOG(LINFO)<<"Scene exist!!!";
-		auto_ptr<DBClientCursor> cursorCollection =MongoProxy::MongoProxy::getSingleton(hostname).query(sceneQuery);
-
-		BSONObj sceneObj;
-		while(cursorCollection->more())
-		{
-			sceneObj = cursorCollection->next();
-		}
+		BSONObj sceneObj = MongoProxy::MongoProxy::getSingleton(hostname).findOne(sceneQuery);
 		BSONElement bsonElement;
 		sceneObj.getObjectID(bsonElement);
 		OID objectOID;
