@@ -167,12 +167,12 @@ void ViewRemover::readfromDB()
 
 			for(std::vector<OID>::iterator viewsSetIter = viewsSetOIDS.begin(); viewsSetIter != viewsSetOIDS.end(); ++viewsSetIter)
 			{
-				BSONObj query = BSON("_id" << *viewsSetIter);
-				BSONObj bsonfile = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
-				string ViewsSetName = bsonfile.getField("ViewsSetName").str();
-				LOG(LNOTICE)<<"ViewsSetName : " <<ViewsSetName;
+			//	BSONObj query = BSON("_id" << *viewsSetIter);
+			//	BSONObj bsonfile = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+			//	string ViewsSetName = bsonfile.getField("ViewsSetName").str();
+			//	LOG(LNOTICE)<<"ViewsSetName : " <<ViewsSetName;
 
-				query = BSON("ViewsSetName"<<ViewsSetName<<"DocumentType"<<"ViewsSet");
+				query = BSON("_id" << *viewsSetIter);
 				update = BSON("$pull"<<BSON("ViewsList"<<BSON("viewOID"<<viewOID.toString())));
 				CLOG(LERROR)<<query.toString(false, false);
 				CLOG(LERROR)<<update.toString(false, false);

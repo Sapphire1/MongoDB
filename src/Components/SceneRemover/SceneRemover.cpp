@@ -96,24 +96,17 @@ void SceneRemover::removeSceneFromMongoDB()
 			int items =  MongoProxy::MongoProxy::getSingleton(hostname).getChildOIDS(obj, "ViewsList", "viewOID", viewsList);
 			if (items==0)
 			{
-				LOG(LINFO)<<"No views founded to update";
+				LOG(LNOTICE)<<"No views founded to update";
 				return;
 			}
 
 			for(std::vector<OID>::iterator it = viewsList.begin(); it != viewsList.end(); ++it)
 			{
 				BSONObj query = BSON("_id" << *it);
-				BSONObj objFile = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
-				string viewName = objFile.getField("ViewName").str();
-
-				// remove scene from view
-				CLOG(LINFO)<<"remove scene from: "<<*it;
-				query = BSON("ViewName"<<viewName<<"DocumentType"<<"View");
-
-				// remove sceneName and sceneOID, if you want to add, use $set operator
 				BSONObj update = BSON("$unset"<<BSON("SceneOID"<<1 <<"SceneName"<<1));
 				MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 			}
+			//TODO remove from viewsSEtList
 		}
 	}//try
 	catch(DBException &e)
