@@ -240,9 +240,9 @@ public:
 	void saveToDisc(cv::Mat& image, string& pathToFiles, bool saveToDiscFlag);
 	void copyData(int height, int channels, float* dataXYZ, float* xyz_p, int i);
 	void saveIntoDisc();
-	void saveIntoMongoBase(string& type, string& name, bool dataInBuffer, string& path);
+	void saveIntoMongoBase(string& type, string& name, bool dataInBuffer, string& path, OID& oid);
 	void insertFileIntoGrid(OID& oid, bool dataInMemory, string& path, string&, string&);
-	void insertFileIntoDocument(OID& oid);
+	void insertFileIntoDocument(OID& oid, string& name, string& type);
 	void convertToBuffer();
 	void getMime();
 	void readFromMongoDB();
@@ -314,7 +314,7 @@ public:
 	};
 
 	float getSize(){return sizeMBytes;};
-	void saveImage(OID& oid);
+	void saveImage(OID& oid, string& name, string& type);
 	void setSize()
 	{
 		LOG(LDEBUG)<<"Set size";
@@ -423,40 +423,16 @@ void PrimitiveFile::saveToDisc(cv::Mat& image, string& pathToFiles, bool saveToD
 	}
 }
 
-void PrimitiveFile::saveIntoMongoBase(string& type, string& name, bool dataInBuffer, string& path)
+void PrimitiveFile::saveIntoMongoBase(string& type, string& name, bool dataInBuffer, string& path, OID& oid)
 {
 	//add timestamp to fileName
 	string timestamp;
 	getTimestamp(timestamp);
 	fileName =timestamp+"_"+fileName;
-	OID oid;
 	if(sizeMBytes<15)
-		insertFileIntoDocument(oid);
+		insertFileIntoDocument(oid, name, type);
 	else if(sizeMBytes>=15)
 		insertFileIntoGrid(oid, dataInBuffer, path, type, name);
-
-
-	LOG(LDEBUG)<<"TYPE: "<<type;
-	BSONObj query;
-	// update document
-	if (type=="View")
-	{
-		query = BSON("ViewName"<<name<<"DocumentType"<<type);
-	}
-	else if (type=="Model")
-	{
-		query = BSON("ModelName"<<name<<"DocumentType"<<type);
-	}
-	else
-	{
-		LOG(LERROR)<<"Couldn't update type: "<<type<<" !!!";
-	}
-	LOG(LDEBUG)<<"OID: "<<oid.toString();
-	BSONObj update = BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString())));
-	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
-
-	update = BSON("$addToSet"<<BSON("FileTypes"<<BSON("Type"<<FTypes[fileType])));
-	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 }
 
 void PrimitiveFile::readImageFromDocument(bool saveToDiscFlag, string& pathToFiles)
@@ -952,7 +928,7 @@ void PrimitiveFile::getXYZRGBNormalData(pcl::PointCloud<pcl::PointXYZRGBNormal>:
 	cloudXYZNormal = boost::get<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr>(data);
 }
 
-void PrimitiveFile::saveImage(OID& oid)
+void PrimitiveFile::saveImage(OID& oid, string& name, string& type)
 {
 	LOG(LDEBUG)<<"Insert image";
 	cv::Mat* img =  boost::get<cv::Mat>(&data);
@@ -976,7 +952,7 @@ void PrimitiveFile::saveImage(OID& oid)
 		LOG(LERROR)<<"File extension is unsupported!";
 		exit(1);
 	}
-	BSONObj b=BSONObjBuilder().genOID().appendBinData(fileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+	BSONObj b=BSONObjBuilder().genOID().appendBinData(fileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append("DocumentType", "file").append(type+"Name", name).append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 	BSONElement bsonElement;
 	b.getObjectID(bsonElement);
 	oid=bsonElement.__oid();
@@ -1039,7 +1015,7 @@ void PrimitiveFile::copyXYZSHOTPointToFloatArray (const PointXYZSHOT &p, float *
 
 }
 
-void PrimitiveFile::insertFileIntoDocument(OID& oid)
+void PrimitiveFile::insertFileIntoDocument(OID& oid, string& name, string& type)
 {
 	// use variant here...
 	LOG(LDEBUG)<<"insertFileIntoDocument";
@@ -1058,7 +1034,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 			char const *cipCharTable = input->c_str();
 			LOG(LDEBUG)<<string(cipCharTable);
 			// create bson object
-			b = BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, BinDataGeneral,  cipCharTable).append("filename", fileName).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+			b = BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, BinDataGeneral,  cipCharTable).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 
 			// insert object into collection
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
@@ -1069,42 +1045,42 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 		}
 		case ImageRgb:
 		{
-			saveImage(oid);
+			saveImage(oid, name, type);
 			break;
 		}
 		case ImageDepth:
 		{
-			saveImage(oid);
+			saveImage(oid, name, type);
 			break;
 		}
 		case ImageIntensity:
 		{
-			saveImage(oid);
+			saveImage(oid, name, type);
 			break;
 		}
 		case ImageMask:
 		{
-			saveImage(oid);
+			saveImage(oid, name, type);
 			break;
 		}
 		case StereoLeft:
 		{
-			saveImage(oid);
+			saveImage(oid, name, type);
 			break;
 		}
 		case StereoRight:
 		{
-			saveImage(oid);
+			saveImage(oid, name, type);
 			break;
 		}
 		case StereoLeftTextured:
 		{
-			saveImage(oid);
+			saveImage(oid, name, type);
 			break;
 		}
 		case StereoRightTextured:
 		{
-			saveImage(oid);
+			saveImage(oid, name, type);
 			break;
 		}
 		case PCXyz:
@@ -1121,7 +1097,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 				const pcl::PointXYZ p = cloudXYZ->points[iter];
 				copyXYZPointToFloatArray (p, &buff[xyzPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
@@ -1141,7 +1117,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 				const pcl::PointXYZRGB p = cloudXYZRGB->points[iter];
 				copyXYZRGBPointToFloatArray (p, &buff[xyzrgbPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
@@ -1161,7 +1137,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 				const PointXYZSIFT p = cloudXYZSIFT->points[iter];
 				copyXYZSiftPointToFloatArray (p, &buff[siftPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
@@ -1189,7 +1165,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 				const PointXYZSHOT p = cloudXYZSHOT->points[iter];
 				copyXYZSHOTPointToFloatArray(p, &buff[shotPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
@@ -1208,7 +1184,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 				const pcl::PointXYZRGBNormal p = cloudXYZRGBNormal->points[iter];
 				copyXYZRGBNormalPointToFloatArray(p, &buff[normalPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
@@ -1224,7 +1200,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid)
 			float* buf;
 			buf = (float*)xyzimage->data;
 			LOG(LDEBUG)<<"Set buffer YAML";
-			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).append("width", width).append("height", height).append("channels", channels).obj();
+			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).append("width", width).append("height", height).append("channels", channels).obj();
 			LOG(LDEBUG)<<"YAML inserted";
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();

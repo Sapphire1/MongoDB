@@ -83,7 +83,7 @@ public:
 
 	View(string& viewName, string& host) : ViewName(viewName), hostname(host)
 	{
-		readViewDocument();
+		//readViewDocument();
 	};
 	void setRequiredKeyTypes(boost::shared_ptr<std::vector<fileTypes> > &requiredKeyTypes)
 	{
@@ -92,7 +92,10 @@ public:
 	void getAllFiles();
 	void saveAllFiles();
 	void setViewName();
-	void getViewName();
+	void getViewsSetNames(vector<string>& viewsSetOIDS, string& tableName, string& fieldName);
+	string& getViewName(){
+		return ViewName;
+	}
 	shared_ptr<PrimitiveFile::PrimitiveFile> getFile(int pos);
 	int getFilesSize()
 	{
@@ -140,6 +143,8 @@ public:
 	void getID(OID& id);
 	void getViewsSetName(string& name);
 	void getViewsSetOID(vector<OID>& viewsSetOIDS, string& tableName, string& fieldName);
+	void addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path);
+
 };// class View
 
 void View::getSceneName(string& name)
@@ -148,18 +153,23 @@ void View::getSceneName(string& name)
 	name.erase(name.begin());
 	name.erase(name.end()-1);
 }
-
-/*
-void View::getViewsSetName(string& name)
+void View::addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path)
 {
-	name = viewDocument["ViewsSet"].toString(false,false);
-	LOG(LDEBUG) << "name: " <<name;
-	name.erase(name.begin());
-	LOG(LDEBUG) << "name: " <<name;
-	name.erase(name.end()-1);
-	LOG(LDEBUG) << "name: " <<name;
+	OID oid;
+	string documentType= "View";
+	file->saveIntoMongoBase(documentType, ViewName, true, path, oid);
+	BSONObj query;
+	// update document
+
+	query = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");
+
+	LOG(LDEBUG)<<"OID: "<<oid.toString();
+	BSONObj update = BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString())));
+	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
+
+	update = BSON("$addToSet"<<BSON("FileTypes"<<BSON("Type"<<FTypes[file->getType()])));
+	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 }
-*/
 
 // return viewsSetsOids in vector of string
 void View::getViewsSetOID(vector<OID>& viewsSetOIDS, string& tableName, string& fieldName)
@@ -174,6 +184,16 @@ void View::getViewsSetOID(vector<OID>& viewsSetOIDS, string& tableName, string& 
 	}
 }
 
+void View::getViewsSetNames(vector<string>& viewsSetNames, string& tableName, string& fieldName)
+{
+	vector<BSONElement> v = viewDocument.getField(tableName).Array();
+	for (unsigned int i = 0; i<v.size(); i++)
+	{
+		string readedName =v[i][fieldName].str();
+		viewsSetNames.push_back(readedName);
+		LOG(LDEBUG)<<"viewsSetName : "<<readedName;
+	}
+}
 void View::getID(OID& id)
 {
 	BSONElement oi;
@@ -226,6 +246,7 @@ void View::readViewDocument()
 {
 	BSONObj query = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");
 	viewDocument = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+	ViewName = viewDocument["ViewName"].str();
 }
 
 /*
@@ -510,11 +531,13 @@ void View::create(OID& sceneOID, OID& viewOID, string& sceneName)
 		BSONObj viewsSet;
 		bool created = false;
 		BSONObj b = BSON("ViewsSetName"<<*viewSetIt<<"DocumentType"<<"ViewsSet");
+		LOG(LNOTICE)<<"Nazwa zbioru: "<< *viewSetIt;
 		// check if viewsSet exist
 		int items = MongoProxy::MongoProxy::getSingleton(hostname).count(b);
 		// document of viewsSet doesn't exist, create it
 		if(items==0)
 		{
+			LOG(LNOTICE)<<"Zbior nie istnieje!";
 			viewsSet = BSONObjBuilder().genOID().append("ViewsSetName", *viewSetIt).append("DocumentType","ViewsSet").obj();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(viewsSet);
 			created=true;
@@ -536,6 +559,9 @@ void View::create(OID& sceneOID, OID& viewOID, string& sceneName)
 		viewSetOID=bsonElement.__oid();
 		query = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");
 		update = BSON("$addToSet"<<BSON("viewSetList"<<BSON("ViewsSetOID"<<viewSetOID.toString())));
+		MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
+
+		update = BSON("$addToSet"<<BSON("viewsSetNamesList"<<BSON("ViewsSetName"<<*viewSetIt)));
 		MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 	}
 	return;

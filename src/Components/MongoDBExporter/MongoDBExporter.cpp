@@ -95,6 +95,7 @@ void MongoDBExporter::write2DB()
 			string vn = string(*itfolders);
 			viewPtr = boost::shared_ptr<View>(new View(vn,hostname));
 			bool exist = viewPtr->checkIfExist();
+
 			//TODO sprawdzać czy istnieje viewsSet
 			if(!exist)
 			{
@@ -117,7 +118,6 @@ void MongoDBExporter::write2DB()
 				CLOG(LERROR)<<"View exist in data base!!!";
 				continue;
 			}
-
 		}
 		else if (itfolders->find("model") != std::string::npos || itfolders->find("Model") != std::string::npos )
 		{
@@ -128,12 +128,8 @@ void MongoDBExporter::write2DB()
 			bool exist = modelPtr->checkIfExist();
 			if(!exist)
 			{
-				//string objectList = objects;
-				//string sensor = SensorType;
-				//std::vector<std::string> splitedObjectNames;
-				//boost::split(splitedObjectNames, objectList, is_any_of(";"));
-				//viewPtr->setSensorType(sensor);
-				//viewPtr->setObjectNames(splitedObjectNames);
+				string viewsSetName = string(viewsSet);
+				modelPtr->setViewsSetNames(viewsSetName);
 			}
 			else
 			{
@@ -251,7 +247,15 @@ void MongoDBExporter::write2DB()
 				{
 					file->writeToSinkFromFile(fileNameTemp);
 				}
-				file->saveIntoMongoBase(type, *itfolders, false, fileNameTemp);
+				if(type == "Model")
+					modelPtr->addFile(file, type, false, fileNameTemp);
+				else if(type == "View")
+					viewPtr->addFile(file, type, false, fileNameTemp);
+				else
+				{
+					CLOG(LERROR) <<"Not view or model!!!";
+					exit(1);
+				}
 			}//for
 		}//for
 	}//for

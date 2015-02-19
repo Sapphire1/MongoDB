@@ -79,7 +79,7 @@ private:
 public:
 	Model(string& modelName, string& host) : ModelName(modelName), hostname(host)
 	{
-		readModelDocument();
+		//readModelDocument();
 	};
 	void setRequiredKeyTypes(boost::shared_ptr<std::vector<fileTypes> > &requiredKeyTypes)
 	{
@@ -135,9 +135,26 @@ public:
 	std::vector<AbstractObject*> getModels();
 	bool checkIfContain(std::vector<fileTypes> & requiredFileTypes);
 	bool getModelTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& typesVector);
+	void addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path);
 
 
 };// class Model
+void Model::addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path)
+{
+	OID oid;
+	string documentType= "Model";
+	file->saveIntoMongoBase(documentType, ModelName, true, path, oid);
+	BSONObj query;
+	// update document
+	query = BSON("ModelName"<<ModelName<<"DocumentType"<<documentType);
+
+	LOG(LDEBUG)<<"OID: "<<oid.toString();
+	BSONObj update = BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString())));
+	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
+
+	update = BSON("$addToSet"<<BSON("FileTypes"<<BSON("Type"<<FTypes[file->getType()])));
+	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
+}
 
 void Model::readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFileTypes)
 {
@@ -426,6 +443,9 @@ void Model::create()
 	OID viewSetOID=bsonElement.__oid();
 	query = BSON("ModelName"<<ModelName<<"DocumentType"<<"Model");
 	update = BSON("$addToSet"<<BSON("ViewsSetsList"<<BSON("objectOID"<<viewSetOID.toString())));
+	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
+
+	update = BSON("$addToSet"<<BSON("viewsSetNamesList"<<BSON("ViewsSetName"<<viewSetName)));
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 	return;
 }
