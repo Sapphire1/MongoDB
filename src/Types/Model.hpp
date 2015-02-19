@@ -62,7 +62,6 @@ class Model
 private:
 	std::string ModelName;					// model1
 	std::vector<shared_ptr<PrimitiveFile::PrimitiveFile> > files;
-	//std::vector<AbstractObject*>& models;
 	string dateOfInsert;					// 02042013
 	std::vector<string>	allFileTypes;			// [MASK, IMAGE, …, IMAGE3D]
 	std::string description;
@@ -80,6 +79,7 @@ private:
 public:
 	Model(string& modelName, string& host) : ModelName(modelName), hostname(host)
 	{
+		readModelDocument();
 	};
 	void setRequiredKeyTypes(boost::shared_ptr<std::vector<fileTypes> > &requiredKeyTypes)
 	{

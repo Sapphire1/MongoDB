@@ -7,10 +7,6 @@
 
 #include "MongoDBImporter.hpp"
 
-#define siftPointSize 133
-#define xyzPointSize 3
-#define xyzrgbPointSize 4
-
 namespace Processors {
 namespace MongoDBImporter  {
 using namespace cv;

@@ -5,10 +5,6 @@
  */
 #include "ModelReader.hpp"
 
-#define siftPointSize 133
-#define xyzPointSize 3
-#define xyzrgbPointSize 4
-
 namespace Processors {
 namespace ModelReader  {
 using namespace cv;
@@ -236,6 +232,7 @@ void ModelReader::loadModels(fileTypes fT, string& ModelName, int meanViewpointF
 	CLOG(LDEBUG) << "Create model";
 	SIFTObjectModel* model;
 	//TODO add more types!!!
+	//TODO test all types and returned vector of models!!!
 	if(fT==PCXyz)
 		CLOG(LERROR)<<"Unsupported type!!!";
 	else if(fT==PCXyzRgb)

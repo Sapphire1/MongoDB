@@ -7,10 +7,6 @@
 
 #include "MongoDBExporter.hpp"
 
-#define siftPointSize 133
-#define xyzPointSize 3
-#define xyzrgbPointSize 4
-
 namespace Processors {
 namespace MongoDBExporter  {
 using namespace cv;
@@ -151,7 +147,6 @@ void MongoDBExporter::write2DB()
 			CLOG(LINFO)<<"Folder: "<<directory+"/" + *itfolders<<" will be ommited!";
 			continue;
 		}
-		CLOG(LERROR)<<"type : "<<type;
 		string source  = directory+"/"+ *itfolders+"/";
 		CLOG(LINFO) <<"source : "<<source;
 		// get files
@@ -168,7 +163,6 @@ void MongoDBExporter::write2DB()
 			{
 				string fileName = *it;
 				string newFileName;
-				CLOG(LERROR)<<"fileName : "<<fileName;
 				string fileNameTemp = fileName;
 
 				const size_t last_slash_idx = fileName.find_last_of("/");
@@ -250,7 +244,6 @@ void MongoDBExporter::write2DB()
 				}
 				CLOG(LNOTICE)<<"ft : "<< ft;
 				shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(newFileName, ft, hostname));
-				CLOG(LERROR)<<"fileNameTemp : "<<fileNameTemp;
 				float size = get_file_size(fileNameTemp);
 				file->setSize(size);
 

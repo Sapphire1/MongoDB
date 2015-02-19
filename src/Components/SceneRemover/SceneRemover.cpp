@@ -5,10 +5,6 @@
  */
 #include "SceneRemover.hpp"
 
-#define siftPointSize 133
-#define xyzPointSize 3
-#define xyzrgbPointSize 4
-
 namespace Processors {
 namespace SceneRemover  {
 using namespace cv;

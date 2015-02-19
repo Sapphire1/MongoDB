@@ -83,6 +83,7 @@ public:
 
 	View(string& viewName, string& host) : ViewName(viewName), hostname(host)
 	{
+		readViewDocument();
 	};
 	void setRequiredKeyTypes(boost::shared_ptr<std::vector<fileTypes> > &requiredKeyTypes)
 	{
@@ -152,11 +153,11 @@ void View::getSceneName(string& name)
 void View::getViewsSetName(string& name)
 {
 	name = viewDocument["ViewsSet"].toString(false,false);
-	LOG(LNOTICE) << "name: " <<name;
+	LOG(LDEBUG) << "name: " <<name;
 	name.erase(name.begin());
-	LOG(LNOTICE) << "name: " <<name;
+	LOG(LDEBUG) << "name: " <<name;
 	name.erase(name.end()-1);
-	LOG(LNOTICE) << "name: " <<name;
+	LOG(LDEBUG) << "name: " <<name;
 }
 */
 
@@ -169,7 +170,7 @@ void View::getViewsSetOID(vector<OID>& viewsSetOIDS, string& tableName, string& 
 		string readedOid =v[i][fieldName].str();
 		OID o = OID(readedOid);
 		viewsSetOIDS.push_back(o);
-		LOG(LNOTICE)<<"DocumentOID : "<<o;
+		LOG(LDEBUG)<<"DocumentOID : "<<o;
 	}
 }
 
@@ -182,7 +183,7 @@ void View::getID(OID& id)
 
 void View::getAllFiles()
 {
-	LOG(LNOTICE)<<"View::getAllFiles";
+	LOG(LDEBUG)<<"View::getAllFiles";
 	vector<OID> fileOIDSVector;
 	int filesNumber = getAllFilesOIDS(fileOIDSVector);
 	for(std::vector<OID>::iterator fileOIDIter = fileOIDSVector.begin(); fileOIDIter != fileOIDSVector.end(); ++fileOIDIter)
@@ -190,7 +191,7 @@ void View::getAllFiles()
 		BSONObj query = BSON("_id" << *fileOIDIter);
 		BSONObj bsonfile = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
 		string fileType = bsonfile.getField("fileType").str();
-		LOG(LNOTICE)<<"fileType : " <<fileType;
+		LOG(LDEBUG)<<"fileType : " <<fileType;
 
 		// map from string to enum
 		// now stereoTextured is equal 18, it's the last one type
@@ -204,7 +205,7 @@ void View::getAllFiles()
 			}
 		}
 		string empty = "";
-		LOG(LNOTICE)<<"READ FILE!!!";
+		LOG(LDEBUG)<<"READ FILE!!!";
 		shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(ft, hostname, *fileOIDIter));
 		file->readFile(true, empty, false);
 		files.push_back(file);
@@ -238,14 +239,14 @@ void View::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, fileTypes ty
 	bool allFiles = checkIfAllFiles();
 	if(allFiles)
 	{
-		LOG(LNOTICE)<<"Create View";
+		LOG(LDEBUG)<<"Create View";
 		create();
-		LOG(LNOTICE)<<"Write files to view";
+		LOG(LDEBUG)<<"Write files to view";
 		saveAllFiles();
 	}
 	else
 	{
-		LOG(LNOTICE) << "Waiting for all files to write them to mongoDB";
+		LOG(LDEBUG) << "Waiting for all files to write them to mongoDB";
 	}
 }
 */
@@ -262,7 +263,7 @@ void View::pushFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, fileTypes ty
 
 bool View::checkIfAllFiles()
 {
-	LOG(LNOTICE)<<"checkIfAllFiles";
+	LOG(LDEBUG)<<"checkIfAllFiles";
 	bool present = false;
 	bool stereoLPresent = false;
 	bool stereoRPresent = false;
@@ -271,13 +272,13 @@ bool View::checkIfAllFiles()
 
 	for(std::vector<fileTypes>::iterator reqTypes = requiredKeyTypes->begin(); reqTypes != requiredKeyTypes->end(); ++reqTypes)
 	{
-		LOG(LNOTICE)<<"requiredKeyTypes loop: ";
+		LOG(LDEBUG)<<"requiredKeyTypes loop: ";
 		for(std::vector<fileTypes>::iterator insTypes = insertedKeyTypes.begin(); insTypes != insertedKeyTypes.end(); ++insTypes)
 		{
-			LOG(LNOTICE)<<"insertedKeyTypes loop: ";
+			LOG(LDEBUG)<<"insertedKeyTypes loop: ";
 			if(*reqTypes==*insTypes)
 			{
-				LOG(LNOTICE)<<"Present in files, type: "<< *reqTypes;
+				LOG(LDEBUG)<<"Present in files, type: "<< *reqTypes;
 				present = true;
 				break;
 			}
@@ -292,7 +293,7 @@ bool View::checkIfAllFiles()
 		}// for
 		if(present)
 		{
-			LOG(LNOTICE)<<"Present";
+			LOG(LDEBUG)<<"Present";
 			present = false;
 		}
 		else if(*reqTypes==Stereo)
@@ -315,12 +316,12 @@ bool View::checkIfExist()
 {
 	BSONObj b = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");\
 	int items = MongoProxy::MongoProxy::getSingleton(hostname).count(b);
-	LOG(LNOTICE)<<"items: "<<items<<"\n";
+	LOG(LDEBUG)<<"items: "<<items<<"\n";
 	if(items==0)
 		return false;
 	else
 	{
-		LOG(LNOTICE)<<"View document founded!";
+		LOG(LDEBUG)<<"View document founded!";
 		return true;
 	}
 }
@@ -343,21 +344,21 @@ fileTypes View::getFileType(int i)
 bool View::getViewTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& fileTypesVector)
 {
 
-	LOG(LNOTICE)<<"View::getModelTypes";
+	LOG(LDEBUG)<<"View::getModelTypes";
 	string output = obj.getField(fieldName);
-	LOG(LNOTICE)<<output;
+	LOG(LDEBUG)<<output;
 	if(output!="EOO")
 	{
-		LOG(LNOTICE)<<output;
+		LOG(LDEBUG)<<output;
 		vector<BSONElement> v = obj.getField(fieldName).Array();
 
 		for (unsigned int i = 0; i<v.size(); i++)
 		{
 			// read to string
-			LOG(LNOTICE)<<v[i][childfieldName].String();
+			LOG(LDEBUG)<<v[i][childfieldName].String();
 
 			fileTypes ft=fileTypes(-1);
-			LOG(LNOTICE)<<"viewFileType: "<<v[i][childfieldName].String();
+			LOG(LDEBUG)<<"viewFileType: "<<v[i][childfieldName].String();
 			// map from string to enum
 
 			for(int j=0; j<18;j++)
@@ -365,16 +366,16 @@ bool View::getViewTypes(BSONObj &obj, const string & fieldName, const string & c
 
 				if(v[i][childfieldName].String() == FTypes[j])
 				{
-					LOG(LNOTICE)<<v[i][childfieldName].String() <<" == " << FTypes[j];
+					LOG(LDEBUG)<<v[i][childfieldName].String() <<" == " << FTypes[j];
 					ft = (fileTypes)j;
-					LOG(LNOTICE)<<ft;
+					LOG(LDEBUG)<<ft;
 					break;
 				}
 			//	else
 			//		ft=fileTypes(-1);
 			}
 
-			LOG(LNOTICE)<<" ft: "<<ft;
+			LOG(LDEBUG)<<" ft: "<<ft;
 			// insert enum to vector
 			if(ft>-1)
 				fileTypesVector.push_back(ft);
@@ -391,13 +392,13 @@ void View::getRequiredFiles(vector<fileTypes>& requiredFileTypes)
 	// read vector of files OIDs
 	vector<OID> fileOIDSVector;
 	getAllFilesOIDS(fileOIDSVector);
-	LOG(LNOTICE)<<"View::readFiles";
+	LOG(LDEBUG)<<"View::readFiles";
 	for(std::vector<OID>::iterator fileOIDIter = fileOIDSVector.begin(); fileOIDIter != fileOIDSVector.end(); ++fileOIDIter)
 	{
 		BSONObj query = BSON("_id" << *fileOIDIter);
 		BSONObj file = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
 		string fileType = file.getField("fileType").str();
-		LOG(LNOTICE)<<"fileType : " <<fileType;
+		LOG(LDEBUG)<<"fileType : " <<fileType;
 		// map from string to enum
 		fileTypes ft;
 		// now stereoTextured is equal 18, it's the last one type
@@ -412,12 +413,12 @@ void View::getRequiredFiles(vector<fileTypes>& requiredFileTypes)
 
 		for(std::vector<fileTypes>::iterator reqFileType = requiredFileTypes.begin(); reqFileType != requiredFileTypes.end(); ++reqFileType)
 		{
-			LOG(LNOTICE)<<"for(std::vector<fileTypes>::iterator reqFileType";
-			LOG(LNOTICE)<<"ft : " <<ft << "*reqFileType: " <<*reqFileType;
+			LOG(LDEBUG)<<"for(std::vector<fileTypes>::iterator reqFileType";
+			LOG(LDEBUG)<<"ft : " <<ft << "*reqFileType: " <<*reqFileType;
 			string empty = "";
 			if(ft==*reqFileType)
 			{
-				LOG(LNOTICE)<<"READ FILE!!!";
+				LOG(LDEBUG)<<"READ FILE!!!";
 				shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(ft, hostname, *fileOIDIter));
 				file->readFile(true, empty, false);
 				files.push_back(file);
@@ -441,7 +442,7 @@ bool View::checkIfContain(std::vector<fileTypes> & requiredFileTypes)
 
 	if(!arrayNotEmpty)
 	{
-		LOG(LNOTICE)<<"Array is empty!!!";
+		LOG(LDEBUG)<<"Array is empty!!!";
 		return false;
 	}
 
@@ -456,8 +457,8 @@ bool View::checkIfContain(std::vector<fileTypes> & requiredFileTypes)
 	{
 		for(std::vector<fileTypes>::iterator viewTypes = fileTypesVector.begin(); viewTypes != fileTypesVector.end(); ++viewTypes)
 		{
-			LOG(LNOTICE)<<"reqTypes : "<<*reqTypes;
-			LOG(LNOTICE)<<"viewTypes : "<<*viewTypes;
+			LOG(LDEBUG)<<"reqTypes : "<<*reqTypes;
+			LOG(LDEBUG)<<"viewTypes : "<<*viewTypes;
 
 			if(*viewTypes==*reqTypes)
 			{
@@ -487,7 +488,7 @@ int View::getAllFilesOIDS(vector<OID>& oidsVector)
 			string readedOid =v[i][childfieldName].str();
 			OID o = OID(readedOid);
 			oidsVector.push_back(o);
-			LOG(LNOTICE)<<"FileOID : "<<o;
+			LOG(LDEBUG)<<"FileOID : "<<o;
 		}
 		return 1;
 	}
@@ -509,7 +510,7 @@ void View::create(OID& sceneOID, OID& viewOID, string& sceneName)
 		BSONObj viewsSet;
 		bool created = false;
 		BSONObj b = BSON("ViewsSetName"<<*viewSetIt<<"DocumentType"<<"ViewsSet");
-		// check if object exist
+		// check if viewsSet exist
 		int items = MongoProxy::MongoProxy::getSingleton(hostname).count(b);
 		// document of viewsSet doesn't exist, create it
 		if(items==0)
@@ -549,49 +550,49 @@ void View::addScene(string& sceneName, OID& sceneOID)
 
 void View::putMatToFile(const cv::Mat& img, fileTypes typ, string& fileName)
 {
-	LOG(LNOTICE)<< "View::putMatToFile";
-	LOG(LNOTICE)<< "key: "<<typ;
+	LOG(LDEBUG)<< "View::putMatToFile";
+	LOG(LDEBUG)<< "key: "<<typ;
 }
 
 void View::putStringToFile(const std::string& str, fileTypes typ, string& fileName)
 {
-	LOG(LNOTICE)<< "View::putStringToFile";
-	LOG(LNOTICE)<< "key: "<<typ;
+	LOG(LDEBUG)<< "View::putStringToFile";
+	LOG(LDEBUG)<< "key: "<<typ;
 
 }
 
 void View::putPCxyzToFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudXYZ, fileTypes typ, string& fileName)
 {
-	LOG(LNOTICE)<< "View::putPCxyzToFile";
-	LOG(LNOTICE)<< "key: "<<typ;
+	LOG(LDEBUG)<< "View::putPCxyzToFile";
+	LOG(LDEBUG)<< "key: "<<typ;
 }
 void View::putPCyxzrgbToFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloudXYZRGB, fileTypes typ, string& fileName)
 {
-	LOG(LNOTICE)<< "View::putPCyxzrgbToFile";
-	LOG(LNOTICE)<< "key: "<<typ;
+	LOG(LDEBUG)<< "View::putPCyxzrgbToFile";
+	LOG(LDEBUG)<< "key: "<<typ;
 }
 void View::putPCxyzsiftToFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloudXYZSIFT, fileTypes typ, string& fileName)
 {
-	LOG(LNOTICE)<< "View::putPCxyzsiftToFile";
-	LOG(LNOTICE)<< "key: "<<typ;
+	LOG(LDEBUG)<< "View::putPCxyzsiftToFile";
+	LOG(LDEBUG)<< "key: "<<typ;
 }
 
 void View::putPCxyzrgbsiftToFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloudXYZRGBSIFT, fileTypes typ, string& fileName)
 {
-	LOG(LNOTICE)<< "View::putPCxyzrgbsiftToFile";
-	LOG(LNOTICE)<< "key: "<<typ;
+	LOG(LDEBUG)<< "View::putPCxyzrgbsiftToFile";
+	LOG(LDEBUG)<< "key: "<<typ;
 }
 
 void View::putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloudXYZSHOT, fileTypes typ, string& fileName)
 {
-	LOG(LNOTICE)<< "View::putPCxyzshotToFile";
-	LOG(LNOTICE)<< "key: "<<typ;
+	LOG(LDEBUG)<< "View::putPCxyzshotToFile";
+	LOG(LDEBUG)<< "key: "<<typ;
 }
 
 void View::putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloudXYZRGBNormal, fileTypes typ, string& fileName)
 {
-	LOG(LNOTICE)<< "View::putPCxyzrgbNormalToFile";
-	LOG(LNOTICE)<< "key: "<<typ;
+	LOG(LDEBUG)<< "View::putPCxyzrgbNormalToFile";
+	LOG(LDEBUG)<< "key: "<<typ;
 }
 
 }//namespace MongoBase
