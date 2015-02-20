@@ -92,6 +92,7 @@ void MongoDBExporter::write2DB()
 		else if (itfolders->find("view") != std::string::npos || itfolders->find("View") != std::string::npos )
 		{
 			type = "View";
+
 			string vn = string(*itfolders);
 			viewPtr = boost::shared_ptr<View>(new View(vn,hostname));
 			bool exist = viewPtr->checkIfExist();

@@ -139,13 +139,12 @@ void ModelReader::readfromDB()
 						break;
 					}
 				}
-				string name= modelPtr->getFile(i)->getFileName();
+				string name= modelPtr->getFile(i)->getName();
 				loadModels(ft, name, 0, models);
 			}//for
 			out_models.write(models);
 		}
 	}
-
 }
 
 void ModelReader::readRequiredData(std::vector<fileTypes> & requiredFileTypes)

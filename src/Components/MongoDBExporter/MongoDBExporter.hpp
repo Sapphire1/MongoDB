@@ -28,6 +28,7 @@
 #include <Types/View.hpp>
 #include <Types/Scene.hpp>
 #include <Types/Model.hpp>
+//#include <Types/Document.hpp>
 using namespace MongoDB;
 using namespace MongoProxy;
 using namespace PrimitiveFile;

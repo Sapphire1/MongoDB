@@ -43,6 +43,7 @@
 #include <Types/PointXYZRGBSIFT.hpp>
 #include <Types/SIFTObjectModelFactory.hpp>
 #include <Types/MongoProxy.hpp>
+#include <Types/Document.hpp>
 
 #include <vector>
 #include <list>
@@ -153,11 +154,9 @@ public:
     }
 };
 
-class PrimitiveFile
+class PrimitiveFile : public Document
 {
 private:
-	//string mongoFileName;	// file name in mongo base
-	string fileName;
 	string pcdCloudType;	// sift, shot, xyz,  itd... itp...
 	string place;			// {grid, document}
 	float sizeBytes;
@@ -165,9 +164,7 @@ private:
 	fileTypes fileType; 		// mask, rgb, depth, I, XYZ, cameraInfo, PCL
 	string PCLType;			// SIFT, SHOT, XYZ, ORB, NORMALS
 	string collectionName;
-	string documentType;	// View, Model, Object, file
-	OID fileOID;
-	BSONObj fileDocument;
+
 	boost::variant<	cv::Mat,
 	string,
 	pcl::PointCloud<pcl::PointXYZ>::Ptr,
@@ -179,64 +176,73 @@ private:
 	> data;
 	string hostname;
 
-//	boost::shared_ptr<MongoBase> basePtr;
 
 public:
-	PrimitiveFile(const cv::Mat& img, fileTypes& type, string& name, string& viewName, string& hostname) : data(img), fileType(type), fileName(name),  hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const cv::Mat& img, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(img), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor cv::Mat";
 		LOG(LDEBUG)<<"fileType :" <<fileType;
+		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const std::string& str, fileTypes& type, string& name, string& viewName, string& hostname) : data(str), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const std::string& str, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(str), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor std::string";
+		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,  fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,  fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor <pcl::PointXYZ>";
+		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor <pcl::PointXYZRGB>";
+		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor <PointXYZSIFT>";
+		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor <PointXYZRGBSIFT>";
+		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor <PointXYZSHOT>";
+		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : data(cloud), fileType(type), fileName(name), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor <pcl::PointXYZRGBNormal>";
+		Type="File";
 		this->setSize();
 	};
 
 	///////////////////////////////////////////////////
-	PrimitiveFile(fileTypes& type, string& hostname, mongo::OID& fileOID) : fileType(type), hostname(hostname), fileOID(fileOID), sizeMBytes(0), fileName("NoName"), sizeBytes(0)
+	PrimitiveFile(fileTypes& type, string& hostname, mongo::OID& oid) : Document(oid), fileType(type), hostname(hostname), sizeMBytes(0),sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor PrimitiveFile";
 		LOG(LDEBUG)<<"fileType :" <<fileType;
+		Type="File";
 	};
-	PrimitiveFile(string& fileName, fileTypes type, string& hostname) : fileName(fileName), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(string& Name, fileTypes type, string& hostname) : Document(Name), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
-		LOG(LDEBUG)<<"Constructor PrimitiveFile with fileName";
+		LOG(LDEBUG)<<"Constructor PrimitiveFile with Name";
+		Type="File";
 	};
 
 	/////////////////////////////////////////////////////////
-	string getFileName(){return fileName;}
+	string getName(){return Name;}
 	void saveToDisc(cv::Mat& image, string& pathToFiles, bool saveToDiscFlag);
 	void copyData(int height, int channels, float* dataXYZ, float* xyz_p, int i);
 	void saveIntoDisc();
@@ -272,7 +278,7 @@ public:
 	void readTextFileFromDocument(bool saveToDiscFlag, string& pathToFiles);
 	void readFile(bool file2Memory, string& pathToFiles, bool saveToDiscFlag);
 	void readImageFromDocument(bool saveToDiscFlag, string& pathToFiles);
-	void ReadPCDCloud(const string& filename);
+	void ReadPCDCloud(const string& Name);
 	void getStringData(std::string& str);
 	void getXYZData(pcl::PointCloud<pcl::PointXYZ>::Ptr& cloudXYZ);
 	void getXYZRGBData(pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloudXYZRGB);
@@ -348,7 +354,7 @@ void PrimitiveFile::readTextFileFromDocument(bool saveToDiscFlag, string& pathTo
 	const char *buffer;
 	int size = (int)sizeBytes;
 	// get data to buffer
-	buffer = fileDocument[fileName].binData(size);
+	buffer = BSONDocument[Name].binData(size);
 	for (int i=0; i<size;i++)
 		LOG(LERROR)<<buffer[i];
 	LOG(LERROR)<<*buffer;
@@ -360,7 +366,7 @@ void PrimitiveFile::readTextFileFromDocument(bool saveToDiscFlag, string& pathTo
 	if(saveToDiscFlag)
 	{
 		//const char *fn;
-		std::ofstream out(fileName.c_str());
+		std::ofstream out(Name.c_str());
 		out << fromDB;
 		out.close();
 	}
@@ -371,10 +377,10 @@ void PrimitiveFile::readXYZMatFromDocument(bool saveToDiscFlag, string& pathToFi
 {
 	LOG(LERROR)<<"Read XYZ Mat\n";
 	int len;
-	float *dataXYZ = (float*)fileDocument[fileName].binData(len);
-	int width = fileDocument.getField("width").Int();//480
-	int height = fileDocument.getField("height").Int();//640
-	int channels = fileDocument.getField("channels").Int();
+	float *dataXYZ = (float*)BSONDocument[Name].binData(len);
+	int width = BSONDocument.getField("width").Int();//480
+	int height = BSONDocument.getField("height").Int();//640
+	int channels = BSONDocument.getField("channels").Int();
 	cv::Mat image3c(width, height, CV_32FC3);
 	cv::Mat image4c(width, height, CV_32FC4);
 	vector<float> img;
@@ -416,7 +422,7 @@ void PrimitiveFile::saveToDisc(cv::Mat& image, string& pathToFiles, bool saveToD
 {
 	if(saveToDiscFlag)
 	{
-		string name = pathToFiles+"/"+fileName;
+		string name = pathToFiles+"/"+Name;
 		cv::FileStorage fs(name, cv::FileStorage::WRITE);
 		fs << "img" << image;
 		fs.release();
@@ -425,10 +431,10 @@ void PrimitiveFile::saveToDisc(cv::Mat& image, string& pathToFiles, bool saveToD
 
 void PrimitiveFile::saveIntoMongoBase(string& type, string& name, bool dataInBuffer, string& path, OID& oid)
 {
-	//add timestamp to fileName
+	//add timestamp to Name
 	string timestamp;
 	getTimestamp(timestamp);
-	fileName =timestamp+"_"+fileName;
+	Name =timestamp+"_"+Name;
 	if(sizeMBytes<15)
 		insertFileIntoDocument(oid, name, type);
 	else if(sizeMBytes>=15)
@@ -439,7 +445,7 @@ void PrimitiveFile::readImageFromDocument(bool saveToDiscFlag, string& pathToFil
 {
 	LOG(LDEBUG)<<"Read image\n";
 	int len;
-	uchar *dataImage = (uchar*)fileDocument[fileName].binData(len);
+	uchar *dataImage = (uchar*)BSONDocument[Name].binData(len);
 	std::vector<uchar> v(dataImage, dataImage+len);
 	cv::Mat image = cv::imdecode(cv::Mat(v), -1);
 	//out_img.write(image);
@@ -448,19 +454,19 @@ void PrimitiveFile::readImageFromDocument(bool saveToDiscFlag, string& pathToFil
 	// save to disc :)
 	if(saveToDiscFlag)
 	{
-		LOG(LDEBUG)<<"Save to disc: " <<pathToFiles+"/"+fileName;
-		imwrite(pathToFiles+"/"+fileName, image);
+		LOG(LDEBUG)<<"Save to disc: " <<pathToFiles+"/"+Name;
+		imwrite(pathToFiles+"/"+Name, image);
 	}
 }
 
 void PrimitiveFile::removeDocument()
 {
-	MongoProxy::MongoProxy::getSingleton(hostname).remove(fileOID);
+	MongoProxy::MongoProxy::getSingleton(hostname).remove(oid);
 }
 
 OID& PrimitiveFile::getOID()
 {
-	return fileOID;
+	return oid;
 }
 
 
@@ -470,23 +476,23 @@ void PrimitiveFile::readFile(bool file2Memory, string& pathToFiles, bool saveToD
 //		LOG(LWARNING)<<"file2Memory is not set! Method writeToSinkFromFile will not be invoked!!!";
 	LOG(LTRACE)<<"MongoProxy::readFile";
 	// get bson object from collection
-	BSONObj query = BSON("_id" << fileOID);
+	BSONObj query = BSON("_id" << oid);
 	BSONObj obj = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
-	LOG(LDEBUG)<<"obj: "<<obj<<", fileOID: "<<fileOID.toString();
+	LOG(LDEBUG)<<"obj: "<<obj<<", fileOID: "<<oid.toString();
 
 	place = obj.getField("place").str();
 
 	sizeBytes = (float)obj.getField("size").Int();
 
-	fileName = obj.getField("filename").str();
-	LOG(LDEBUG)<<"place: "<<place<<" size: "<<(int)sizeBytes<<", fileName: "<<fileName<< ", fileType: " << fileType;
+	Name = obj.getField("Name").str();
+	LOG(LDEBUG)<<"place: "<<place<<" size: "<<(int)sizeBytes<<", Name: "<<Name<< ", fileType: " << fileType;
 
 	if(place=="document")
 	{
 		LOG(LDEBUG)<<"Read from document";
 
-		BSONObj query = BSON("_id" << fileOID);
-		fileDocument = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+		BSONObj query = BSON("_id" << oid);
+		BSONDocument = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
 
 		if(fileType==ImageRgb || fileType==ImageDepth || fileType==ImageIntensity || fileType==ImageMask
 				|| fileType==StereoLeft || fileType==StereoRight || fileType==StereoLeftTextured
@@ -519,8 +525,8 @@ void PrimitiveFile::readFile(bool file2Memory, string& pathToFiles, bool saveToD
 		// create GridFS client
 		GridFS fs(*c, MongoProxy::MongoProxy::getSingleton(hostname).collectionName);
 
-		LOG(LTRACE)<<"_id"<<fileOID;
-		GridFile file = fs.findFile(Query(BSON("_id" << fileOID)));
+		LOG(LTRACE)<<"_id"<<oid;
+		GridFile file = fs.findFile(Query(BSON("_id" << oid)));
 
 		if (!file.exists())
 		{
@@ -528,13 +534,13 @@ void PrimitiveFile::readFile(bool file2Memory, string& pathToFiles, bool saveToD
 		}
 		else
 		{
-			// get filename
-			string filename = file.getFileField("filename").str();
-			LOG(LDEBUG)<<"filename: "<<filename;
+			// get Name
+			string Name = file.getFileField("Name").str();
+			LOG(LDEBUG)<<"Name: "<<Name;
 			getFileFromGrid(file, pathToFiles);
 			string empty = "";
 			if(file2Memory)
-				writeToSinkFromFile(filename);
+				writeToSinkFromFile(Name);
 				//writeToSinkFromFile(empty);
 			else
 				LOG(LDEBUG)<<"file2Memory=" <<file2Memory;
@@ -550,98 +556,98 @@ void PrimitiveFile::removeFile()
 	if(place=="grid")
 	{
 		//TODO check if it works!!!
-		LOG(LDEBUG)<<"Remove : " << fileName;
-		fs.removeFile(fileName);
+		LOG(LDEBUG)<<"Remove : " << Name;
+		fs.removeFile(Name);
 	}
 	this->removeDocument();
 }
 
-void PrimitiveFile::ReadPCDCloud(const string& filename)
+void PrimitiveFile::ReadPCDCloud(const string& Name)
 {
 	LOG(LDEBUG) << "PrimitiveFile::ReadPCDCloud";
-	LOG(LDEBUG) << "filename::"<<filename;
+	LOG(LDEBUG) << "Name::"<<Name;
 	// Try to read the cloud of XYZRGB points.
-	if(filename.find("xyzrgb")!=string::npos)
+	if(Name.find("xyzrgb")!=string::npos)
 	{
-		LOG(LDEBUG)<<"filename.find(xyzrgb)!=string::npos";
+		LOG(LDEBUG)<<"Name.find(xyzrgb)!=string::npos";
 		pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_xyzrgb (new pcl::PointCloud<pcl::PointXYZRGB>);
-		if (pcl::io::loadPCDFile<pcl::PointXYZRGB> (filename, *cloud_xyzrgb) == -1){
-			LOG(LERROR) <<"Cannot read PointXYZRGB cloud from "<<fileName;
+		if (pcl::io::loadPCDFile<pcl::PointXYZRGB> (Name, *cloud_xyzrgb) == -1){
+			LOG(LERROR) <<"Cannot read PointXYZRGB cloud from "<<Name;
 			return;
 		}else{
 			//out_cloud_xyzrgb.write(cloud_xyzrgb);
 			data = cloud_xyzrgb;
-			LOG(LINFO) <<"PointXYZRGB cloud loaded properly from "<<fileName;
+			LOG(LINFO) <<"PointXYZRGB cloud loaded properly from "<<Name;
 		}
 	}
-	else if(filename.find("xyzsift.pcd")!=string::npos)
+	else if(Name.find("xyzsift.pcd")!=string::npos)
 	{
-		LOG(LDEBUG)<<"filename.find(xyzsift)!=string::npos";
+		LOG(LDEBUG)<<"Name.find(xyzsift)!=string::npos";
 		pcl::PointCloud<PointXYZSIFT>::Ptr cloud_xyzsift (new pcl::PointCloud<PointXYZSIFT>);
-		if (pcl::io::loadPCDFile<PointXYZSIFT> (filename, *cloud_xyzsift) == -1){
-			LOG(LERROR) <<"Cannot read PointXYZSIFT cloud from "<<fileName;
+		if (pcl::io::loadPCDFile<PointXYZSIFT> (Name, *cloud_xyzsift) == -1){
+			LOG(LERROR) <<"Cannot read PointXYZSIFT cloud from "<<Name;
 			return;
 		}else{
 			data = cloud_xyzsift;
 		//	out_cloud_xyzsift.write(cloud_xyzsift);
-			LOG(LINFO) <<"PointXYZSIFT cloud loaded properly from "<<fileName;
+			LOG(LINFO) <<"PointXYZSIFT cloud loaded properly from "<<Name;
 		}
 	}
-	else if(filename.find("xyzrgbsift.pcd")!=string::npos)
+	else if(Name.find("xyzrgbsift.pcd")!=string::npos)
 	{
-		LOG(LDEBUG)<<"filename.find(xyzrgbsift)!=string::npos";
+		LOG(LDEBUG)<<"Name.find(xyzrgbsift)!=string::npos";
 		pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloud_xyzrgbsift (new pcl::PointCloud<PointXYZRGBSIFT>);
-		if (pcl::io::loadPCDFile<PointXYZRGBSIFT> (filename, *cloud_xyzrgbsift) == -1){
-			LOG(LERROR) <<"Cannot read PointXYZSIFT cloud from "<<fileName;
+		if (pcl::io::loadPCDFile<PointXYZRGBSIFT> (Name, *cloud_xyzrgbsift) == -1){
+			LOG(LERROR) <<"Cannot read PointXYZSIFT cloud from "<<Name;
 			return;
 		}else{
 			data = cloud_xyzrgbsift;
 		//	out_cloud_xyzsift.write(cloud_xyzsift);
-			LOG(LINFO) <<"PointXYZSIFT cloud loaded properly from "<<fileName;
+			LOG(LINFO) <<"PointXYZSIFT cloud loaded properly from "<<Name;
 		}
 	}
 	// SHOT
-	else if(filename.find("xyzshot")!=string::npos)
+	else if(Name.find("xyzshot")!=string::npos)
 	{
-		LOG(LDEBUG)<<"filename.find(xyzshot)!=string::npos";
+		LOG(LDEBUG)<<"Name.find(xyzshot)!=string::npos";
 		// Try to read the cloud of XYZ points.
 		pcl::PointCloud<PointXYZSHOT>::Ptr cloud_xyzshot (new pcl::PointCloud<PointXYZSHOT>);
-		if (pcl::io::loadPCDFile<PointXYZSHOT> (filename, *cloud_xyzshot) == -1){
-			LOG(LERROR) <<"Cannot read PointXYZSHOT cloud from "<<fileName;
+		if (pcl::io::loadPCDFile<PointXYZSHOT> (Name, *cloud_xyzshot) == -1){
+			LOG(LERROR) <<"Cannot read PointXYZSHOT cloud from "<<Name;
 			return;
 		}else{
 			data = cloud_xyzshot;
 		//	out_cloud_xyz.write(cloud_xyz);
-			LOG(LINFO) <<"PointXYZSHOT cloud loaded properly from "<<fileName;
+			LOG(LINFO) <<"PointXYZSHOT cloud loaded properly from "<<Name;
 		}
 	}
 	//NORMALS
-	else if(filename.find("xyzrgbnnormal")!=string::npos)
+	else if(Name.find("xyzrgbnnormal")!=string::npos)
 	{
-		LOG(LDEBUG)<<"filename.find(xyzrgbnnormal)!=string::npos";
+		LOG(LDEBUG)<<"Name.find(xyzrgbnnormal)!=string::npos";
 		// Try to read the cloud of XYZ points.
 		pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud_xyzrgbnnormal (new pcl::PointCloud<pcl::PointXYZRGBNormal>);
-		if (pcl::io::loadPCDFile<pcl::PointXYZRGBNormal> (filename, *cloud_xyzrgbnnormal) == -1){
-			LOG(LERROR) <<"Cannot read PointXYZRGBNormal cloud from "<<fileName;
+		if (pcl::io::loadPCDFile<pcl::PointXYZRGBNormal> (Name, *cloud_xyzrgbnnormal) == -1){
+			LOG(LERROR) <<"Cannot read PointXYZRGBNormal cloud from "<<Name;
 			return;
 		}else{
 			data = cloud_xyzrgbnnormal;
 		//	out_cloud_xyz.write(cloud_xyz);
-			LOG(LINFO) <<"PointXYZRGBNormal cloud loaded properly from "<<fileName;
+			LOG(LINFO) <<"PointXYZRGBNormal cloud loaded properly from "<<Name;
 		}
 	}
-	else if(filename.find("xyz")!=string::npos)
+	else if(Name.find("xyz")!=string::npos)
 	{
-		LOG(LDEBUG)<<"filename.find(xyz)!=string::npos";
+		LOG(LDEBUG)<<"Name.find(xyz)!=string::npos";
 		// Try to read the cloud of XYZ points.
 		pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_xyz (new pcl::PointCloud<pcl::PointXYZ>);
-		if (pcl::io::loadPCDFile<pcl::PointXYZ> (filename, *cloud_xyz) == -1){
-			LOG(LERROR) <<"Cannot read PointXYZ cloud from "<<fileName;
+		if (pcl::io::loadPCDFile<pcl::PointXYZ> (Name, *cloud_xyz) == -1){
+			LOG(LERROR) <<"Cannot read PointXYZ cloud from "<<Name;
 			return;
 		}else{
 			data = cloud_xyz;
 		//	out_cloud_xyz.write(cloud_xyz);
-			LOG(LINFO) <<"PointXYZ cloud loaded properly from "<<fileName;
+			LOG(LINFO) <<"PointXYZ cloud loaded properly from "<<Name;
 		}
 	}
 	else
@@ -684,9 +690,9 @@ void PrimitiveFile::writeToSinkFromFile(string& path)
 	{
 		LOG(LDEBUG)<<"xml :)";
 		string CIPFile;
-		char const* charFileName = fileNm.c_str();
+		char const* charName = fileNm.c_str();
 		LOG(LDEBUG)<<fileNm;
-		std::ifstream t(charFileName);
+		std::ifstream t(charName);
 		std::stringstream buffer;
 		buffer << t.rdbuf();
 		CIPFile = buffer.str();
@@ -709,9 +715,9 @@ void PrimitiveFile::getFileFromGrid(const GridFile& file, string& path)
 	string str = ss.str();
 	string name;
 	if(path=="")
-		name = fileName;
+		name = Name;
 	else
-		name = path+"/"+fileName;
+		name = path+"/"+Name;
 
 	LOG(LDEBUG)<<"name : "<<name;
 	ofstream ofs((char*)name.c_str());
@@ -735,7 +741,7 @@ void PrimitiveFile::readPointCloudFromDocument(bool saveToDiscFlag, string& path
 		{
 			// read data to buffer
 			int totalSize;
-			float* buffer = (float*)fileDocument[fileName].binData(totalSize);
+			float* buffer = (float*)BSONDocument[Name].binData(totalSize);
 			int bufferSize = totalSize/sizeof(float);
 			LOG(LDEBUG)<<"bufferSize: "<<bufferSize;
 			float newBuffer[bufferSize];
@@ -751,13 +757,13 @@ void PrimitiveFile::readPointCloudFromDocument(bool saveToDiscFlag, string& path
 			}
 			data = cloudXYZ;
 			if(saveToDiscFlag)
-				pcl::io::savePCDFile(pathToFiles+"/"+fileName, *cloudXYZ, false);
+				pcl::io::savePCDFile(pathToFiles+"/"+Name, *cloudXYZ, false);
 		}
 		else if(fileType==PCXyzRgb)
 		{
 			// read data to buffer
 			int totalSize;
-			float* buffer = (float*)fileDocument[fileName].binData(totalSize);
+			float* buffer = (float*)BSONDocument[Name].binData(totalSize);
 			int bufferSize = totalSize/sizeof(float);
 			LOG(LDEBUG)<<"bufferSize: "<<bufferSize;
 			float newBuffer[bufferSize];
@@ -774,13 +780,13 @@ void PrimitiveFile::readPointCloudFromDocument(bool saveToDiscFlag, string& path
 			}
 			data = cloudXYZRGB;
 			if(saveToDiscFlag)
-				pcl::io::savePCDFile(pathToFiles+"/"+fileName, *cloudXYZRGB, false);
+				pcl::io::savePCDFile(pathToFiles+"/"+Name, *cloudXYZRGB, false);
 		}
 		else if(fileType==PCXyzSift)
 		{
 			// read data to buffer
 			int totalSize;
-			float* buffer = (float*)fileDocument[fileName].binData(totalSize);
+			float* buffer = (float*)BSONDocument[Name].binData(totalSize);
 			int bufferSize = totalSize/sizeof(float);
 			LOG(LDEBUG)<<"bufferSize: "<<bufferSize;
 			float newBuffer[bufferSize];
@@ -803,7 +809,7 @@ void PrimitiveFile::readPointCloudFromDocument(bool saveToDiscFlag, string& path
 			}
 			data = cloudXYZSIFT;
 			if(saveToDiscFlag)
-				pcl::io::savePCDFile(pathToFiles+"/"+fileName, *cloudXYZSIFT, false);
+				pcl::io::savePCDFile(pathToFiles+"/"+Name, *cloudXYZSIFT, false);
 		}
 		else if(fileType==PCXyzRgbSift)
 		{
@@ -814,7 +820,7 @@ void PrimitiveFile::readPointCloudFromDocument(bool saveToDiscFlag, string& path
 		{
 			// read data to buffer
 			int totalSize;
-			float* buffer = (float*)fileDocument[fileName].binData(totalSize);
+			float* buffer = (float*)BSONDocument[Name].binData(totalSize);
 			int bufferSize = totalSize/sizeof(float);
 			LOG(LDEBUG)<<"bufferSize: "<<bufferSize;
 			float newBuffer[bufferSize];
@@ -838,13 +844,13 @@ void PrimitiveFile::readPointCloudFromDocument(bool saveToDiscFlag, string& path
 			}
 			data = cloudXYZSHOT;
 			if(saveToDiscFlag)
-				pcl::io::savePCDFile(pathToFiles+"/"+fileName, *cloudXYZSHOT, false);
+				pcl::io::savePCDFile(pathToFiles+"/"+Name, *cloudXYZSHOT, false);
 		}
 		else if(fileType==PCXyzRgbNormal)
 		{
 			// read data to buffer
 			int totalSize;
-			float* buffer = (float*)fileDocument[fileName].binData(totalSize);
+			float* buffer = (float*)BSONDocument[Name].binData(totalSize);
 			int bufferSize = totalSize/sizeof(float);
 			LOG(LDEBUG)<<"bufferSize: "<<bufferSize;
 			float newBuffer[bufferSize];
@@ -861,7 +867,7 @@ void PrimitiveFile::readPointCloudFromDocument(bool saveToDiscFlag, string& path
 			}
 			data = cloudXYZRGBNormal;
 			if(saveToDiscFlag)
-				pcl::io::savePCDFile(pathToFiles+"/"+fileName, *cloudXYZRGBNormal, false);
+				pcl::io::savePCDFile(pathToFiles+"/"+Name, *cloudXYZRGBNormal, false);
 		}
 	}catch(Exception &ex)
 	{
@@ -935,13 +941,13 @@ void PrimitiveFile::saveImage(OID& oid, string& name, string& type)
 	std::vector<uchar> buf;
 	std::vector<int> params(2);
 
-	if(fileName.find(".jpg")!=string::npos)
+	if(Name.find(".jpg")!=string::npos)
 	{
 		params[0] = CV_IMWRITE_JPEG_QUALITY;
 		params[1] = 95;
 		cv::imencode(".jpg", *img, buf, params);
 	}
-	else if(fileName.find(".png")!=string::npos)
+	else if(Name.find(".png")!=string::npos)
 	{
 		params[0] = CV_IMWRITE_PNG_COMPRESSION;
 		params[1] = 9;
@@ -952,7 +958,7 @@ void PrimitiveFile::saveImage(OID& oid, string& name, string& type)
 		LOG(LERROR)<<"File extension is unsupported!";
 		exit(1);
 	}
-	BSONObj b=BSONObjBuilder().genOID().appendBinData(fileName, buf.size(), mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append("DocumentType", "file").append(type+"Name", name).append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+	BSONObj b=BSONObjBuilder().genOID().appendBinData(Name, buf.size(), mongo::BinDataGeneral, &buf[0]).append("Name", Name).append("Type", Type).append(type+"Name", name).append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 	BSONElement bsonElement;
 	b.getObjectID(bsonElement);
 	oid=bsonElement.__oid();
@@ -1034,7 +1040,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid, string& name, string& type)
 			char const *cipCharTable = input->c_str();
 			LOG(LDEBUG)<<string(cipCharTable);
 			// create bson object
-			b = BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, BinDataGeneral,  cipCharTable).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+			b = BSONObjBuilder().genOID().appendBinData(Name, (int)sizeBytes, BinDataGeneral,  cipCharTable).append("Name", Name).append(type+"Name", name).append("Type", Type).append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 
 			// insert object into collection
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
@@ -1097,7 +1103,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid, string& name, string& type)
 				const pcl::PointXYZ p = cloudXYZ->points[iter];
 				copyXYZPointToFloatArray (p, &buff[xyzPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+			b=BSONObjBuilder().genOID().appendBinData(Name, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("Name", Name).append(type+"Name", name).append("Type", Type).append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
@@ -1117,7 +1123,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid, string& name, string& type)
 				const pcl::PointXYZRGB p = cloudXYZRGB->points[iter];
 				copyXYZRGBPointToFloatArray (p, &buff[xyzrgbPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+			b=BSONObjBuilder().genOID().appendBinData(Name, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("Name", Name).append(type+"Name", name).append("Type", Type).append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
@@ -1137,7 +1143,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid, string& name, string& type)
 				const PointXYZSIFT p = cloudXYZSIFT->points[iter];
 				copyXYZSiftPointToFloatArray (p, &buff[siftPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+			b=BSONObjBuilder().genOID().appendBinData(Name, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("Name", Name).append(type+"Name", name).append("Type", Type).append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
@@ -1165,7 +1171,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid, string& name, string& type)
 				const PointXYZSHOT p = cloudXYZSHOT->points[iter];
 				copyXYZSHOTPointToFloatArray(p, &buff[shotPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+			b=BSONObjBuilder().genOID().appendBinData(Name, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("Name", Name).append(type+"Name", name).append("Type", Type).append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
@@ -1184,7 +1190,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid, string& name, string& type)
 				const pcl::PointXYZRGBNormal p = cloudXYZRGBNormal->points[iter];
 				copyXYZRGBNormalPointToFloatArray(p, &buff[normalPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+			b=BSONObjBuilder().genOID().appendBinData(Name, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("Name", Name).append(type+"Name", name).append("Type", Type).append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
@@ -1200,7 +1206,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid, string& name, string& type)
 			float* buf;
 			buf = (float*)xyzimage->data;
 			LOG(LDEBUG)<<"Set buffer YAML";
-			b=BSONObjBuilder().genOID().appendBinData(fileName, (int)sizeBytes, mongo::BinDataGeneral, &buf[0]).append("filename", fileName).append(type+"Name", name).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).append("width", width).append("height", height).append("channels", channels).obj();
+			b=BSONObjBuilder().genOID().appendBinData(Name, (int)sizeBytes, mongo::BinDataGeneral, &buf[0]).append("Name", Name).append(type+"Name", name).append("Type", Type).append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).append("width", width).append("height", height).append("channels", channels).obj();
 			LOG(LDEBUG)<<"YAML inserted";
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
@@ -1222,7 +1228,7 @@ void PrimitiveFile::savePCxyzRGBNormalFileToDisc(bool suffix, bool binary, std::
 		}
 		fn = std::string(fn) + std::string("_xyzrgbNormal.pcd");
 	}
-	LOG(LDEBUG) <<"FileName:"<<fn;
+	LOG(LDEBUG) <<"Name:"<<fn;
 	pcl::io::savePCDFile(fn, *cloudXYZNormal, binary);
 }
 
@@ -1239,7 +1245,7 @@ void PrimitiveFile::savePCxyzSHOTFileToDisc(bool suffix, bool binary, std::strin
 		}
 		fn = std::string(fn) + std::string("_xyzrgbshot.pcd");
 	}
-	LOG(LDEBUG) <<"FileName:"<<fn;
+	LOG(LDEBUG) <<"Name:"<<fn;
 	pcl::io::savePCDFile(fn, *cloudXYZSHOT, binary);
 }
 
@@ -1255,7 +1261,7 @@ void PrimitiveFile::savePCxyzFileToDisc(bool suffix, bool binary, std::string& f
 		}
 		fn = std::string(fn) + std::string("_xyz.pcd");
 	}
-	LOG(LDEBUG) <<"FileName:"<<fn;
+	LOG(LDEBUG) <<"Name:"<<fn;
 	pcl::io::savePCDFile(fn, *cloudXYZ, binary);
 }
 
@@ -1271,7 +1277,7 @@ void PrimitiveFile::savePCxyzRGBFileToDisc(bool suffix, bool binary, std::string
 		}
 		fn = std::string(fn) + std::string("_xyzrgb.pcd");
 	}
-	LOG(LDEBUG) <<"FileName:"<<fn;
+	LOG(LDEBUG) <<"Name:"<<fn;
 	pcl::io::savePCDFile(fn, *cloudXYZRGB, binary);
 }
 
@@ -1287,7 +1293,7 @@ void PrimitiveFile::savePCxyzSIFTFileToDisc(bool suffix, bool binary, std::strin
 		}
 		fn = std::string(fn) + std::string("_xyzsift.pcd");
 	}
-	LOG(LDEBUG) <<"FileName:"<<fn;
+	LOG(LDEBUG) <<"Name:"<<fn;
 	pcl::io::savePCDFile(fn, *cloudXYZSIFT, binary);
 }
 
@@ -1303,7 +1309,7 @@ void PrimitiveFile::savePCxyzRGBSIFTFileToDisc(bool suffix, bool binary, std::st
 		}
 		fn = std::string(fn) + std::string("_xyzrgbsift.pcd");
 	}
-	LOG(LDEBUG) <<"FileName:"<<fn;
+	LOG(LDEBUG) <<"Name:"<<fn;
 	pcl::io::savePCDFile(fn, *cloudXYZRBGSIFT, binary);
 }
 
@@ -1311,7 +1317,7 @@ void PrimitiveFile::saveImageOnDisc()
 {
 	LOG(LTRACE)<<"Save image to disc";
 	cv::Mat* img = boost::get<cv::Mat>(&data);
-	cv::imwrite(fileName, *img);
+	cv::imwrite(Name, *img);
 }
 
 void PrimitiveFile::saveToDisc(bool suffix, bool binary)
@@ -1321,7 +1327,7 @@ void PrimitiveFile::saveToDisc(bool suffix, bool binary)
 		case FileCameraInfo:
 		{
 			std::string* cameraMatrix = boost::get<std::string>(&data);
-			char const* ca = fileName.c_str();
+			char const* ca = Name.c_str();
 			std::ofstream out(ca);
 			out<<*cameraMatrix;
 			out.close();
@@ -1370,38 +1376,38 @@ void PrimitiveFile::saveToDisc(bool suffix, bool binary)
 		}
 		case PCXyz:
 		{
-			savePCxyzFileToDisc(suffix, binary, fileName);
+			savePCxyzFileToDisc(suffix, binary, Name);
 			break;
 		}
 		case PCXyzRgb:
 		{
-			savePCxyzRGBFileToDisc(suffix, binary, fileName);
+			savePCxyzRGBFileToDisc(suffix, binary, Name);
 			break;
 		}
 		case PCXyzSift:
 		{
-			savePCxyzSIFTFileToDisc(suffix, binary, fileName);
+			savePCxyzSIFTFileToDisc(suffix, binary, Name);
 			break;
 		}
 		case PCXyzRgbSift:
 		{
-			savePCxyzRGBSIFTFileToDisc(suffix, binary, fileName);
+			savePCxyzRGBSIFTFileToDisc(suffix, binary, Name);
 			break;
 		}
 		case PCXyzShot:
 		{
-			savePCxyzSHOTFileToDisc(suffix, binary, fileName);
+			savePCxyzSHOTFileToDisc(suffix, binary, Name);
 			break;
 		}
 		case PCXyzRgbNormal:
 		{
-			savePCxyzRGBNormalFileToDisc(suffix, binary, fileName);
+			savePCxyzRGBNormalFileToDisc(suffix, binary, Name);
 			break;
 		}
 		case ImageXyz:
 		{
 			cv::Mat* xyzimage = boost::get<cv::Mat>(&data);
-			cv::FileStorage fs(fileName, cv::FileStorage::WRITE);
+			cv::FileStorage fs(Name, cv::FileStorage::WRITE);
 			fs << "img" << *xyzimage;
 			fs.release();
 			break;
@@ -1441,13 +1447,13 @@ void PrimitiveFile::insertFileIntoGrid(OID& oid, bool dataInBuffer, string& path
 			saveToDisc(suffix, binary);
 
 		if(path=="")
-			path=fileName;
+			path=Name;
 		boost::shared_ptr<DBClientConnection>  c = MongoProxy::MongoProxy::getSingleton(hostname).getClient();
 		// create GridFS client
 		GridFS fs(*c, MongoProxy::MongoProxy::getSingleton(hostname).collectionName);
 
 		// save in grid
-		object = fs.storeFile(path, fileName, mime);
+		object = fs.storeFile(path, Name, mime);
 
 		//TODO dodawac mean_viewpoint_features_number!!! odczytany z wejscia komponentu
 		//	if(cloudType=="xyzsift")
@@ -1457,9 +1463,9 @@ void PrimitiveFile::insertFileIntoGrid(OID& oid, bool dataInBuffer, string& path
 		BSONObj b;
 		LOG(LDEBUG)<<"fileType: "<<fileType;
 		if(type=="View")
-			b = BSONObjBuilder().appendElements(object).append("ViewName", name).append("fileType", FTypes[fileType]).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "grid").obj();
+			b = BSONObjBuilder().appendElements(object).append("ViewName", name).append("fileType", FTypes[fileType]).append("Type", Type).append("size", (int)sizeBytes).append("place", "grid").obj();
 		else if(type=="Model")
-			b = BSONObjBuilder().appendElements(object).append("ModelName", name).append("fileType", FTypes[fileType]).append("DocumentType", "file").append("size", (int)sizeBytes).append("place", "grid").obj();
+			b = BSONObjBuilder().appendElements(object).append("ModelName", name).append("fileType", FTypes[fileType]).append("Type", Type).append("size", (int)sizeBytes).append("place", "grid").obj();
 		else
 		{
 			LOG(LERROR)<<"Couldn't update type: "<<type<<" !!!";
@@ -1468,7 +1474,7 @@ void PrimitiveFile::insertFileIntoGrid(OID& oid, bool dataInBuffer, string& path
 		b.getObjectID(bsonElement);
 		oid=bsonElement.__oid();
 		LOG(LDEBUG)<<"OID :"<<oid;
-		string field = "filename";
+		string field = "Name";
 		MongoProxy::MongoProxy::getSingleton(hostname).index(field);
 	}catch(DBException &e)
 	{

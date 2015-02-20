@@ -40,9 +40,11 @@
 
 #include <Types/PointXYZSIFT.hpp>
 #include <Types/PointXYZRGBSIFT.hpp>
-#include <Types/SIFTObjectModelFactory.hpp>
+//#include <Types/SIFTObjectModelFactory.hpp>
 #include <Types/MongoProxy.hpp>
 #include <Types/PrimitiveFile.hpp>
+#include <Types/Document.hpp>
+#include <Types/ViewsSet.hpp>
 
 #include <vector>
 #include <list>
@@ -57,32 +59,26 @@ using namespace std;
 using namespace boost;
 using namespace PrimitiveFile;
 
-class View
+class View : public Document
 {
 private:
-	string ViewName;						// lab012
 	string SensorType;						// Stereo, ToF...
-	string dateOfInsert;					// 02042013
 	std::vector<string>	allFileTypes;			// [MASK, IMAGE, …, IMAGE3D]
-	std::string description;
 	std::vector<std::string> splitedViewsSet;
 	string hostname;
-	BSONObj viewDocument;
 	// all required types to store
 	boost::shared_ptr<std::vector<fileTypes> > requiredKeyTypes;
 
 	// inserted file types of file
 	std::vector<fileTypes> insertedKeyTypes;
-
-	// pointer to MongoBase object
-//	boost::shared_ptr<MongoBase> basePtr;
 	std::vector<shared_ptr<PrimitiveFile::PrimitiveFile> > files;
 
 
 public:
 
-	View(string& viewName, string& host) : ViewName(viewName), hostname(host)
+	View(string& Name, string& host) : Document(Name), hostname(host)
 	{
+		Type="View";
 		//readViewDocument();
 	};
 	void setRequiredKeyTypes(boost::shared_ptr<std::vector<fileTypes> > &requiredKeyTypes)
@@ -91,10 +87,10 @@ public:
 	};
 	void getAllFiles();
 	void saveAllFiles();
-	void setViewName();
+	void setName();
 	void getViewsSetNames(vector<string>& viewsSetOIDS, string& tableName, string& fieldName);
-	string& getViewName(){
-		return ViewName;
+	string& getName(){
+		return Name;
 	}
 	shared_ptr<PrimitiveFile::PrimitiveFile> getFile(int pos);
 	int getFilesSize()
@@ -112,7 +108,7 @@ public:
 	};
 	BSONObj getDocument()
 	{
-		return viewDocument;
+		return BSONDocument;
 	}
 	void getSensorType();
 	void setDateOfInsert();
@@ -149,20 +145,18 @@ public:
 
 void View::getSceneName(string& name)
 {
-	name = viewDocument["SceneName"].toString(false,false);
+	name = BSONDocument["SceneName"].toString(false,false);
 	name.erase(name.begin());
 	name.erase(name.end()-1);
 }
 void View::addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path)
 {
 	OID oid;
-	string documentType= "View";
-	file->saveIntoMongoBase(documentType, ViewName, true, path, oid);
+	file->saveIntoMongoBase(Type, Name, true, path, oid);
 	BSONObj query;
-	// update document
-
-	query = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");
-
+	LOG(LNOTICE)<<"update document";
+	query = BSON("Name"<<Name<<"Type"<<Type);
+	LOG(LNOTICE)<<"Name"<<Name<<"Type"<<Type;
 	LOG(LDEBUG)<<"OID: "<<oid.toString();
 	BSONObj update = BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString())));
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
@@ -174,7 +168,7 @@ void View::addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type,
 // return viewsSetsOids in vector of string
 void View::getViewsSetOID(vector<OID>& viewsSetOIDS, string& tableName, string& fieldName)
 {
-	vector<BSONElement> v = viewDocument.getField(tableName).Array();
+	vector<BSONElement> v = BSONDocument.getField(tableName).Array();
 	for (unsigned int i = 0; i<v.size(); i++)
 	{
 		string readedOid =v[i][fieldName].str();
@@ -186,7 +180,7 @@ void View::getViewsSetOID(vector<OID>& viewsSetOIDS, string& tableName, string& 
 
 void View::getViewsSetNames(vector<string>& viewsSetNames, string& tableName, string& fieldName)
 {
-	vector<BSONElement> v = viewDocument.getField(tableName).Array();
+	vector<BSONElement> v = BSONDocument.getField(tableName).Array();
 	for (unsigned int i = 0; i<v.size(); i++)
 	{
 		string readedName =v[i][fieldName].str();
@@ -197,7 +191,7 @@ void View::getViewsSetNames(vector<string>& viewsSetNames, string& tableName, st
 void View::getID(OID& id)
 {
 	BSONElement oi;
-	viewDocument.getObjectID(oi);
+	BSONDocument.getObjectID(oi);
 	id= oi.__oid();
 }
 
@@ -236,17 +230,16 @@ void View::saveAllFiles()
 
 	for(std::vector<boost::shared_ptr<PrimitiveFile::PrimitiveFile> >::iterator it = files.begin(); it != files.end(); ++it)
 	{
-		string type = "View";
-		//it->get()->saveIntoMongoBase(type, ViewName);
+		//it->get()->saveIntoMongoBase(type, Name);
 	}
 	return ;
 }
 
 void View::readViewDocument()
 {
-	BSONObj query = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");
-	viewDocument = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
-	ViewName = viewDocument["ViewName"].str();
+	BSONObj query = BSON("Name"<<Name<<"Type"<<Type);
+	BSONDocument = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+	Name = BSONDocument["Name"].str();
 }
 
 /*
@@ -335,7 +328,7 @@ bool View::checkIfAllFiles()
 
 bool View::checkIfExist()
 {
-	BSONObj b = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");\
+	BSONObj b = BSON("Name"<<Name<<"Type"<<Type);\
 	int items = MongoProxy::MongoProxy::getSingleton(hostname).count(b);
 	LOG(LDEBUG)<<"items: "<<items<<"\n";
 	if(items==0)
@@ -365,7 +358,7 @@ fileTypes View::getFileType(int i)
 bool View::getViewTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& fileTypesVector)
 {
 
-	LOG(LDEBUG)<<"View::getModelTypes";
+	LOG(LDEBUG)<<"View::getViewTypes";
 	string output = obj.getField(fieldName);
 	LOG(LDEBUG)<<output;
 	if(output!="EOO")
@@ -459,7 +452,7 @@ bool View::checkIfContain(std::vector<fileTypes> & requiredFileTypes)
 	vector<fileTypes> fileTypesVector;
 	string fieldName = "FileTypes";
 	string childfieldName = "Type";
-	bool arrayNotEmpty = getViewTypes(viewDocument,fieldName, childfieldName, fileTypesVector);
+	bool arrayNotEmpty = getViewTypes(BSONDocument,fieldName, childfieldName, fileTypesVector);
 
 	if(!arrayNotEmpty)
 	{
@@ -500,10 +493,10 @@ int View::getAllFilesOIDS(vector<OID>& oidsVector)
 {
 	string fieldName = "fileOIDs";
 	string childfieldName = "fileOID";
-	string output = viewDocument.getField(fieldName);
+	string output = BSONDocument.getField(fieldName);
 	if(output!="EOO")
 	{
-		vector<BSONElement> v = viewDocument.getField(fieldName).Array();
+		vector<BSONElement> v = BSONDocument.getField(fieldName).Array();
 		for (unsigned int i = 0; i<v.size(); i++)
 		{
 			string readedOid =v[i][childfieldName].str();
@@ -520,7 +513,7 @@ int View::getAllFilesOIDS(vector<OID>& oidsVector)
 void View::create(OID& sceneOID, OID& viewOID, string& sceneName)
 {
 	BSONArrayBuilder objectArrayBuilder;
-	BSONObj view = BSONObjBuilder().genOID().append("ViewName", ViewName).append("SceneOID", sceneOID).append("SceneName", sceneName).append("DocumentType","View").append("sensorType", SensorType).append("description", description).obj();
+	BSONObj view = BSONObjBuilder().genOID().append("Name", Name).append("SceneOID", sceneOID).append("SceneName", sceneName).append("Type",Type).append("sensorType", SensorType).append("description", description).obj();
 	// get view oid
 	BSONElement bsonElement;
 	view.getObjectID(bsonElement);
@@ -530,7 +523,7 @@ void View::create(OID& sceneOID, OID& viewOID, string& sceneName)
 	{
 		BSONObj viewsSet;
 		bool created = false;
-		BSONObj b = BSON("ViewsSetName"<<*viewSetIt<<"DocumentType"<<"ViewsSet");
+		BSONObj b = BSON("ViewsSetName"<<*viewSetIt<<"Type"<<"ViewsSet");
 		LOG(LNOTICE)<<"Nazwa zbioru: "<< *viewSetIt;
 		// check if viewsSet exist
 		int items = MongoProxy::MongoProxy::getSingleton(hostname).count(b);
@@ -538,26 +531,26 @@ void View::create(OID& sceneOID, OID& viewOID, string& sceneName)
 		if(items==0)
 		{
 			LOG(LNOTICE)<<"Zbior nie istnieje!";
-			viewsSet = BSONObjBuilder().genOID().append("ViewsSetName", *viewSetIt).append("DocumentType","ViewsSet").obj();
+			viewsSet = BSONObjBuilder().genOID().append("ViewsSetName", *viewSetIt).append("Type","ViewsSet").obj();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(viewsSet);
 			created=true;
 		}
 		// insert view oid to viewsSet document
-		BSONObj query = BSON("ViewsSetName"<<*viewSetIt<<"DocumentType"<<"ViewsSet");
+		BSONObj query = BSON("ViewsSetName"<<*viewSetIt<<"Type"<<"ViewsSet");
 		BSONObj update = BSON("$addToSet"<<BSON("ViewsList"<<BSON("viewOID"<<viewOID.toString())));
 		MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 
 		// insert viewsSet oid to view document
 		if(!created)
 		{
-			query = BSON("ViewsSetName"<<*viewSetIt<<"DocumentType"<<"ViewsSet");
+			query = BSON("ViewsSetName"<<*viewSetIt<<"Type"<<"ViewsSet");
 			viewsSet =  MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
 		}
 		viewsSet.getObjectID(bsonElement);
 		OID viewSetOID;
 		// insert viewsetOID to view
 		viewSetOID=bsonElement.__oid();
-		query = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");
+		query = BSON("Name"<<Name<<"Type"<<Type);
 		update = BSON("$addToSet"<<BSON("viewSetList"<<BSON("ViewsSetOID"<<viewSetOID.toString())));
 		MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 
@@ -569,7 +562,7 @@ void View::create(OID& sceneOID, OID& viewOID, string& sceneName)
 
 void View::addScene(string& sceneName, OID& sceneOID)
 {
-	BSONObj query = BSON("ViewName"<<ViewName<<"DocumentType"<<"View");
+	BSONObj query = BSON("Name"<<Name<<"Type"<<Type);
 	BSONObj update = BSON("$set"<<BSON("SceneName"<<sceneName<<"sceneOID"<<sceneOID));
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 }

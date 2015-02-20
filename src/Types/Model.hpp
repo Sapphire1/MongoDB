@@ -43,7 +43,7 @@
 #include <Types/SIFTObjectModelFactory.hpp>
 #include <Types/MongoProxy.hpp>
 #include <Types/PrimitiveFile.hpp>
-
+#include <Types/Document.hpp>
 #include <vector>
 #include <list>
 #include <iostream>
@@ -57,17 +57,13 @@ using namespace mongo;
 using namespace std;
 using namespace boost;
 
-class Model
+class Model : public Document
 {
 private:
-	std::string ModelName;					// model1
 	std::vector<shared_ptr<PrimitiveFile::PrimitiveFile> > files;
-	string dateOfInsert;					// 02042013
 	std::vector<string>	allFileTypes;			// [MASK, IMAGE, …, IMAGE3D]
-	std::string description;
 	string hostname;
 	string viewSetName;
-	BSONObj modelDocument;
 
 	// all required types to store
 	boost::shared_ptr<std::vector<fileTypes> > requiredKeyTypes;
@@ -77,8 +73,9 @@ private:
 	std::vector<fileTypes> insertedKeyTypes;
 
 public:
-	Model(string& modelName, string& host) : ModelName(modelName), hostname(host)
+	Model(string& Name, string& host) : Document(Name), hostname(host)
 	{
+		Type="Model";
 		//readModelDocument();
 	};
 	void setRequiredKeyTypes(boost::shared_ptr<std::vector<fileTypes> > &requiredKeyTypes)
@@ -89,6 +86,13 @@ public:
 	{
 		this->viewSetName = viewSetName;
 	}
+	void readDocument()
+	{
+		BSONObj query = BSON("ViewName"<<Name<<"Type"<<Type);
+		BSONDocument = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+		Name = BSONDocument["ViewName"].str();
+	}
+
 
 	bool checkIfExist();
 	void create();
@@ -125,8 +129,8 @@ public:
 	void saveAllFiles();
 	void removeFile();
 	void removeAllFiles();
-	void setModelName();
-	void getModelName();
+	void setName();
+	void getName();
 	void setSensorType();
 	void getSensorType();
 	void setDateOfInsert();
@@ -142,11 +146,11 @@ public:
 void Model::addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path)
 {
 	OID oid;
-	string documentType= "Model";
-	file->saveIntoMongoBase(documentType, ModelName, true, path, oid);
+	//string Type= Type;
+	file->saveIntoMongoBase(Type, Name, true, path, oid);
 	BSONObj query;
 	// update document
-	query = BSON("ModelName"<<ModelName<<"DocumentType"<<documentType);
+	query = BSON("Name"<<Name<<"Type"<<Type);
 
 	LOG(LDEBUG)<<"OID: "<<oid.toString();
 	BSONObj update = BSON("$addToSet"<<BSON("fileOIDs"<<BSON("fileOID"<<oid.toString())));
@@ -198,10 +202,10 @@ int Model::getAllFilesOIDS(vector<OID>& oidsVector)
 {
 	string fieldName = "fileOIDs";
 	string childfieldName = "fileOID";
-	string output = modelDocument.getField(fieldName);
+	string output = BSONDocument.getField(fieldName);
 	if(output!="EOO")
 	{
-		vector<BSONElement> v = modelDocument.getField(fieldName).Array();
+		vector<BSONElement> v = BSONDocument.getField(fieldName).Array();
 		for (unsigned int i = 0; i<v.size(); i++)
 		{
 			string readedOid =v[i][childfieldName].str();
@@ -217,8 +221,8 @@ int Model::getAllFilesOIDS(vector<OID>& oidsVector)
 
 void Model::readModelDocument()
 {
-	BSONObj query = BSON("ModelName"<<ModelName<<"DocumentType"<<"Model");
-	modelDocument = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+	BSONObj query = BSON("Name"<<Name<<"Type"<<Type);
+	BSONDocument = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
 }
 
 bool Model::getModelTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& fileTypesVector)
@@ -276,9 +280,9 @@ bool Model::checkIfContain(std::vector<fileTypes> & requiredFileTypes)
 	string fieldName = "FileTypes";
 	string childfieldName = "Type";
 
-	LOG(LNOTICE)<<"modelDocument: "<<modelDocument;
+	LOG(LNOTICE)<<"modelDocument: "<<BSONDocument;
 
-	bool arrayNotEmpty = getModelTypes(modelDocument,fieldName, childfieldName, fileTypesVector);
+	bool arrayNotEmpty = getModelTypes(BSONDocument,fieldName, childfieldName, fileTypesVector);
 
 	if(!arrayNotEmpty)
 	{
@@ -321,8 +325,8 @@ void Model::saveAllFiles()
 
 	for(std::vector<boost::shared_ptr<PrimitiveFile::PrimitiveFile> >::iterator it = files.begin(); it != files.end(); ++it)
 	{
-		string type = "Model";
-		//it->get()->saveIntoMongoBase(type, ModelName, false, "");
+		//string type = Type;
+		//it->get()->saveIntoMongoBase(type, Name, false, "");
 	}
 	return ;
 }
@@ -387,7 +391,7 @@ bool Model::checkIfExist()
 	int options=0;
 	int limit=0;
 	int skip=0;
-	BSONObj b = BSON("ModelName"<<ModelName<<"DocumentType"<<"Model");
+	BSONObj b = BSON("Name"<<Name<<"Type"<<Type);
 	int items = MongoProxy::MongoProxy::getSingleton(hostname).count(b);
 	LOG(LNOTICE)<<"items: "<<items<<"\n";
 	if(items==0)
@@ -400,7 +404,7 @@ bool Model::checkIfFileExist(fileTypes key)
 	LOG(LNOTICE)<<"checkIfFileExist, key: "<<key<<", insertedSize: "<<files.size() ;
 	for(std::vector<boost::shared_ptr<PrimitiveFile::PrimitiveFile> >::iterator it = files.begin(); it != files.end(); ++it)
 	{
-		LOG(LNOTICE)<<"file: "<< it->get()->getFileName();
+		//LOG(LNOTICE)<<"file: "<< it->get()->getFileName();
 		if(key==it->get()->getType())
 			return true;
 	}
@@ -413,7 +417,7 @@ void Model::create()
 	int limit=0;
 	int skip=0;
 	BSONArrayBuilder objectArrayBuilder;
-	BSONObj model = BSONObjBuilder().genOID().append("ModelName", ModelName).append("DocumentType","Model").append("description", description).obj();
+	BSONObj model = BSONObjBuilder().genOID().append("Name", Name).append("Type",Type).append("description", description).obj();
 	// get model oid
 	BSONElement bsonElement;
 	model.getObjectID(bsonElement);
@@ -423,25 +427,25 @@ void Model::create()
 	// thesis: model doesn't exist so doesn't contain any object
 
 	// check if ViewsSet exist
-	BSONObj b = BSON("ViewsSetName"<<viewSetName<<"DocumentType"<<"ViewsSet");
+	BSONObj b = BSON("ViewsSetName"<<viewSetName<<"Type"<<"ViewsSet");
 	int items = MongoProxy::MongoProxy::getSingleton(hostname).count(b);
 	// document of object doesn't exist
 	if(items==0)
 	{
-		BSONObj viewSet = BSONObjBuilder().genOID().append("ViewsSetName", viewSetName).append("DocumentType","ViewsSet").obj();
+		BSONObj viewSet = BSONObjBuilder().genOID().append("ViewsSetName", viewSetName).append("Type","ViewsSet").obj();
 		MongoProxy::MongoProxy::getSingleton(hostname).insert(viewSet);
 	}
-	BSONObj query = BSON("ViewsSetName"<<viewSetName<<"DocumentType"<<"ViewsSet");
+	BSONObj query = BSON("ViewsSetName"<<viewSetName<<"Type"<<"ViewsSet");
 	BSONObj update = BSON("$addToSet"<<BSON("ModelsList"<<BSON("modelOID"<<modelOID.toString())));
 	// insert model oid to object document
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 
 	// insert viewSet oid to model document
-	query = BSON("ViewsSetName"<<viewSetName<<"DocumentType"<<"ViewsSet");
+	query = BSON("ViewsSetName"<<viewSetName<<"Type"<<"ViewsSet");
 	BSONObj viewSet= MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
 	viewSet.getObjectID(bsonElement);
 	OID viewSetOID=bsonElement.__oid();
-	query = BSON("ModelName"<<ModelName<<"DocumentType"<<"Model");
+	query = BSON("Name"<<Name<<"Type"<<Type);
 	update = BSON("$addToSet"<<BSON("ViewsSetsList"<<BSON("objectOID"<<viewSetOID.toString())));
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 

@@ -19,8 +19,6 @@
 			<Executor name="Processing"  period="1">
 			<Component name="ViewReader" type="MongoDB:ViewReader" priority="1">
 			</Component>
-			<Component name="CIPReader" type="MongoDB:CIPReader" priority="2">
-			</Component>
 			</Executor>
 			
 			<Executor name="Exec1" period="0.01">

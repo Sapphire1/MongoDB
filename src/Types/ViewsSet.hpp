@@ -1,12 +1,12 @@
 /*
- * Scene.hpp
+ * ViewsSet.hpp
  *
- *  Created on: Jan 11, 2015
+ *  Created on: Feb 20, 2015
  *      Author: lzmuda
  */
 
-#ifndef SCENE_HPP_
-#define SCENE_HPP_
+#ifndef VIEWSSET_HPP_
+#define VIEWSSET_HPP_
 
 
 #include <opencv2/core/core.hpp>
@@ -59,13 +59,13 @@ using namespace std;
 using namespace boost;
 using namespace PrimitiveFile;
 
-class Scene : public Document
+class ViewsSet : public Document
 {
 private:
 	string hostname;
 
 public:
-	Scene(string& Name, string& host) : Document(Name), hostname(host)
+	ViewsSet(string& Name, string& host) : Document(Name), hostname(host)
 	{
 
 	}
@@ -73,7 +73,7 @@ public:
 	void addView(string& ViewName, OID& viewOID);
 	}; //class Scene
 
-void Scene::addView(string& ViewName, OID& viewOID)
+void ViewsSet::addView(string& ViewName, OID& viewOID)
 {
 	// insert view oid to scene document
 	BSONObj query = BSON("Name"<<Name<<"Type"<<Type);
@@ -81,7 +81,7 @@ void Scene::addView(string& ViewName, OID& viewOID)
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 }
 
-void Scene::create(OID& sceneOID)
+void ViewsSet::create(OID& sceneOID)
 {
 	BSONObj sceneQuery= BSON("Name"<<Name<<"Type"<<Type);
 	// check if object exist
@@ -109,4 +109,6 @@ void Scene::create(OID& sceneOID)
 }
 };// namespace MongoDB
 
-#endif /* SCENE_HPP_ */
+
+
+#endif /* VIEWSSET_HPP_ */

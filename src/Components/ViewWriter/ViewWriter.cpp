@@ -316,7 +316,7 @@ void ViewWriter::saveFile(fileTypes & fileType)
 
 	string filename = (string)fileName;
 	string type = "View";
-	string ViewName = viewPtr->getViewName();
+	string ViewName = viewPtr->getName();
 	string empty = "";
 	switch(fileType)
 	{
