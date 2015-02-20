@@ -523,7 +523,7 @@ void View::create(OID& sceneOID, OID& viewOID, string& sceneName)
 	{
 		BSONObj viewsSet;
 		bool created = false;
-		BSONObj b = BSON("ViewsSetName"<<*viewSetIt<<"Type"<<"ViewsSet");
+		BSONObj b = BSON("Name"<<*viewSetIt<<"Type"<<"ViewsSet");
 		LOG(LNOTICE)<<"Nazwa zbioru: "<< *viewSetIt;
 		// check if viewsSet exist
 		int items = MongoProxy::MongoProxy::getSingleton(hostname).count(b);
@@ -531,19 +531,19 @@ void View::create(OID& sceneOID, OID& viewOID, string& sceneName)
 		if(items==0)
 		{
 			LOG(LNOTICE)<<"Zbior nie istnieje!";
-			viewsSet = BSONObjBuilder().genOID().append("ViewsSetName", *viewSetIt).append("Type","ViewsSet").obj();
+			viewsSet = BSONObjBuilder().genOID().append("Name", *viewSetIt).append("Type","ViewsSet").obj();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(viewsSet);
 			created=true;
 		}
 		// insert view oid to viewsSet document
-		BSONObj query = BSON("ViewsSetName"<<*viewSetIt<<"Type"<<"ViewsSet");
+		BSONObj query = BSON("Name"<<*viewSetIt<<"Type"<<"ViewsSet");
 		BSONObj update = BSON("$addToSet"<<BSON("ViewsList"<<BSON("viewOID"<<viewOID.toString())));
 		MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 
 		// insert viewsSet oid to view document
 		if(!created)
 		{
-			query = BSON("ViewsSetName"<<*viewSetIt<<"Type"<<"ViewsSet");
+			query = BSON("Name"<<*viewSetIt<<"Type"<<"ViewsSet");
 			viewsSet =  MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
 		}
 		viewsSet.getObjectID(bsonElement);
@@ -551,10 +551,10 @@ void View::create(OID& sceneOID, OID& viewOID, string& sceneName)
 		// insert viewsetOID to view
 		viewSetOID=bsonElement.__oid();
 		query = BSON("Name"<<Name<<"Type"<<Type);
-		update = BSON("$addToSet"<<BSON("viewSetList"<<BSON("ViewsSetOID"<<viewSetOID.toString())));
+		update = BSON("$addToSet"<<BSON("ViewsSetsList"<<BSON("ViewsSetOID"<<viewSetOID.toString())));
 		MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 
-		update = BSON("$addToSet"<<BSON("viewsSetNamesList"<<BSON("ViewsSetName"<<*viewSetIt)));
+		update = BSON("$addToSet"<<BSON("viewsSetNamesList"<<BSON("Name"<<*viewSetIt)));
 		MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 	}
 	return;

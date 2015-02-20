@@ -67,7 +67,7 @@ private:
 public:
 	Scene(string& Name, string& host) : Document(Name), hostname(host)
 	{
-
+		Type="Scene";
 	}
 	void create(OID&);
 	void addView(string& ViewName, OID& viewOID);

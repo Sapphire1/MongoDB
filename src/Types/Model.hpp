@@ -88,11 +88,10 @@ public:
 	}
 	void readDocument()
 	{
-		BSONObj query = BSON("ViewName"<<Name<<"Type"<<Type);
+		BSONObj query = BSON("Name"<<Name<<"Type"<<Type);
 		BSONDocument = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
-		Name = BSONDocument["ViewName"].str();
+		Name = BSONDocument["Name"].str();
 	}
-
 
 	bool checkIfExist();
 	void create();
@@ -112,6 +111,9 @@ public:
 	void putPCxyzshotToFile(const pcl::PointCloud<PointXYZSHOT>::Ptr&, fileTypes key, string& fileName);
 	void putPCxyzrgbNormalToFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr&, fileTypes key, string& fileName);
 	void readFiles(vector<OID>& fileOIDSVector, vector<fileTypes>& requiredFileTypes);
+	void getViewsSetOID(vector<OID>& viewsSetOIDS, string& tableName, string& fieldName);
+	void getRequiredFiles(vector<fileTypes>& requiredFileTypes);
+
 	int getFilesSize()
 	{
 		return files.size();
@@ -140,9 +142,101 @@ public:
 	bool checkIfContain(std::vector<fileTypes> & requiredFileTypes);
 	bool getModelTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& typesVector);
 	void addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path);
-
+	void getID(OID& id);
 
 };// class Model
+
+void Model::getID(OID& id)
+{
+	BSONElement oi;
+	BSONDocument.getObjectID(oi);
+	id= oi.__oid();
+}
+
+void Model::getAllFiles()
+{
+	LOG(LDEBUG)<<"Model::getAllFiles";
+	vector<OID> fileOIDSVector;
+	int filesNumber = getAllFilesOIDS(fileOIDSVector);
+	for(std::vector<OID>::iterator fileOIDIter = fileOIDSVector.begin(); fileOIDIter != fileOIDSVector.end(); ++fileOIDIter)
+	{
+		BSONObj query = BSON("_id" << *fileOIDIter);
+		BSONObj bsonfile = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+		string fileType = bsonfile.getField("fileType").str();
+		LOG(LDEBUG)<<"fileType : " <<fileType;
+
+		// map from string to enum
+		// now stereoTextured is equal 18, it's the last one type
+		fileTypes ft;
+		for(int i=0; i<StereoTextured;i++)
+		{
+			if(fileType == FTypes[i])
+			{
+				ft = (fileTypes)i;
+				break;
+			}
+		}
+		string empty = "";
+		LOG(LDEBUG)<<"READ FILE!!!";
+		shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(ft, hostname, *fileOIDIter));
+		file->readFile(true, empty, false);
+		files.push_back(file);
+	}
+}
+
+// return viewsSetsOids in vector of string
+void Model::getViewsSetOID(vector<OID>& viewsSetOIDS, string& tableName, string& fieldName)
+{
+	vector<BSONElement> v = BSONDocument.getField(tableName).Array();
+	for (unsigned int i = 0; i<v.size(); i++)
+	{
+		string readedOid =v[i][fieldName].str();
+		OID o = OID(readedOid);
+		viewsSetOIDS.push_back(o);
+		LOG(LDEBUG)<<"DocumentOID : "<<o;
+	}
+}
+
+void Model::getRequiredFiles(vector<fileTypes>& requiredFileTypes)
+{
+	// read vector of files OIDs
+	vector<OID> fileOIDSVector;
+	getAllFilesOIDS(fileOIDSVector);
+	LOG(LDEBUG)<<"Model::readFiles";
+	for(std::vector<OID>::iterator fileOIDIter = fileOIDSVector.begin(); fileOIDIter != fileOIDSVector.end(); ++fileOIDIter)
+	{
+		BSONObj query = BSON("_id" << *fileOIDIter);
+		BSONObj file = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
+		string fileType = file.getField("fileType").str();
+		LOG(LDEBUG)<<"fileType : " <<fileType;
+		// map from string to enum
+		fileTypes ft;
+		// now stereoTextured is equal 18, it's the last one type
+		for(int i=0; i<StereoTextured;i++)
+		{
+			if(fileType == FTypes[i])
+			{
+				ft = (fileTypes)i;
+				break;
+			}
+		}
+
+		for(std::vector<fileTypes>::iterator reqFileType = requiredFileTypes.begin(); reqFileType != requiredFileTypes.end(); ++reqFileType)
+		{
+			LOG(LDEBUG)<<"for(std::vector<fileTypes>::iterator reqFileType";
+			LOG(LDEBUG)<<"ft : " <<ft << "*reqFileType: " <<*reqFileType;
+			string empty = "";
+			if(ft==*reqFileType)
+			{
+				LOG(LDEBUG)<<"READ FILE!!!";
+				shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(ft, hostname, *fileOIDIter));
+				file->readFile(true, empty, false);
+				files.push_back(file);
+			}
+		}
+	}
+}
+
 void Model::addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path)
 {
 	OID oid;
@@ -427,29 +521,29 @@ void Model::create()
 	// thesis: model doesn't exist so doesn't contain any object
 
 	// check if ViewsSet exist
-	BSONObj b = BSON("ViewsSetName"<<viewSetName<<"Type"<<"ViewsSet");
+	BSONObj b = BSON("Name"<<viewSetName<<"Type"<<"ViewsSet");
 	int items = MongoProxy::MongoProxy::getSingleton(hostname).count(b);
 	// document of object doesn't exist
 	if(items==0)
 	{
-		BSONObj viewSet = BSONObjBuilder().genOID().append("ViewsSetName", viewSetName).append("Type","ViewsSet").obj();
+		BSONObj viewSet = BSONObjBuilder().genOID().append("Name", viewSetName).append("Type","ViewsSet").obj();
 		MongoProxy::MongoProxy::getSingleton(hostname).insert(viewSet);
 	}
-	BSONObj query = BSON("ViewsSetName"<<viewSetName<<"Type"<<"ViewsSet");
+	BSONObj query = BSON("Name"<<viewSetName<<"Type"<<"ViewsSet");
 	BSONObj update = BSON("$addToSet"<<BSON("ModelsList"<<BSON("modelOID"<<modelOID.toString())));
 	// insert model oid to object document
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 
 	// insert viewSet oid to model document
-	query = BSON("ViewsSetName"<<viewSetName<<"Type"<<"ViewsSet");
+	query = BSON("Name"<<viewSetName<<"Type"<<"ViewsSet");
 	BSONObj viewSet= MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
 	viewSet.getObjectID(bsonElement);
 	OID viewSetOID=bsonElement.__oid();
 	query = BSON("Name"<<Name<<"Type"<<Type);
-	update = BSON("$addToSet"<<BSON("ViewsSetsList"<<BSON("objectOID"<<viewSetOID.toString())));
+	update = BSON("$addToSet"<<BSON("ViewsSetsList"<<BSON("ViewsSetOID"<<viewSetOID.toString())));
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 
-	update = BSON("$addToSet"<<BSON("viewsSetNamesList"<<BSON("ViewsSetName"<<viewSetName)));
+	update = BSON("$addToSet"<<BSON("viewsSetNamesList"<<BSON("Name"<<viewSetName)));
 	MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 	return;
 }

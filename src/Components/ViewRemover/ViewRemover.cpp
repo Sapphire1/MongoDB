@@ -17,7 +17,7 @@ using namespace boost::posix_time;
 
 ViewRemover::ViewRemover(const std::string & name) : Base::Component(name),
 	mongoDBHost("mongoDBHost", string("localhost")),
-	viewName("ViewName", string("lab012")),
+	viewName("Name", string("lab012")),
 	cameraInfoProp("file.cameraInfo.xml", false),
 	xyzProp("image.xyz", false),
 	rgbProp("image.rgb", false),
@@ -141,7 +141,7 @@ void ViewRemover::readfromDB()
 				OID fileOID = viewPtr->getFile(i)->getOID();
 				CLOG(LERROR)<<"Usuwamy : " << FTypes[viewPtr->getFile(i)->getType()];
 				CLOG(LERROR)<<"fileOID: " << fileOID;
-				query = BSON("ViewName"<<vn<<"DocumentType"<<"View");
+				query = BSON("Name"<<vn<<"Type"<<"View");
 				update = BSON("$pull"<<BSON("FileTypes"<<BSON("Type"<<FTypes[viewPtr->getFile(i)->getType()])));
 				MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 				update = BSON("$pull"<<BSON("fileOIDs"<<BSON("fileOID"<<fileOID.toString())));
@@ -155,13 +155,13 @@ void ViewRemover::readfromDB()
 			viewPtr->getID(viewOID);
 			CLOG(LERROR)<<"Scene: " << sceneName;
 			CLOG(LERROR)<<"viewOID.toString(): " << viewOID.toString();
-			query = BSON("SceneName"<<sceneName<<"DocumentType"<<"Scene");
+			query = BSON("Name"<<sceneName<<"Type"<<"Scene");
 			update = BSON("$pull"<<BSON("ViewsList"<<BSON("viewOID"<<viewOID.toString())));
 			MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 
 			// remove from viewsSet
 			vector<OID> viewsSetOIDS;
-			string tableName = "viewSetList";
+			string tableName = "ViewsSetsList";
 			string fieldName = "ViewsSetOID";
 			viewPtr->getViewsSetOID(viewsSetOIDS, tableName, fieldName);
 
@@ -202,7 +202,7 @@ void ViewRemover::readfromDB()
 				OID fileOID = viewPtr->getFile(i)->getOID();
 				CLOG(LERROR)<<"Usuwamy : " << FTypes[viewPtr->getFile(i)->getType()];
 				CLOG(LERROR)<<"fileOID: " << fileOID;
-				BSONObj query = BSON("ViewName"<<vn<<"DocumentType"<<"View");
+				BSONObj query = BSON("Name"<<vn<<"Type"<<"View");
 				BSONObj update = BSON("$pull"<<BSON("FileTypes"<<BSON("Type"<<FTypes[viewPtr->getFile(i)->getType()])));
 				MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 				update = BSON("$pull"<<BSON("fileOIDs"<<BSON("fileOID"<<fileOID.toString())));

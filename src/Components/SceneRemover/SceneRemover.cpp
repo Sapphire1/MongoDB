@@ -75,7 +75,7 @@ void SceneRemover::removeSceneFromMongoDB()
 	string name;
 	try{
 		int items=0;
-		BSONObj query = BSON("SceneName"<<sceneName<<"DocumentType"<<"Scene");
+		BSONObj query = BSON("Name"<<sceneName<<"Type"<<"Scene");
 		cursorCollection = MongoProxy::MongoProxy::getSingleton(hostname).query(query);
 		while (cursorCollection->more())
 		{
