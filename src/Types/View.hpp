@@ -139,7 +139,7 @@ public:
 	void getID(OID& id);
 	void getViewsSetName(string& name);
 	void getViewsSetOID(vector<OID>& viewsSetOIDS, string& tableName, string& fieldName);
-	void addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path);
+	void addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path, int in_mean_viewpoint_features_number);
 
 };// class View
 
@@ -149,10 +149,11 @@ void View::getSceneName(string& name)
 	name.erase(name.begin());
 	name.erase(name.end()-1);
 }
-void View::addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path)
+
+void View::addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path, int in_mean_viewpoint_features_number)
 {
 	OID oid;
-	file->saveIntoMongoBase(Type, Name, true, path, oid);
+	file->saveIntoMongoBase(Type, Name, true, path, oid, in_mean_viewpoint_features_number);
 	BSONObj query;
 	LOG(LNOTICE)<<"update document";
 	query = BSON("Name"<<Name<<"Type"<<Type);

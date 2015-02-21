@@ -230,14 +230,14 @@ void ModelReader::loadModels(fileTypes fT, string& ModelName, int meanViewpointF
 {
 	CLOG(LDEBUG) << "Create model";
 	SIFTObjectModel* model;
-	//TODO add more types!!!
-	//TODO test all types and returned vector of models!!!
 	if(fT==PCXyz)
 		CLOG(LERROR)<<"Unsupported type!!!";
 	else if(fT==PCXyzRgb)
 		cloud_xyzrgb=cloudXYZRGB;
 	else if(fT==PCXyzSift)
 		cloud_xyzsift=cloudXYZSIFT;
+	else if(fT==PCXyzRgbNormal)
+		cloud_xyzrgb_normals = cloudXYZNormal;
 	else
 	{
 		CLOG(LERROR)<<"Unsupported type!!!";

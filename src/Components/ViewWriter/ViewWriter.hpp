@@ -112,7 +112,10 @@ public:
 
    	/// Cloud containing points with Cartesian coordinates, colors and normals (XYZ + RGB + NORMAL).
    	Base::DataStreamIn<pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr, Base::DataStreamBuffer::Newest> in_pc_xyzrgbnormal;
-	shared_ptr<MongoDB::View> viewPtr;
+
+	Base::DataStreamIn<int, Base::DataStreamBuffer::Newest> in_mean_viewpoint_features_number;
+
+   	shared_ptr<MongoDB::View> viewPtr;
 	shared_ptr<MongoDB::Scene> scenePtr;
 	string hostname;
 protected:

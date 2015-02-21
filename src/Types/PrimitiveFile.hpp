@@ -246,9 +246,9 @@ public:
 	void saveToDisc(cv::Mat& image, string& pathToFiles, bool saveToDiscFlag);
 	void copyData(int height, int channels, float* dataXYZ, float* xyz_p, int i);
 	void saveIntoDisc();
-	void saveIntoMongoBase(string& type, string& name, bool dataInBuffer, string& path, OID& oid);
-	void insertFileIntoGrid(OID& oid, bool dataInMemory, string& path, string&, string&);
-	void insertFileIntoDocument(OID& oid, string& name, string& type);
+	void saveIntoMongoBase(string& type, string& name, bool dataInBuffer, string& path, OID& oid, int);
+	void insertFileIntoGrid(OID& oid, bool dataInMemory, string& path, string&, string&, int);
+	void insertFileIntoDocument(OID& oid, string& name, string& type, int);
 	void convertToBuffer();
 	void getMime();
 	void readFromMongoDB();
@@ -429,16 +429,17 @@ void PrimitiveFile::saveToDisc(cv::Mat& image, string& pathToFiles, bool saveToD
 	}
 }
 
-void PrimitiveFile::saveIntoMongoBase(string& type, string& name, bool dataInBuffer, string& path, OID& oid)
+
+void PrimitiveFile::saveIntoMongoBase(string& type, string& name, bool dataInBuffer, string& path, OID& oid, int mean_viewpoint_features_number)
 {
 	//add timestamp to Name
 	string timestamp;
 	getTimestamp(timestamp);
 	Name =timestamp+"_"+Name;
 	if(sizeMBytes<15)
-		insertFileIntoDocument(oid, name, type);
+		insertFileIntoDocument(oid, name, type, mean_viewpoint_features_number);
 	else if(sizeMBytes>=15)
-		insertFileIntoGrid(oid, dataInBuffer, path, type, name);
+		insertFileIntoGrid(oid, dataInBuffer, path, type, name, mean_viewpoint_features_number);
 }
 
 void PrimitiveFile::readImageFromDocument(bool saveToDiscFlag, string& pathToFiles)
@@ -1021,7 +1022,7 @@ void PrimitiveFile::copyXYZSHOTPointToFloatArray (const PointXYZSHOT &p, float *
 
 }
 
-void PrimitiveFile::insertFileIntoDocument(OID& oid, string& name, string& type)
+void PrimitiveFile::insertFileIntoDocument(OID& oid, string& name, string& type, int mean_viewpoint_features_number)
 {
 	// use variant here...
 	LOG(LDEBUG)<<"insertFileIntoDocument";
@@ -1143,7 +1144,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid, string& name, string& type)
 				const PointXYZSIFT p = cloudXYZSIFT->points[iter];
 				copyXYZSiftPointToFloatArray (p, &buff[siftPointSize*iter]);
 			}
-			b=BSONObjBuilder().genOID().appendBinData(Name, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("Name", Name).append(type+"Name", name).append("Type", Type).append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
+			b=BSONObjBuilder().genOID().appendBinData(Name, (int)sizeBytes, mongo::BinDataGeneral, &buff[0]).append("Name", Name).append(type+"Name", name).append("mean_viewpoint_features_number", mean_viewpoint_features_number).append("Type", Type).append("size", (int)sizeBytes).append("place", "document").append("fileType", FTypes[fileType]).obj();
 			b.getObjectID(bsonElement);
 			oid=bsonElement.__oid();
 			MongoProxy::MongoProxy::getSingleton(hostname).insert(b);
@@ -1151,7 +1152,7 @@ void PrimitiveFile::insertFileIntoDocument(OID& oid, string& name, string& type)
 		}
 		case PCXyzRgbSift:
 		{
-			LOG(LDEBUG)<<"ERROR: I don't know what to do with pc_xyzrgbsift";
+			LOG(LERROR)<<"ERROR: I don't know what to do with pc_xyzrgbsift";
 			exit(1);
 			//pcl::PointCloud<PointXYZRGBSIFT>::Ptr cloudXYZRGBSIFT = boost::get<pcl::PointCloud<PointXYZRGBSIFT>::Ptr>(data);;
 			break;
@@ -1433,7 +1434,7 @@ void PrimitiveFile::getTimestamp(string& timestamp)
 	return;
 }
 
-void PrimitiveFile::insertFileIntoGrid(OID& oid, bool dataInBuffer, string& path, string& type, string& name)
+void PrimitiveFile::insertFileIntoGrid(OID& oid, bool dataInBuffer, string& path, string& type, string& name, int mean_viewpoint_features_number)
 {
 	LOG(LDEBUG)<<"Writting to GRIDFS!";
 	try{
@@ -1455,17 +1456,12 @@ void PrimitiveFile::insertFileIntoGrid(OID& oid, bool dataInBuffer, string& path
 		// save in grid
 		object = fs.storeFile(path, Name, mime);
 
-		//TODO dodawac mean_viewpoint_features_number!!! odczytany z wejscia komponentu
-		//	if(cloudType=="xyzsift")
-		//		b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
-		//	else
-		//		b = BSONObjBuilder().appendElements(object).append("ObjectName", objectName).append("size", totalSize).append("place", "grid").obj();
 		BSONObj b;
 		LOG(LDEBUG)<<"fileType: "<<fileType;
 		if(type=="View")
-			b = BSONObjBuilder().appendElements(object).append("ViewName", name).append("fileType", FTypes[fileType]).append("Type", Type).append("size", (int)sizeBytes).append("place", "grid").obj();
+			b = BSONObjBuilder().appendElements(object).append("ViewName", name).append("fileType", FTypes[fileType]).append("Type", Type).append("size", (int)sizeBytes).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
 		else if(type=="Model")
-			b = BSONObjBuilder().appendElements(object).append("ModelName", name).append("fileType", FTypes[fileType]).append("Type", Type).append("size", (int)sizeBytes).append("place", "grid").obj();
+			b = BSONObjBuilder().appendElements(object).append("ModelName", name).append("fileType", FTypes[fileType]).append("Type", Type).append("size", (int)sizeBytes).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
 		else
 		{
 			LOG(LERROR)<<"Couldn't update type: "<<type<<" !!!";

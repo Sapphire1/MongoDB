@@ -23,9 +23,11 @@ MongoDBExporter::MongoDBExporter(const string & name) : Base::Component(name),
 	viewsSet("viewsSet", string("viewsSet1")),
 	SensorType("SensorType", string("Stereo")),
 	folderName("folderName", string("/home/lzmuda/mongo_driver_tutorial")),
+	in_mean_viewpoint_features_number("in_mean_viewpoint_features_number", int(10)),
 	sceneNameProp("sceneNamesProp", string("scene1"))
 {
 	registerProperty(mongoDBHost);
+	registerProperty(in_mean_viewpoint_features_number);
 	registerProperty(description);
 	registerProperty(viewsSet);
 	registerProperty(SensorType);
@@ -249,9 +251,9 @@ void MongoDBExporter::write2DB()
 					file->writeToSinkFromFile(fileNameTemp);
 				}
 				if(type == "Model")
-					modelPtr->addFile(file, type, false, fileNameTemp);
+					modelPtr->addFile(file, type, false, fileNameTemp, in_mean_viewpoint_features_number);
 				else if(type == "View")
-					viewPtr->addFile(file, type, false, fileNameTemp);
+					viewPtr->addFile(file, type, false, fileNameTemp, in_mean_viewpoint_features_number);
 				else
 				{
 					CLOG(LERROR) <<"Not view or model!!!";

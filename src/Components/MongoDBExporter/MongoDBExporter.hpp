@@ -99,6 +99,7 @@ private:
         Base::Property<string> viewsSet;
     	Base::Property<string> SensorType;
         Base::Property<string> folderName;
+        Base::Property<int> in_mean_viewpoint_features_number;
         Base::Property<string> sceneNameProp;
         std::vector<std::string> fileExtensions;
         //string sceneName;

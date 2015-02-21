@@ -69,6 +69,7 @@ void ModelWriter::prepareInterface() {
 	registerStream("in_pc_xyzrgbsift", &in_pc_xyzrgbsift);
 	registerStream("in_pc_xyzshot", &in_pc_xyzshot);
 	registerStream("in_pc_xyzrgnormal", &in_pc_xyzrgbnormal);
+	registerStream("in_mean_viewpoint_features_number", &in_mean_viewpoint_features_number);
 
 	// adding dependency
 	addDependency("writeData", NULL);
@@ -180,42 +181,44 @@ void ModelWriter::saveFile(fileTypes & fileType)
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyz.read(), fileType, filename, ModelName, hostname));
-			modelPtr->addFile(file, type, true, empty);
+			modelPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case PCXyzRgb:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgb.read(), fileType, filename, ModelName, hostname));
-			modelPtr->addFile(file, type, true, empty);
+			modelPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case PCXyzSift:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzsift.read(), fileType, filename, ModelName, hostname));
-			modelPtr->addFile(file, type, true, empty);
+			int mean_viewpoint_features_number = in_mean_viewpoint_features_number.read();
+			modelPtr->addFile(file, type, true, empty, mean_viewpoint_features_number);
 			break;
 		}
 		case PCXyzRgbSift:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgbsift.read(), fileType, filename, ModelName, hostname));
-			modelPtr->addFile(file, type, true, empty);
+			int mean_viewpoint_features_number = in_mean_viewpoint_features_number.read();
+			modelPtr->addFile(file, type, true, empty, mean_viewpoint_features_number);
 			break;
 		}
 		case PCXyzShot:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzshot.read(), fileType, filename, ModelName, hostname));
-			modelPtr->addFile(file, type, true, empty);
+			modelPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case PCXyzRgbNormal:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgbnormal.read(), fileType, filename, ModelName, hostname));
-			modelPtr->addFile(file, type, true, empty);
+			modelPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		default:

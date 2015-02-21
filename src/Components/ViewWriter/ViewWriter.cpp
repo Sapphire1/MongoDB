@@ -121,6 +121,9 @@ void ViewWriter::prepareInterface() {
 
 	// adding dependency
 	addDependency("writeData", NULL);
+
+	// in_mean_viewpoint_features_number
+	registerStream("in_mean_viewpoint_features_number", &in_mean_viewpoint_features_number);
 }
 
 void ViewWriter::writeData()
@@ -325,7 +328,7 @@ void ViewWriter::saveFile(fileTypes & fileType)
 			filename += ".xml";
 			string cameraInfo = in_camera_info.read();
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(cameraInfo, fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case ImageRgb:
@@ -333,105 +336,107 @@ void ViewWriter::saveFile(fileTypes & fileType)
 			CLOG(LNOTICE)<<"Read ImageRGB!";
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_rgb.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case ImageXyz:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_xyz.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case ImageDepth:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_depth.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case ImageIntensity:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_intensity.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case ImageMask:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_mask.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case StereoLeft:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_stereoL.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case StereoRight:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_stereoR.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case StereoLeftTextured:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_stereoLTextured.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case StereoRightTextured:
 		{
 			filename += ".png";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_stereoRTextured.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case PCXyz:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyz.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case PCXyzRgb:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgb.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case PCXyzSift:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzsift.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			int in_mean_viewpnt_features_number = in_mean_viewpoint_features_number.read();
+			viewPtr->addFile(file, type, true, empty, in_mean_viewpnt_features_number);
 			break;
 		}
 		case PCXyzRgbSift:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgbsift.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			int in_mean_viewpnt_features_number = (int)in_mean_viewpoint_features_number.read();
+			viewPtr->addFile(file, type, true, empty, in_mean_viewpnt_features_number);
 			break;
 		}
 		case PCXyzShot:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzshot.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		case PCXyzRgbNormal:
 		{
 			filename += ".pcd";
 			shared_ptr<PrimitiveFile::PrimitiveFile> file(new PrimitiveFile::PrimitiveFile(in_pc_xyzrgbnormal.read(), fileType, filename, ViewName, hostname));
-			viewPtr->addFile(file, type, true, empty);
+			viewPtr->addFile(file, type, true, empty, 0);
 			break;
 		}
 		default:

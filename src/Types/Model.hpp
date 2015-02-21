@@ -141,7 +141,7 @@ public:
 	std::vector<AbstractObject*> getModels();
 	bool checkIfContain(std::vector<fileTypes> & requiredFileTypes);
 	bool getModelTypes(BSONObj &obj, const string & fieldName, const string & childfieldName, vector<fileTypes>& typesVector);
-	void addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path);
+	void addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path, int in_mean_viewpoint_features_number);
 	void getID(OID& id);
 
 };// class Model
@@ -237,11 +237,11 @@ void Model::getRequiredFiles(vector<fileTypes>& requiredFileTypes)
 	}
 }
 
-void Model::addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path)
+void Model::addFile(shared_ptr<PrimitiveFile::PrimitiveFile>& file, string& type, bool dataInBuffer, string& path, int in_mean_viewpoint_features_number)
 {
 	OID oid;
 	//string Type= Type;
-	file->saveIntoMongoBase(Type, Name, true, path, oid);
+	file->saveIntoMongoBase(Type, Name, true, path, oid, in_mean_viewpoint_features_number);
 	BSONObj query;
 	// update document
 	query = BSON("Name"<<Name<<"Type"<<Type);
