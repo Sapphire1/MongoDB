@@ -99,7 +99,7 @@ void SceneRemover::removeSceneFromMongoDB()
 			for(std::vector<OID>::iterator it = viewsList.begin(); it != viewsList.end(); ++it)
 			{
 				BSONObj query = BSON("_id" << *it);
-				BSONObj update = BSON("$unset"<<BSON("SceneOID"<<1 <<"SceneName"<<1));
+				BSONObj update = BSON("$unset"<<BSON("SceneOID"<<1 <<"Name"<<1));
 				MongoProxy::MongoProxy::getSingleton(hostname).update(query, update);
 			}
 			//TODO remove from viewsSEtList

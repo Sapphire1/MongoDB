@@ -43,7 +43,7 @@
 #include <Types/PointXYZRGBSIFT.hpp>
 #include <Types/SIFTObjectModelFactory.hpp>
 #include <Types/MongoProxy.hpp>
-#include <Types/Document.hpp>
+//#include <Types/Document.hpp>
 
 #include <vector>
 #include <list>
@@ -154,7 +154,7 @@ public:
     }
 };
 
-class PrimitiveFile : public Document
+class PrimitiveFile //: public Document
 {
 private:
 	string pcdCloudType;	// sift, shot, xyz,  itd... itp...
@@ -164,7 +164,14 @@ private:
 	fileTypes fileType; 		// mask, rgb, depth, I, XYZ, cameraInfo, PCL
 	string PCLType;			// SIFT, SHOT, XYZ, ORB, NORMALS
 	string collectionName;
-
+	/****/
+	std::string Type;
+	OID oid;
+	std::string Name;
+	BSONObj BSONDocument;
+	std::string dateOfInsert;
+	std::string description;
+	/******/
 	boost::variant<	cv::Mat,
 	string,
 	pcl::PointCloud<pcl::PointXYZ>::Ptr,
@@ -178,50 +185,50 @@ private:
 
 
 public:
-	PrimitiveFile(const cv::Mat& img, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(img), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const cv::Mat& img, fileTypes& type, string& name, string& viewName, string& hostname) : Name(Name), data(img), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor cv::Mat";
 		LOG(LDEBUG)<<"fileType :" <<fileType;
 		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const std::string& str, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(str), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const std::string& str, fileTypes& type, string& name, string& viewName, string& hostname) : Name(Name), data(str), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor std::string";
 		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,  fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZ>::Ptr& cloud,  fileTypes& type, string& name, string& viewName, string& hostname) : Name(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor <pcl::PointXYZ>";
 		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Name(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor <pcl::PointXYZRGB>";
 		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Name(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor <PointXYZSIFT>";
 		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZRGBSIFT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Name(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor <PointXYZRGBSIFT>";
 		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<PointXYZSHOT>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Name(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor <PointXYZSHOT>";
 		Type="File";
 		this->setSize();
 	};
-	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Document(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(const pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& cloud, fileTypes& type, string& name, string& viewName, string& hostname) : Name(Name), data(cloud), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor <pcl::PointXYZRGBNormal>";
 		Type="File";
@@ -229,13 +236,13 @@ public:
 	};
 
 	///////////////////////////////////////////////////
-	PrimitiveFile(fileTypes& type, string& hostname, mongo::OID& oid) : Document(oid), fileType(type), hostname(hostname), sizeMBytes(0),sizeBytes(0)
+	PrimitiveFile(fileTypes& type, string& hostname, mongo::OID& oid) : oid(oid), fileType(type), hostname(hostname), sizeMBytes(0),sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor PrimitiveFile";
 		LOG(LDEBUG)<<"fileType :" <<fileType;
 		Type="File";
 	};
-	PrimitiveFile(string& Name, fileTypes type, string& hostname) : Document(Name), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
+	PrimitiveFile(string& Name, fileTypes type, string& hostname) : Name(Name), fileType(type), hostname(hostname), sizeMBytes(0), sizeBytes(0)
 	{
 		LOG(LDEBUG)<<"Constructor PrimitiveFile with Name";
 		Type="File";
@@ -436,9 +443,9 @@ void PrimitiveFile::saveIntoMongoBase(string& type, string& name, bool dataInBuf
 	string timestamp;
 	getTimestamp(timestamp);
 	Name =timestamp+"_"+Name;
-	if(sizeMBytes<15)
+//	if(sizeMBytes<15)
 		insertFileIntoDocument(oid, name, type, mean_viewpoint_features_number);
-	else if(sizeMBytes>=15)
+	//else if(sizeMBytes>=15)
 		insertFileIntoGrid(oid, dataInBuffer, path, type, name, mean_viewpoint_features_number);
 }
 
@@ -536,8 +543,8 @@ void PrimitiveFile::readFile(bool file2Memory, string& pathToFiles, bool saveToD
 		else
 		{
 			// get Name
-			string Name = file.getFileField("Name").str();
-			LOG(LDEBUG)<<"Name: "<<Name;
+			string Name = file.getFileField("filename").str();
+			LOG(LNOTICE)<<"Name: "<<Name;
 			getFileFromGrid(file, pathToFiles);
 			string empty = "";
 			if(file2Memory)
@@ -545,6 +552,8 @@ void PrimitiveFile::readFile(bool file2Memory, string& pathToFiles, bool saveToD
 				//writeToSinkFromFile(empty);
 			else
 				LOG(LDEBUG)<<"file2Memory=" <<file2Memory;
+			const char* file_name = Name.c_str();
+			std::remove(file_name);
 		}
 	}
 }
@@ -566,7 +575,7 @@ void PrimitiveFile::removeFile()
 void PrimitiveFile::ReadPCDCloud(const string& Name)
 {
 	LOG(LDEBUG) << "PrimitiveFile::ReadPCDCloud";
-	LOG(LDEBUG) << "Name::"<<Name;
+	LOG(LNOTICE) << "Name::"<<Name;
 	// Try to read the cloud of XYZRGB points.
 	if(Name.find("xyzrgb")!=string::npos)
 	{
@@ -1459,9 +1468,9 @@ void PrimitiveFile::insertFileIntoGrid(OID& oid, bool dataInBuffer, string& path
 		BSONObj b;
 		LOG(LDEBUG)<<"fileType: "<<fileType;
 		if(type=="View")
-			b = BSONObjBuilder().appendElements(object).append("ViewName", name).append("fileType", FTypes[fileType]).append("Type", Type).append("size", (int)sizeBytes).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
+			b = BSONObjBuilder().appendElements(object).append("ViewName", name).append("Name", Name).append("fileType", FTypes[fileType]).append("Type", Type).append("size", (int)sizeBytes).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
 		else if(type=="Model")
-			b = BSONObjBuilder().appendElements(object).append("ModelName", name).append("fileType", FTypes[fileType]).append("Type", Type).append("size", (int)sizeBytes).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
+			b = BSONObjBuilder().appendElements(object).append("ModelName", name).append("Name", Name).append("fileType", FTypes[fileType]).append("Type", Type).append("size", (int)sizeBytes).append("place", "grid").append("mean_viewpoint_features_number", mean_viewpoint_features_number).obj();
 		else
 		{
 			LOG(LERROR)<<"Couldn't update type: "<<type<<" !!!";
@@ -1478,6 +1487,8 @@ void PrimitiveFile::insertFileIntoGrid(OID& oid, bool dataInBuffer, string& path
 		//LOG(LDEBUG) <<c->getLastError();
 		LOG(LERROR) << e.what();
 	}
+	const char* file_name = Name.c_str();
+	std::remove(file_name);
 }
 
 }//namespace File

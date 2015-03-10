@@ -60,12 +60,12 @@ void SceneReader::getView()
 	bool exist = viewPtr->checkIfExist();
 	if(exist)
 	{
-		BSONObj query = BSON("ViewName"<<viewName<<"DocumentType"<<"View");
+		BSONObj query = BSON("Name"<<viewName<<"Type"<<"View");
 		cursorCollection = MongoProxy::MongoProxy::getSingleton(hostname).query(query);
 		vector<OID> childsVector;
 		BSONObj sceneDocument = cursorCollection->next();
 
-		string output = sceneDocument.getField("SceneName").str();
+		string output = sceneDocument.getField("Name").str();
 		if(output!="EOO")
 		{
 			CLOG(LINFO)<<"SceneName : "<< output;
@@ -84,8 +84,8 @@ void SceneReader::getScenes()
 {
 	sn = sceneName;
 	scenePtr = boost::shared_ptr<Scene>(new Scene(sn,hostname));
-	BSONObj query = BSON("SceneName"<<sn<<"DocumentType"<<"Scene");
-	CLOG(LINFO)<<"SceneName"<<sn<<"DocumentType"<<"Scene";
+	BSONObj query = BSON("Name"<<sn<<"Type"<<"Scene");
+	CLOG(LINFO)<<"Name"<<sn<<"Type"<<"Scene";
 	cursorCollection = MongoProxy::MongoProxy::getSingleton(hostname).query(query);
 	if (cursorCollection->more())
 	{
@@ -99,7 +99,7 @@ void SceneReader::getScenes()
 			{
 				BSONObj query = BSON("_id" << *viewOIDIter);
 				BSONObj viewDocument = MongoProxy::MongoProxy::getSingleton(hostname).findOne(query);
-				string output = viewDocument.getField("ViewName").str();
+				string output = viewDocument.getField("Name").str();
 				if(output!="EOO")
 				{
 					CLOG(LINFO)<<"ViewName : "<< output;
